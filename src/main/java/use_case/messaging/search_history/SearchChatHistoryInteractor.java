@@ -2,12 +2,12 @@ package use_case.messaging.search_history;
 
 import entity.Chat;
 import entity.Message;
-import entity.User;
-import entity.ports.ChatRepository;
-import entity.ports.MessageRepository;
-import entity.ports.UserRepository;
+import goc.chat.entity.User;
+import use_case.messaging.ChatMessageDto;
+import use_case.ports.ChatRepository;
+import use_case.ports.MessageRepository;
+import use_case.ports.UserRepository;
 
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -19,9 +19,6 @@ public class SearchChatHistoryInteractor implements SearchChatHistoryInputBounda
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
     private final SearchChatHistoryOutputBoundary presenter;
-
-    private static final DateTimeFormatter TIME_FORMATTER =
-            DateTimeFormatter.ISO_INSTANT;
 
     public SearchChatHistoryInteractor(ChatRepository chatRepository,
                                        MessageRepository messageRepository,
@@ -38,62 +35,53 @@ public class SearchChatHistoryInteractor implements SearchChatHistoryInputBounda
         String chatId = inputData.getChatId();
         String keyword = inputData.getKeyword();
 
-        // 1. Verify chat existence
+        // 1. chat 是否存在
         Optional<Chat> chatOpt = chatRepository.findById(chatId);
         if (chatOpt.isEmpty()) {
             presenter.prepareFailView("Chat not found: " + chatId);
             return;
         }
 
-        // 2. Validate keyword
         if (keyword == null || keyword.trim().isEmpty()) {
             presenter.prepareFailView("Search keyword must not be empty.");
             return;
         }
         String normalized = keyword.toLowerCase();
 
-        // 3. Retrieve and sort messages
+        // 2. 拿到所有消息并按时间排序
         List<Message> messages = messageRepository.findByChatId(chatId);
         messages.sort(Comparator.comparing(Message::getTimestamp));
 
-        // 4. Filter by keyword and convert to String[]
-        List<String[]> matching = new ArrayList<>();
+        // 3. 过滤出包含关键字的
+        List<ChatMessageDto> dtos = new ArrayList<>();
         for (Message m : messages) {
             String content = m.getContent();
-            if (content == null || !content.toLowerCase().contains(normalized)) {
+            if (content == null ||
+                    !content.toLowerCase().contains(normalized)) {
                 continue;
             }
-            matching.add(toStringArray(m));
+            String senderName = resolveSenderName(m.getSenderUserId());
+            dtos.add(new ChatMessageDto(
+                    m.getId(),
+                    m.getSenderUserId(),
+                    senderName,
+                    m.getContent(),
+                    m.getTimestamp()
+            ));
         }
 
-        // 5. Send result to presenter
-        if (matching.isEmpty()) {
+        if (dtos.isEmpty()) {
             presenter.prepareNoMatchesView(chatId, keyword);
-        } else {
-            SearchChatHistoryOutputData output =
-                    new SearchChatHistoryOutputData(chatId, keyword, matching);
-            presenter.prepareSuccessView(output);
+            return;
         }
-    }
 
-    private String[] toStringArray(Message m) {
-        String messageId = m.getId();
-        String senderId = m.getSenderUserId();
-        String senderName = resolveSenderName(senderId);
-        String content = m.getContent();
-        String time = m.getTimestamp() == null
-                ? ""
-                : TIME_FORMATTER.format(m.getTimestamp());
-
-        // Match the same format used by ViewChatHistory:
-        // [id, senderId, senderName, content, time]
-        return new String[]{messageId, senderId, senderName, content, time};
+        SearchChatHistoryOutputData outputData =
+                new SearchChatHistoryOutputData(chatId, keyword, dtos);
+        presenter.prepareSuccessView(outputData);
     }
 
     private String resolveSenderName(String senderUserId) {
-        // In your domain, "user id" is effectively the username,
-        // and UserRepository looks up by username.
-        Optional<User> userOpt = userRepository.findByUsername(senderUserId);
-        return userOpt.map(User::getName).orElse("Unknown");
+        Optional<User> userOpt = userRepository.findById(senderUserId);
+        return userOpt.map(User::getUsername).orElse("Unknown");
     }
 }

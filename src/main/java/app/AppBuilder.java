@@ -11,6 +11,8 @@ import interface_adapter.login.LoginPresenter;
 import interface_adapter.login.LoginViewModel;
 import interface_adapter.logout.LogoutController;
 import interface_adapter.logout.LogoutPresenter;
+import interface_adapter.messaging.view_history.ViewChatHistoryController;
+import interface_adapter.messaging.view_history.ViewChatHistoryPresenter;
 import interface_adapter.signup.SignupController;
 import interface_adapter.signup.SignupPresenter;
 import interface_adapter.signup.SignupViewModel;
@@ -25,6 +27,9 @@ import use_case.messaging.send_m.SendMessageOutputBoundary;
 import use_case.messaging.send_m.SendMessageInteractor;
 import interface_adapter.messaging.send_m.ChatViewModel;
 
+import use_case.messaging.view_history.ViewChatHistoryInputBoundary;
+import use_case.messaging.view_history.ViewChatHistoryInteractor;
+import use_case.messaging.view_history.ViewChatHistoryOutputBoundary;
 import use_case.search_user.SearchUserInputBoundary;
 import use_case.search_user.SearchUserInteractor;
 import use_case.search_user.SearchUserOutputBoundary;
@@ -104,7 +109,8 @@ public class AppBuilder {
 
     // Field for send message
     private final ChatViewModel chatViewModel = new ChatViewModel();
-    private SendMessageController sendMessageController;
+    private ViewChatHistoryController viewChatHistoryController;
+
     private final String messagingUserId;
     private final String messagingChatId;
 
@@ -225,14 +231,6 @@ public class AppBuilder {
         return application;
     }
 
-    public AppBuilder addChatView() {
-        chatView = new ChatView(viewManagerModel, sendMessageController);
-        chatView.setChatContext(messagingChatId, messagingUserId, "");
-        chatViewModel.addPropertyChangeListener(chatView);
-        cardPanel.add(chatView, chatView.getViewName());
-        return this;
-    }
-
     public AppBuilder addAccountDetailsView() {
         accountDetailsView = new AccountDetailsView(viewManagerModel, loggedInViewModel);
         cardPanel.add(accountDetailsView, accountDetailsView.getViewName());
@@ -293,10 +291,14 @@ public class AppBuilder {
     }
 
     public AppBuilder addChatUseCase() {
-
-        // Presenter
+        SendMessageController sendMessageController;
+        // Presenter send and history
         SendMessageOutputBoundary sendMessagePresenter =
                 new SendMessagePresenter(chatViewModel, viewManagerModel);
+
+        ViewChatHistoryOutputBoundary viewHistoryPresenter =
+                new ViewChatHistoryPresenter(chatViewModel, viewManagerModel);
+
         // Interactor
         SendMessageInputBoundary sendMessageInteractor =
                 new SendMessageInteractor(
@@ -305,10 +307,27 @@ public class AppBuilder {
                         userRepository,
                         sendMessagePresenter
                 );
+
+        ViewChatHistoryInputBoundary viewHistoryInteractor =
+                new ViewChatHistoryInteractor(
+                        chatRepository,
+                        messageRepository,
+                        userRepository,
+                        viewHistoryPresenter
+                );
+
         // Controller
+        viewChatHistoryController = new ViewChatHistoryController(viewHistoryInteractor);
         sendMessageController = new SendMessageController(sendMessageInteractor);
+
+
+        // view
+        chatView = new ChatView(viewManagerModel, sendMessageController, viewChatHistoryController);
+        chatViewModel.addPropertyChangeListener(chatView);
+        cardPanel.add(chatView, chatView.getViewName());
+
+        chatView.setChatContext(messagingChatId, messagingUserId, "hi");
 
         return this;
     }
-
 }

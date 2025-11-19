@@ -4,6 +4,9 @@ import interface_adapter.ViewManagerModel;
 import interface_adapter.messaging.send_m.SendMessageController;
 import interface_adapter.messaging.send_m.ChatState;
 import use_case.messaging.ChatMessageDto;
+
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.util.List;
 import javax.swing.*;
 import java.awt.*;
@@ -100,6 +103,19 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         messageInputField = new JTextArea(3, 1);
         messageInputField.setLineWrap(true);
         messageInputField.setWrapStyleWord(true);
+        messageInputField.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    if (!e.isShiftDown()) {
+                        // Enter: send message
+                        e.consume();   // not new line
+                        sendButton.doClick(); // = send buttom
+                    }
+                }
+            }
+        });
+
         JScrollPane inputScrollPane = new JScrollPane(messageInputField);
 
         sendButton = new JButton("Send");

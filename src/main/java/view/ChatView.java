@@ -3,6 +3,7 @@ package view;
 import interface_adapter.ViewManagerModel;
 import interface_adapter.messaging.send_m.SendMessageController;
 import interface_adapter.messaging.send_m.ChatState;
+import interface_adapter.messaging.view_history.ViewChatHistoryController;
 import use_case.messaging.ChatMessageDto;
 import java.util.List;
 import javax.swing.*;
@@ -17,6 +18,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
     public final String viewName = "chat";
     private final ViewManagerModel viewManagerModel;
     private final SendMessageController sendMessageController;
+    private final ViewChatHistoryController viewChatHistoryController;
 
     private String currentChatId;
     private String currentUserId;
@@ -31,9 +33,11 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
     private final JPanel chatDisplayPanel;
     private final JLabel initialPrompt;
 
-    public ChatView(ViewManagerModel viewManagerModel, SendMessageController sendMessageController) {
+    public ChatView(ViewManagerModel viewManagerModel, SendMessageController sendMessageController,
+                    interface_adapter.messaging.view_history.ViewChatHistoryController viewChatHistoryController) {
         this.viewManagerModel = viewManagerModel;
         this.sendMessageController = sendMessageController;
+        this.viewChatHistoryController = viewChatHistoryController;
         this.setLayout(new BorderLayout());
 
         // Top Bar (Chat Partner and Exit/Back Button)
@@ -206,6 +210,6 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         this.currentChatId = chatId;
         this.currentUserId = currentUserId;
         setChatPartner(partnerUsername);
+        viewChatHistoryController.execute(chatId);
     }
-
 }

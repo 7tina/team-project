@@ -21,6 +21,10 @@ public class ChatState {
         messages.add(message);
     }
 
+    public void clearMessages() {
+        messages.clear();
+    }
+
     public String getError() {
         return error;
     }

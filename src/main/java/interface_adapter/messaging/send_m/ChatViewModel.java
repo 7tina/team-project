@@ -11,4 +11,13 @@ public class ChatViewModel extends ViewModel<ChatState> {
         super("chat");
         this.setState(new ChatState());
     }
+
+    public ChatState getChatState() {
+        ChatState state = this.getState();
+        if (state == null) {
+            state = new ChatState();
+            this.setState(state);
+        }
+        return state;
+    }
 }

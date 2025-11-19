@@ -1,4 +1,4 @@
-package use_case.messaging;
+package use_case.messaging.view_history;
 
 /**
  * Input data for viewing the chat history of a given chat.

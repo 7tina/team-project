@@ -1,8 +1,9 @@
-package use_case.messaging;
+package use_case.messaging.view_history;
 
 import entity.Chat;
 import entity.Message;
 import goc.chat.entity.User;
+import use_case.messaging.ChatMessageDto;
 import use_case.ports.ChatRepository;
 import use_case.ports.MessageRepository;
 import use_case.ports.UserRepository;
@@ -15,7 +16,7 @@ import java.util.Optional;
 /**
  * Use case: view the history of a given chat.
  */
-public class ViewChatHistoryInteractor {
+public class ViewChatHistoryInteractor implements ViewChatHistoryInputBoundary {
 
     private final ChatRepository chatRepository;
     private final MessageRepository messageRepository;

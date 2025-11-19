@@ -1,4 +1,4 @@
-package use_case.messaging;
+package use_case.messaging.view_history;
 
 /**
  * Presenter boundary for the view chat history use case.

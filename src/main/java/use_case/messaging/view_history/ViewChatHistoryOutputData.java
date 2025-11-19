@@ -1,4 +1,6 @@
-package use_case.messaging;
+package use_case.messaging.view_history;
+
+import use_case.messaging.ChatMessageDto;
 
 import java.util.List;
 

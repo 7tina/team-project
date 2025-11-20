@@ -6,6 +6,7 @@ import interface_adapter.logged_in.LoggedInViewModel;
 import interface_adapter.messaging.send_m.SendMessageController;
 import interface_adapter.messaging.send_m.ChatState;
 import interface_adapter.messaging.view_history.ViewChatHistoryController;
+import interface_adapter.messaging.search_history.SearchChatHistoryController;
 import use_case.messaging.ChatMessageDto;
 
 import java.util.List;

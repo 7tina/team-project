@@ -15,8 +15,8 @@ import interface_adapter.logged_in.LoggedInViewModel;
 import interface_adapter.user_search.SearchUserController;
 import interface_adapter.user_search.SearchUserViewModel;
 import interface_adapter.user_search.SearchUserState;
-import use_case.ports.ChatRepository;
-import use_case.ports.UserRepository;
+import entity.ports.ChatRepository;
+import entity.ports.UserRepository;
 import entity.Chat;
 import entity.User;
 import java.util.Optional;
@@ -75,7 +75,7 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
         searchInputField = new JTextField(20);
 
         // Exit/Cancel Button
-        searchExitButton = new JButton("X");
+        searchExitButton = new JButton("❌");
         searchExitButton.setFont(new Font("Oxygen", Font.BOLD, 16));
         searchExitButton.setFocusPainted(false);
         searchExitButton.setBorderPainted(false);

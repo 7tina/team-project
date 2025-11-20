@@ -1,6 +1,6 @@
 package use_case.groups;
 
-import use_case.ports.ChatRepository;
+import entity.ports.ChatRepository;
 import java.util.Optional;
 
 /**

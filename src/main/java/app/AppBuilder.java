@@ -3,6 +3,12 @@ package app;
 import data_access.FireBaseUserDataAccessObject;
 import entity.UserFactory;
 import entity.User;
+import entity.ports.ChatRepository;
+import entity.ports.UserRepository;
+import entity.repo.FirebaseMessageRepository;
+import entity.repo.InMemoryChatRepository;
+import entity.repo.InMemoryMessageRepository;
+import entity.repo.InMemoryUserRepository;
 import interface_adapter.ViewManagerModel;
 import interface_adapter.logged_in.ChangePasswordController;
 import interface_adapter.logged_in.ChangePasswordPresenter;
@@ -21,12 +27,17 @@ import interface_adapter.signup.SignupViewModel;
 import interface_adapter.user_search.SearchUserController;
 import interface_adapter.user_search.SearchUserPresenter;
 import interface_adapter.user_search.SearchUserViewModel;
+import interface_adapter.groupchat.ChangeGroupNameController;
+import interface_adapter.groupchat.ChangeGroupNamePresenter;
+import interface_adapter.groupchat.CreateGroupChatController;
+import interface_adapter.groupchat.CreateGroupChatPresenter;
+import interface_adapter.groupchat.GroupChatViewModel;
 import interface_adapter.messaging.send_m.SendMessageController;
 import interface_adapter.messaging.send_m.SendMessagePresenter;
+import interface_adapter.messaging.send_m.ChatViewModel;
 import use_case.messaging.send_m.SendMessageInputBoundary;
 import use_case.messaging.send_m.SendMessageOutputBoundary;
 import use_case.messaging.send_m.SendMessageInteractor;
-import interface_adapter.messaging.send_m.ChatViewModel;
 
 import use_case.messaging.view_history.ViewChatHistoryInputBoundary;
 import use_case.messaging.view_history.ViewChatHistoryInteractor;
@@ -56,8 +67,9 @@ import view.WelcomeView;
 import view.SearchUserView;
 import view.ChatView;
 import view.AccountDetailsView;
+import view.ChatSettingView;
 
-import use_case.ports.MessageRepository;
+import entity.ports.MessageRepository;
 
 import javax.swing.*;
 import java.awt.*;
@@ -66,15 +78,15 @@ public class AppBuilder {
     private final JPanel cardPanel = new JPanel();
     private final CardLayout cardLayout = new CardLayout();
     // ChatRepository
-    private final use_case.ports.ChatRepository chatRepository =
-            new interface_adapter.repo.InMemoryChatRepository();
+    private final ChatRepository chatRepository =
+            new InMemoryChatRepository();
 
     // MessageRepository
     private final MessageRepository messageRepository;
 
     // UserRepository
-    private final use_case.ports.UserRepository userRepository =
-            new interface_adapter.repo.InMemoryUserRepository();
+    private final UserRepository userRepository =
+            new InMemoryUserRepository();
 
     final UserFactory userFactory = new UserFactory();
     final ViewManagerModel viewManagerModel = new ViewManagerModel();
@@ -104,6 +116,9 @@ public class AppBuilder {
     private final SearchUserViewModel searchUserViewModel = new SearchUserViewModel();
     private SearchUserView searchUserView;
 
+    private final GroupChatViewModel groupChatViewModel = new GroupChatViewModel();
+    private ChatSettingView chatSettingView;
+
     // Field for send message
     private final ChatViewModel chatViewModel = new ChatViewModel();
     private ViewChatHistoryController viewChatHistoryController;
@@ -118,11 +133,11 @@ public class AppBuilder {
         try {
             com.google.cloud.firestore.Firestore db =
                     data_access.FirebaseClientProvider.getFirestore();
-            repo = new interface_adapter.repo.FirebaseMessageRepository(db);
+            repo = new FirebaseMessageRepository(db);
             System.out.println("Using FirebaseMessageRepository");
         } catch (Exception e) {
             e.printStackTrace();
-            repo = new interface_adapter.repo.InMemoryMessageRepository();
+            repo = new InMemoryMessageRepository();
             System.out.println("Fallback to InMemoryMessageRepository");
         }
         this.messageRepository = repo;
@@ -252,8 +267,16 @@ public class AppBuilder {
      * @return this builder
      */
     public AppBuilder addSearchUserView() {
-        //this.searchUserView = new SearchUserView(viewManagerModel, searchUserViewModel, chatView);
-        //cardPanel.add(searchUserView, searchUserView.getViewName());
+        this.searchUserView = new SearchUserView(
+                viewManagerModel,
+                searchUserViewModel,
+                chatView,
+                groupChatViewModel,
+                chatRepository,
+                userRepository,
+                loggedInViewModel
+        );
+        cardPanel.add(searchUserView, searchUserView.getViewName());
         return this;
     }
 

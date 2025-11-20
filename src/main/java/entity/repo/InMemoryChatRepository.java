@@ -1,7 +1,7 @@
-package interface_adapter.repo;
+package entity.repo;
 
 import entity.Chat;
-import use_case.ports.ChatRepository;
+import entity.ports.ChatRepository;
 
 import java.util.*;
 

@@ -1,4 +1,4 @@
-package use_case.ports;
+package entity.ports;
 
 import entity.Chat;
 import entity.User;

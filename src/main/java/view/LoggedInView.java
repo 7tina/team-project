@@ -42,26 +42,30 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
         // Top Bar Panel (User, New Chat)
         JPanel topBar = new JPanel(new BorderLayout(5, 0));
         topBar.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        topBar.setMaximumSize(new Dimension(Integer.MAX_VALUE, topBar.getPreferredSize().height));
 
         // Left Side: Profile Button and Username Label
         JPanel userInfoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
 
         profileButton = new JButton("👤");
         profileButton.setFont(new Font("SansSerif", Font.PLAIN, 24));
-        profileButton.setFocusPainted(false);
-        profileButton.setBorderPainted(false);
-        profileButton.setContentAreaFilled(false);
+//        profileButton.setFocusPainted(false);
+//        profileButton.setBorderPainted(false);
+//        profileButton.setContentAreaFilled(false);
+
+        JPanel profileChatPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        profileChatPanel.add(profileButton);
 
         usernameLabel = new JLabel("User");
         usernameLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
 
-        userInfoPanel.add(profileButton);
+        userInfoPanel.add(profileChatPanel);
         userInfoPanel.add(usernameLabel);
 
         topBar.add(userInfoPanel, BorderLayout.WEST);
 
         // Right Side: New Chat Button (Plus Icon)
-        newChatButton = new JButton("⊕");
+        newChatButton = new JButton("➕");
         newChatButton.setFont(new Font("SansSerif", Font.PLAIN, 24));
 
         JPanel newChatPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));

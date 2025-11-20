@@ -2,8 +2,8 @@ package use_case.groups;
 
 import entity.Chat;
 import entity.User;
-import use_case.ports.ChatRepository;
-import use_case.ports.UserRepository;
+import entity.ports.ChatRepository;
+import entity.ports.UserRepository;
 
 import java.util.ArrayList;
 import java.util.List;

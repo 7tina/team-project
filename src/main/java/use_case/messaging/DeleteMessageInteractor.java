@@ -1,7 +1,7 @@
 package use_case.messaging;
 
 import entity.Message;
-import use_case.ports.MessageRepository;
+import entity.ports.MessageRepository;
 
 import java.util.Optional;
 

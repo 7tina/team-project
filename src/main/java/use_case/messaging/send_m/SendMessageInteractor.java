@@ -4,9 +4,9 @@ import entity.Chat;
 import entity.Message;
 import entity.User;
 import use_case.messaging.ChatMessageDto;
-import use_case.ports.ChatRepository;
-import use_case.ports.MessageRepository;
-import use_case.ports.UserRepository;
+import entity.ports.ChatRepository;
+import entity.ports.MessageRepository;
+import entity.ports.UserRepository;
 
 import java.time.Instant;
 import java.util.Optional;

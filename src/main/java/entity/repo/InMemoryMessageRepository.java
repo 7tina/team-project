@@ -1,7 +1,7 @@
-package interface_adapter.repo;
+package entity.repo;
 
 import entity.Message;
-import use_case.ports.MessageRepository;
+import entity.ports.MessageRepository;
 
 import java.util.*;
 import java.util.stream.Collectors;

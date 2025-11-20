@@ -1,9 +1,9 @@
-package interface_adapter.repo;
+package entity.repo;
 
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
 import entity.Message;
-import use_case.ports.MessageRepository;
+import entity.ports.MessageRepository;
 
 import java.time.Instant;
 import java.util.*;

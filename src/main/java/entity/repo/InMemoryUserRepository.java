@@ -1,7 +1,7 @@
-package interface_adapter.repo;
+package entity.repo;
 
 import entity.User;
-import use_case.ports.UserRepository;
+import entity.ports.UserRepository;
 
 import java.util.HashMap;
 import java.util.Map;

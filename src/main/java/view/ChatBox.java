@@ -2,9 +2,9 @@ package view;
 
 import entity.UserFactory;
 import entity.User;
-import interface_adapter.repo.InMemoryChatRepository;
-import interface_adapter.repo.InMemoryMessageRepository;
-import interface_adapter.repo.InMemoryUserRepository;
+import entity.repo.InMemoryChatRepository;
+import entity.repo.InMemoryMessageRepository;
+import entity.repo.InMemoryUserRepository;
 
 import use_case.messaging.ChatMessageDto;
 

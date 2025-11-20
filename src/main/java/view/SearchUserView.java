@@ -272,9 +272,9 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
                     // Navigate to chat view with the new group chat
                     chatView.setChatContext(
                             chatState.getChatId(),
-                            "user-1",  // TODO: Get from session/logged in user
+                            loggedInViewModel.getState().getUsername(),  // Use actual logged-in user
                             chatState.getGroupName(),
-                            true  // isGroupChat = true
+                            true
                     );
 
                     viewManagerModel.setState("chat");

@@ -135,28 +135,20 @@ public class AccountDetailsView extends JPanel implements ActionListener, Proper
                         currentUsername,
                         newUsername
                 );
-            } else {
-                // display that the username
-                // Print panel that says invalid username
             }
         }
     }
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        if (evt.getPropertyName().equals("state")) {
+        // Check for either a general state update or a specific username update event.
+        if (evt.getPropertyName().equals("state") || evt.getPropertyName().equals("username")) {
             final LoggedInState state = (LoggedInState) evt.getNewValue();
             String newUsername = state.getUsername();
+
+            // Update the label text
             usernameLabel.setText("Username: " + (newUsername != null ? newUsername : "User"));
-            if (evt.getPropertyName().equals("username")) {
-                if (state.getUsernameError() == null) {
-                    JOptionPane.showMessageDialog(this, "Username successfully updated to " + newUsername);
-                } else {
-                    JOptionPane.showMessageDialog(this, state.getUsernameError(), "Username Change Failed", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        } else if (evt.getPropertyName().equals("password")) {
-            final LoggedInState state = (LoggedInState) evt.getNewValue();
+
         }
     }
 

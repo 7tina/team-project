@@ -1,5 +1,6 @@
 package app;
 
+import data_access.FireBaseUserDataAccessObject; // Corrected class name
 import data_access.FileUserDataAccessObject;
 import entity.UserFactory;
 import interface_adapter.ViewManagerModel;
@@ -55,6 +56,10 @@ import use_case.change_username.ChangeUsernameInputBoundary;
 import use_case.change_username.ChangeUsernameInteractor;
 import use_case.change_username.ChangeUsernameOutputBoundary;
 import use_case.change_username.ChangeUsernameUserDataAccessInterface;
+import use_case.signup.SignupUserDataAccessInterface;
+import use_case.change_password.ChangePasswordUserDataAccessInterface;
+import use_case.login.LoginUserDataAccessInterface;
+import use_case.logout.LogoutUserDataAccessInterface;
 
 import javax.swing.*;
 import java.awt.*;
@@ -65,15 +70,16 @@ import java.util.UUID;
 public class AppBuilder {
     private final JPanel cardPanel = new JPanel();
     private final CardLayout cardLayout = new CardLayout();
-    // ChatRepository
+
+    // ChatRepository (for messaging use cases)
     private final use_case.ports.ChatRepository chatRepository =
             new interface_adapter.repo.InMemoryChatRepository();
 
-    // MessageRepository
+    // MessageRepository (for messaging use cases)
     private final use_case.ports.MessageRepository messageRepository =
             new interface_adapter.repo.InMemoryMessageRepository();
 
-    // UserRepository
+    // UserRepository (for messaging use cases)
     private final use_case.ports.UserRepository userRepository =
             new interface_adapter.repo.InMemoryUserRepository();
 
@@ -81,8 +87,18 @@ public class AppBuilder {
     final ViewManagerModel viewManagerModel = new ViewManagerModel();
     ViewManager viewManager = new ViewManager(cardPanel, cardLayout, viewManagerModel);
 
-    // DAO version using local file storage
-    final FileUserDataAccessObject userDataAccessObject = new FileUserDataAccessObject("users.csv", userFactory);
+    // --- Data Access Objects (User Authentication/Account) ---
+    // Concrete DAO initialized here
+    private final FireBaseUserDataAccessObject concreteUserDAO;
+
+    // Interface fields assigned to the concrete DAO
+    private final SignupUserDataAccessInterface signupUserDataAccessObject; // Renamed to avoid conflict
+    private final ChangePasswordUserDataAccessInterface changePasswordUserRepository;
+    private final ChangeUsernameUserDataAccessInterface changeUsernameUserRepository;
+    private final LoginUserDataAccessInterface loginUserRepository;
+    private final LogoutUserDataAccessInterface logoutUserRepository;
+    private final SearchUserDataAccessInterface searchUserRepository;
+
 
     private SignupView signupView;
     private SignupViewModel signupViewModel;
@@ -111,18 +127,44 @@ public class AppBuilder {
     public AppBuilder() {
         cardPanel.setLayout(cardLayout);
 
-        // Load all users from CSV into the in-memory repository
-        Map<String, entity.User> csvUsers = userDataAccessObject.getAccounts();
+        // 1. Initialize Firebase DAO
+        // The serviceAccountKey.json file is used for Firebase Admin SDK initialization.
+        String serviceAccountKeyPath = "src/main/resources/serviceAccountKeyUsers.json";
+        this.concreteUserDAO = new FireBaseUserDataAccessObject(serviceAccountKeyPath, userFactory);
 
-        for (entity.User csvUser : csvUsers.values()) {
-            goc.chat.entity.User inMemoryUser = new goc.chat.entity.User(
-                    UUID.randomUUID().toString(),        // Generate unique ID
-                    csvUser.getName(),                   // Username from CSV
-                    csvUser.getName() + "@example.com",  // Generate email
-                    "hash"                               // Placeholder hash
+        // 2. Assign the concrete DAO instance to all required interfaces
+        this.signupUserDataAccessObject = this.concreteUserDAO;
+        this.changePasswordUserRepository = this.concreteUserDAO;
+        this.changeUsernameUserRepository = this.concreteUserDAO;
+        this.loginUserRepository = this.concreteUserDAO;
+        this.logoutUserRepository = this.concreteUserDAO;
+        this.searchUserRepository = this.concreteUserDAO;
+
+
+        // Use repo to store
+        goc.chat.entity.User me =
+                new goc.chat.entity.User("user-1", "demo", "demo@example.com", "hash");
+        me = userRepository.save(me);
+        messagingUserId = me.getId();
+
+        // Get or create the demo user for messaging
+        Optional<goc.chat.entity.User> demoUserOpt = userRepository.findByUsername("demo");
+        if (demoUserOpt.isPresent()) {
+            messagingUserId = demoUserOpt.get().getId();
+        } else {
+            // If demo user doesn't exist in CSV, create it
+            goc.chat.entity.User me = new goc.chat.entity.User(
+                    "user-1", "demo", "demo@example.com", "hash"
             );
-            userRepository.save(inMemoryUser);
+            me = userRepository.save(me);
+            messagingUserId = me.getId();
         }
+
+        // Create initial chat
+        entity.Chat c = new entity.Chat("chat-1");
+        c.addParticipant(messagingUserId);
+        c = chatRepository.save(c);
+        messagingChatId = c.getId();
     }
 
     public AppBuilder addWelcomeView() {
@@ -155,8 +197,10 @@ public class AppBuilder {
     public AppBuilder addSignupUseCase() {
         final SignupOutputBoundary signupOutputBoundary = new SignupPresenter(viewManagerModel,
                 signupViewModel, loginViewModel);
+
+        // Use the new, correctly named interface field
         final SignupInputBoundary userSignupInteractor = new SignupInteractor(
-                userDataAccessObject, signupOutputBoundary, userFactory);
+                this.signupUserDataAccessObject, signupOutputBoundary, userFactory);
 
         SignupController controller = new SignupController(userSignupInteractor);
         signupView.setSignupController(controller);
@@ -166,8 +210,10 @@ public class AppBuilder {
     public AppBuilder addLoginUseCase() {
         final LoginOutputBoundary loginOutputBoundary = new LoginPresenter(viewManagerModel,
                 loggedInViewModel, loginViewModel);
+
+        // Use the login interface field
         final LoginInputBoundary loginInteractor = new LoginInteractor(
-                userDataAccessObject, loginOutputBoundary);
+                this.loginUserRepository, loginOutputBoundary);
 
         LoginController loginController = new LoginController(loginInteractor);
         loginView.setLoginController(loginController);
@@ -178,8 +224,9 @@ public class AppBuilder {
         final ChangePasswordOutputBoundary changePasswordOutputBoundary = new ChangePasswordPresenter(viewManagerModel,
                 loggedInViewModel);
 
+        // Use the change password interface field
         final ChangePasswordInputBoundary changePasswordInteractor =
-                new ChangePasswordInteractor(userDataAccessObject, changePasswordOutputBoundary, userFactory);
+                new ChangePasswordInteractor(this.changePasswordUserRepository, changePasswordOutputBoundary, userFactory);
 
         ChangePasswordController changePasswordController = new ChangePasswordController(changePasswordInteractor);
 
@@ -200,8 +247,9 @@ public class AppBuilder {
         final LogoutOutputBoundary logoutOutputBoundary = new LogoutPresenter(viewManagerModel,
                 loggedInViewModel, loginViewModel);
 
+        // Use the logout interface field
         final LogoutInputBoundary logoutInteractor =
-                new LogoutInteractor(userDataAccessObject, logoutOutputBoundary);
+                new LogoutInteractor(this.logoutUserRepository, logoutOutputBoundary);
 
         final LogoutController logoutController = new LogoutController(logoutInteractor);
 
@@ -237,9 +285,10 @@ public class AppBuilder {
         final ChangeUsernameOutputBoundary changeUsernameOutputBoundary =
                 new ChangeUsernamePresenter(loggedInViewModel, viewManagerModel);
 
+        // Use the change username interface field
         final ChangeUsernameInputBoundary changeUsernameInteractor =
                 new ChangeUsernameInteractor(
-                        (ChangeUsernameUserDataAccessInterface) userDataAccessObject,
+                        this.changeUsernameUserRepository, // Already cast to the correct interface in field assignment
                         changeUsernameOutputBoundary,
                         userFactory
                 );
@@ -279,9 +328,10 @@ public class AppBuilder {
         final SearchUserOutputBoundary searchUserOutputBoundary =
                 new SearchUserPresenter(searchUserViewModel);
 
+        // Use the search interface field
         final SearchUserInputBoundary searchUsersInteractor =
                 new SearchUserInteractor(
-                        (SearchUserDataAccessInterface) userRepository,
+                        this.searchUserRepository, // Already cast to the correct interface in field assignment
                         searchUserOutputBoundary
                 );
 
@@ -308,7 +358,7 @@ public class AppBuilder {
                 new SendMessageInteractor(
                         chatRepository,
                         messageRepository,
-                        userRepository,
+                        userRepository, // This is the InMemoryUserRepository for messaging, which is correct
                         sendMessagePresenter
                 );
 
@@ -316,7 +366,7 @@ public class AppBuilder {
                 new ViewChatHistoryInteractor(
                         chatRepository,
                         messageRepository,
-                        userRepository,
+                        userRepository, // This is the InMemoryUserRepository for messaging, which is correct
                         viewHistoryPresenter
                 );
 

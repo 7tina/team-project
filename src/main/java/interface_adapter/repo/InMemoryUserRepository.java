@@ -32,10 +32,25 @@ public class InMemoryUserRepository implements UserRepository, SearchUserDataAcc
 
     @Override
     public Optional<User> findByUsername(String username) {
-        return Optional.ofNullable(usersByUsername.get(username));
+        if (username == null) {
+            return Optional.empty();
+        }
+
+        String trimmed = username.trim();
+
+        // Try exact match first (fast path)
+        User user = usersByUsername.get(trimmed);
+        if (user != null) {
+            return Optional.of(user);
+        }
+
+        // Fall back to case-insensitive search
+        return usersByUsername.entrySet().stream()
+                .filter(entry -> entry.getKey().equalsIgnoreCase(trimmed))
+                .map(Map.Entry::getValue)
+                .findFirst();
     }
 
-    // Add this method to implement SearchUserDataAccessInterface
     @Override
     public List<String> searchUsers(String query) {
         if (query == null || query.trim().isEmpty()) {

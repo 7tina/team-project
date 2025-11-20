@@ -105,13 +105,14 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
         selectionLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         // Hint label
-        JLabel hintLabel = new JLabel("Tip: Hold Ctrl to select multiple users for group chat");
+        JLabel hintLabel = new JLabel("Hold Ctrl to select multiple users for group chat");
         hintLabel.setFont(new Font("SansSerif", Font.ITALIC, 10));
         hintLabel.setForeground(Color.GRAY);
         hintLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         // Create button BEFORE adding listener
         startChatButton = new JButton("Start Chat");
+        startChatButton.setPreferredSize(new Dimension(200, 30));
 
         // Add selection listener for visual feedback
         userList.addListSelectionListener(e -> {

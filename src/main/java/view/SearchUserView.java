@@ -208,23 +208,21 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
 
     private String findOrCreateChat(String userId1, String userId2) {
         // Find existing chat with both participants (and only these two)
-        java.util.List<Chat> allChats = chatRepository.findAll();
+        String a = userId1.compareTo(userId2) < 0 ? userId1 : userId2;
+        String b = userId1.compareTo(userId2) < 0 ? userId2 : userId1;
+        String stableChatId = "dm_" + a + "_" + b;
 
-        for (Chat chat : allChats) {
-            java.util.List<String> participants = chat.getParticipantUserIds();  // Changed from getParticipants()
-            if (participants.size() == 2 &&
-                    participants.contains(userId1) &&
-                    participants.contains(userId2)) {
-                return chat.getId();
-            }
-        }
+        // 先看看内存里有没有（有就直接用）
+        Optional<Chat> existing = chatRepository.findById(stableChatId);
+        if (existing.isPresent()) return stableChatId;
 
-        // No existing chat found, create new one
-        Chat newChat = new Chat(UUID.randomUUID().toString());
+        // 没有就创建一份放进内存（对 Firebase 历史不影响）
+        Chat newChat = new Chat(stableChatId);
         newChat.addParticipant(userId1);
         newChat.addParticipant(userId2);
-        Chat saved = chatRepository.save(newChat);
-        return saved.getId();
+        chatRepository.save(newChat);
+
+        return stableChatId;
     }
 
     @Override

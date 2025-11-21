@@ -40,25 +40,18 @@ public class ViewChatHistoryInteractor implements ViewChatHistoryInputBoundary {
     public void execute(ViewChatHistoryInputData inputData) {
         String chatId = inputData.getChatId();
 
-        // 1. confirm the existence of chat
-        Optional<Chat> chatOpt = chatRepository.findById(chatId);
-        if (chatOpt.isEmpty()) {
-            presenter.prepareFailView("Chat not found: " + chatId);
-            return;
-        }
-
-        // 2. extract all the message
         List<Message> messages = messageRepository.findByChatId(chatId);
 
-        // 3. time sort
-        messages.sort(Comparator.comparing(Message::getTimestamp));
-
+        // empty history
         if (messages.isEmpty()) {
             presenter.prepareNoMessagesView(chatId);
             return;
         }
 
-        // 4. change into list
+        // sort
+        messages.sort(Comparator.comparing(Message::getTimestamp));
+
+        // change into dtos
         List<ChatMessageDto> dtos = new ArrayList<>();
         for (Message m : messages) {
             String senderName = resolveSenderName(m.getSenderUserId());
@@ -81,8 +74,7 @@ public class ViewChatHistoryInteractor implements ViewChatHistoryInputBoundary {
      * Helper: username
      */
     private String resolveSenderName(String senderUserId) {
-        Optional<User> userOpt = userRepository.findByUsername(senderUserId);
-        return userOpt.map(User::getName).orElse("Unknown");
+        return senderUserId;
     }
 }
 

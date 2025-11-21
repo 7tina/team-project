@@ -129,6 +129,20 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         JScrollPane inputScrollPane = new JScrollPane(messageInputField);
 
         sendButton = new JButton("Send");
+        // can press enter for sending messages
+        messageInputField.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
+            public void keyPressed(java.awt.event.KeyEvent e) {
+                // Enter pressed
+                if (e.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER) {
+                    String message = messageInputField.getText().trim();
+                    if (!message.isEmpty()) {
+                        sendMessageController.execute(currentChatId, currentUserId, message);
+                        messageInputField.setText("");
+                    }
+                }
+            }
+        });
         sendButton.setFont(new Font("SansSerif", Font.BOLD, 14));
         sendButton.setPreferredSize(new Dimension(80, inputScrollPane.getPreferredSize().height));
 

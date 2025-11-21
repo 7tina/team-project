@@ -183,9 +183,7 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
     private void startIndividualChat(String username) {
         // Get current logged-in user from session
         String currentUsername = loggedInViewModel.getState().getUsername();
-        Optional<User> currentUserOpt = userRepository.findByUsername(currentUsername);
-
-        if (currentUserOpt.isEmpty()) {
+        if (currentUsername == null || currentUsername.isEmpty()) {
             JOptionPane.showMessageDialog(this,
                     "Session error. Please log in again.",
                     "Error",
@@ -193,21 +191,9 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
             return;
         }
 
-        String currentUserId = currentUserOpt.get().getName();
+        String currentUserId = currentUsername; // username = id
+        String targetUserId = username;
 
-        // Find the target user
-        Optional<User> targetUserOpt = userRepository.findByUsername(username);
-        if (targetUserOpt.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "User not found: " + username,
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        String targetUserId = targetUserOpt.get().getName();
-
-        // Find existing chat or create new one
         String chatId = findOrCreateChat(currentUserId, targetUserId);
 
         // Set the chat context with the unique chat ID
@@ -222,23 +208,21 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
 
     private String findOrCreateChat(String userId1, String userId2) {
         // Find existing chat with both participants (and only these two)
-        java.util.List<Chat> allChats = chatRepository.findAll();
+        String a = userId1.compareTo(userId2) < 0 ? userId1 : userId2;
+        String b = userId1.compareTo(userId2) < 0 ? userId2 : userId1;
+        String stableChatId = "dm_" + a + "_" + b;
 
-        for (Chat chat : allChats) {
-            java.util.List<String> participants = chat.getParticipantUserIds();  // Changed from getParticipants()
-            if (participants.size() == 2 &&
-                    participants.contains(userId1) &&
-                    participants.contains(userId2)) {
-                return chat.getId();
-            }
-        }
+        // find id
+        Optional<Chat> existing = chatRepository.findById(stableChatId);
+        if (existing.isPresent()) return stableChatId;
 
-        // No existing chat found, create new one
-        Chat newChat = new Chat(UUID.randomUUID().toString());
+        // if not find chatid (creat a new window)
+        Chat newChat = new Chat(stableChatId);
         newChat.addParticipant(userId1);
         newChat.addParticipant(userId2);
-        Chat saved = chatRepository.save(newChat);
-        return saved.getId();
+        chatRepository.save(newChat);
+
+        return stableChatId;
     }
 
     @Override
@@ -271,7 +255,7 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
                     // Navigate to chat view with the new group chat
                     chatView.setChatContext(
                             chatState.getChatId(),
-                            "user-1",  // TODO: Get from session/logged in user
+                            chatState.getChatId(),
                             chatState.getGroupName(),
                             true  // isGroupChat = true
                     );
@@ -333,14 +317,11 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
         if (createGroupChatController != null) {
             // Get current logged-in user from session
             String currentUsername = loggedInViewModel.getState().getUsername();
-            Optional<User> currentUserOpt = userRepository.findByUsername(currentUsername);
-
-            if (currentUserOpt.isEmpty()) {
+            if (currentUsername == null || currentUsername.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Session error. Please log in again.");
                 return;
             }
-
-            String currentUserId = currentUserOpt.get().getName();
+            String currentUserId = currentUsername;
 
             createGroupChatController.execute(currentUserId, usernames, groupName.trim());
         } else {

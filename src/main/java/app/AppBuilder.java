@@ -123,9 +123,6 @@ public class AppBuilder {
     private final ChatViewModel chatViewModel = new ChatViewModel();
     private ViewChatHistoryController viewChatHistoryController;
 
-    private final String messagingUserId;
-    private final String messagingChatId;
-
     public AppBuilder() {
         cardPanel.setLayout(cardLayout);
 
@@ -141,16 +138,6 @@ public class AppBuilder {
             System.out.println("Fallback to InMemoryMessageRepository");
         }
         this.messageRepository = repo;
-
-        // Use repo to store
-        User me = userFactory.create("user-1", "demo");
-        me = userRepository.save(me);
-        messagingUserId = me.getName();
-
-        entity.Chat c = new entity.Chat("chat-1");
-        c.addParticipant(messagingUserId);
-        c = chatRepository.save(c);
-        messagingChatId = c.getId();
     }
 
     public AppBuilder addWelcomeView() {
@@ -304,20 +291,20 @@ public class AppBuilder {
     }
 
     public AppBuilder addChatUseCase() {
-        SendMessageController sendMessageController;
-        // Presenter send and history
+        // --- Presenter for Sending Message ---
         SendMessageOutputBoundary sendMessagePresenter =
                 new SendMessagePresenter(chatViewModel, viewManagerModel);
 
+        // --- Presenter for Viewing History ---
         ViewChatHistoryOutputBoundary viewHistoryPresenter =
                 new ViewChatHistoryPresenter(chatViewModel, viewManagerModel);
 
-        // Interactor
+        //  Interactors
         SendMessageInputBoundary sendMessageInteractor =
                 new SendMessageInteractor(
                         chatRepository,
                         messageRepository,
-                        userRepository,
+                        userDataAccessObject,   // Firebase user dao
                         sendMessagePresenter
                 );
 
@@ -329,18 +316,21 @@ public class AppBuilder {
                         viewHistoryPresenter
                 );
 
-        // Controller
+        // Controllers
         viewChatHistoryController = new ViewChatHistoryController(viewHistoryInteractor);
-        sendMessageController = new SendMessageController(sendMessageInteractor);
+        SendMessageController sendMessageController = new SendMessageController(sendMessageInteractor);
 
-
-        // view
-        chatView = new ChatView(viewManagerModel, loggedInViewModel, sendMessageController, viewChatHistoryController);
+        // CREATE ChatView HERE
+        chatView = new ChatView(
+                viewManagerModel,
+                loggedInViewModel,
+                sendMessageController,
+                viewChatHistoryController
+        );
         chatViewModel.addPropertyChangeListener(chatView);
+
+        // Add ChatView to cardPanel
         cardPanel.add(chatView, chatView.getViewName());
-
-        chatView.setChatContext(messagingChatId, messagingUserId, "hi", false);
-
         return this;
     }
 }

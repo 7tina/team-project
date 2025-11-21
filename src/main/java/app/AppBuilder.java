@@ -123,9 +123,6 @@ public class AppBuilder {
     private final ChatViewModel chatViewModel = new ChatViewModel();
     private ViewChatHistoryController viewChatHistoryController;
 
-    private final String messagingUserId;
-    private final String messagingChatId;
-
     public AppBuilder() {
         cardPanel.setLayout(cardLayout);
 
@@ -141,16 +138,6 @@ public class AppBuilder {
             System.out.println("Fallback to InMemoryMessageRepository");
         }
         this.messageRepository = repo;
-
-        // Use repo to store
-        User me = userFactory.create("user-1", "demo");
-        me = userRepository.save(me);
-        messagingUserId = me.getName();
-
-        entity.Chat c = new entity.Chat("chat-1");
-        c.addParticipant(messagingUserId);
-        c = chatRepository.save(c);
-        messagingChatId = c.getId();
     }
 
     public AppBuilder addWelcomeView() {
@@ -317,7 +304,7 @@ public class AppBuilder {
                 new SendMessageInteractor(
                         chatRepository,
                         messageRepository,
-                        userRepository,
+                        userDataAccessObject,
                         sendMessagePresenter
                 );
 
@@ -332,14 +319,6 @@ public class AppBuilder {
         // Controller
         viewChatHistoryController = new ViewChatHistoryController(viewHistoryInteractor);
         sendMessageController = new SendMessageController(sendMessageInteractor);
-
-
-        // view
-        chatView = new ChatView(viewManagerModel, loggedInViewModel, sendMessageController, viewChatHistoryController);
-        chatViewModel.addPropertyChangeListener(chatView);
-        cardPanel.add(chatView, chatView.getViewName());
-
-        chatView.setChatContext(messagingChatId, messagingUserId, "hi", false);
 
         return this;
     }

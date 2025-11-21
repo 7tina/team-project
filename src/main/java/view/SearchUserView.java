@@ -212,11 +212,11 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
         String b = userId1.compareTo(userId2) < 0 ? userId2 : userId1;
         String stableChatId = "dm_" + a + "_" + b;
 
-        // 先看看内存里有没有（有就直接用）
+        // find id
         Optional<Chat> existing = chatRepository.findById(stableChatId);
         if (existing.isPresent()) return stableChatId;
 
-        // 没有就创建一份放进内存（对 Firebase 历史不影响）
+        // if not find chatid (creat a new window)
         Chat newChat = new Chat(stableChatId);
         newChat.addParticipant(userId1);
         newChat.addParticipant(userId2);

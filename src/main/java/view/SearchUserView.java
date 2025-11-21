@@ -183,9 +183,7 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
     private void startIndividualChat(String username) {
         // Get current logged-in user from session
         String currentUsername = loggedInViewModel.getState().getUsername();
-        Optional<User> currentUserOpt = userRepository.findByUsername(currentUsername);
-
-        if (currentUserOpt.isEmpty()) {
+        if (currentUsername == null || currentUsername.isEmpty()) {
             JOptionPane.showMessageDialog(this,
                     "Session error. Please log in again.",
                     "Error",
@@ -193,21 +191,9 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
             return;
         }
 
-        String currentUserId = currentUserOpt.get().getName();
+        String currentUserId = currentUsername; // username = id
+        String targetUserId = username;
 
-        // Find the target user
-        Optional<User> targetUserOpt = userRepository.findByUsername(username);
-        if (targetUserOpt.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "User not found: " + username,
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        String targetUserId = targetUserOpt.get().getName();
-
-        // Find existing chat or create new one
         String chatId = findOrCreateChat(currentUserId, targetUserId);
 
         // Set the chat context with the unique chat ID
@@ -271,7 +257,7 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
                     // Navigate to chat view with the new group chat
                     chatView.setChatContext(
                             chatState.getChatId(),
-                            "user-1",  // TODO: Get from session/logged in user
+                            chatState.getChatId(),
                             chatState.getGroupName(),
                             true  // isGroupChat = true
                     );
@@ -333,14 +319,11 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
         if (createGroupChatController != null) {
             // Get current logged-in user from session
             String currentUsername = loggedInViewModel.getState().getUsername();
-            Optional<User> currentUserOpt = userRepository.findByUsername(currentUsername);
-
-            if (currentUserOpt.isEmpty()) {
+            if (currentUsername == null || currentUsername.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Session error. Please log in again.");
                 return;
             }
-
-            String currentUserId = currentUserOpt.get().getName();
+            String currentUserId = currentUsername;
 
             createGroupChatController.execute(currentUserId, usernames, groupName.trim());
         } else {

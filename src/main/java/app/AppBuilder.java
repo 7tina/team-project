@@ -291,20 +291,20 @@ public class AppBuilder {
     }
 
     public AppBuilder addChatUseCase() {
-        SendMessageController sendMessageController;
-        // Presenter send and history
+        // --- Presenter for Sending Message ---
         SendMessageOutputBoundary sendMessagePresenter =
                 new SendMessagePresenter(chatViewModel, viewManagerModel);
 
+        // --- Presenter for Viewing History ---
         ViewChatHistoryOutputBoundary viewHistoryPresenter =
                 new ViewChatHistoryPresenter(chatViewModel, viewManagerModel);
 
-        // Interactor
+        //  Interactors
         SendMessageInputBoundary sendMessageInteractor =
                 new SendMessageInteractor(
                         chatRepository,
                         messageRepository,
-                        userDataAccessObject,
+                        userDataAccessObject,   // Firebase user dao
                         sendMessagePresenter
                 );
 
@@ -316,10 +316,21 @@ public class AppBuilder {
                         viewHistoryPresenter
                 );
 
-        // Controller
+        // Controllers
         viewChatHistoryController = new ViewChatHistoryController(viewHistoryInteractor);
-        sendMessageController = new SendMessageController(sendMessageInteractor);
+        SendMessageController sendMessageController = new SendMessageController(sendMessageInteractor);
 
+        // CREATE ChatView HERE
+        chatView = new ChatView(
+                viewManagerModel,
+                loggedInViewModel,
+                sendMessageController,
+                viewChatHistoryController
+        );
+        chatViewModel.addPropertyChangeListener(chatView);
+
+        // Add ChatView to cardPanel
+        cardPanel.add(chatView, chatView.getViewName());
         return this;
     }
 }

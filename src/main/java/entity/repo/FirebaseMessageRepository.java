@@ -9,7 +9,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
-public class FirebaseMessageRepository implements MessageRepository {
+public class FirebaseMessageRepository {
 
     private static final String COLLECTION = "messages";
     private final Firestore db;
@@ -23,7 +23,6 @@ public class FirebaseMessageRepository implements MessageRepository {
         this.db = db;
     }
 
-    @Override
     public Optional<Message> findById(String id) {
         try {
             DocumentReference docRef = db.collection(COLLECTION).document(id);
@@ -39,7 +38,6 @@ public class FirebaseMessageRepository implements MessageRepository {
     }
 
     /** -------------------- SAVE MESSAGE -------------------- **/
-    @Override
     public Message save(Message message) {
         try {
             Map<String, Object> data = new HashMap<>();
@@ -68,7 +66,6 @@ public class FirebaseMessageRepository implements MessageRepository {
     }
 
     /** -------------------- FIND MESSAGES BY CHAT ID -------------------- **/
-    @Override
     public List<Message> findByChatId(String chatId) {
         try {
             CollectionReference col = db.collection(COLLECTION);
@@ -93,7 +90,6 @@ public class FirebaseMessageRepository implements MessageRepository {
     }
 
     /** -------------------- DELETE BY ID -------------------- **/
-    @Override
     public void deleteById(String id) {
         try {
             DocumentReference doc = db.collection(COLLECTION).document(id);

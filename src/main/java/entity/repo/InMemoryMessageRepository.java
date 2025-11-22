@@ -6,6 +6,9 @@ import entity.ports.MessageRepository;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Will only store the messages of the current chat and will clear when not in use.
+*/
 public class InMemoryMessageRepository implements MessageRepository {
 
     private final Map<String, Message> messages = new HashMap<>();
@@ -32,4 +35,7 @@ public class InMemoryMessageRepository implements MessageRepository {
     public void deleteById(String id) {
         messages.remove(id);
     }
+
+    @Override
+    public void clear() {this.messages.clear();}
 }

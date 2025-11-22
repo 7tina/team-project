@@ -1,7 +1,5 @@
 package use_case.messaging.view_history;
 
-import use_case.messaging.ChatMessageDto;
-
 import java.util.List;
 
 /**
@@ -10,9 +8,9 @@ import java.util.List;
 public class ViewChatHistoryOutputData {
 
     private final String chatId;
-    private final List<ChatMessageDto> messages;
+    private final List<String[]> messages;
 
-    public ViewChatHistoryOutputData(String chatId, List<ChatMessageDto> messages) {
+    public ViewChatHistoryOutputData(String chatId, List<String[]> messages) {
         this.chatId = chatId;
         this.messages = messages;
     }
@@ -21,7 +19,7 @@ public class ViewChatHistoryOutputData {
         return chatId;
     }
 
-    public List<ChatMessageDto> getMessages() {
+    public List<String[]> getMessages() {
         return messages;
     }
 }

@@ -5,11 +5,12 @@ import entity.UserFactory;
 import entity.User;
 import entity.ports.ChatRepository;
 import entity.ports.UserRepository;
-import entity.repo.FirebaseMessageRepository;
 import entity.repo.InMemoryChatRepository;
 import entity.repo.InMemoryMessageRepository;
 import entity.repo.InMemoryUserRepository;
 import interface_adapter.ViewManagerModel;
+import interface_adapter.create_chat.CreateChatController;
+import interface_adapter.create_chat.CreateChatPresenter;
 import interface_adapter.logged_in.ChangePasswordController;
 import interface_adapter.logged_in.ChangePasswordPresenter;
 import interface_adapter.logged_in.LoggedInViewModel;
@@ -35,6 +36,9 @@ import interface_adapter.groupchat.GroupChatViewModel;
 import interface_adapter.messaging.send_m.SendMessageController;
 import interface_adapter.messaging.send_m.SendMessagePresenter;
 import interface_adapter.messaging.send_m.ChatViewModel;
+import use_case.create_chat.CreateChatInputBoundary;
+import use_case.create_chat.CreateChatInteractor;
+import use_case.create_chat.CreateChatOutputBoundary;
 import use_case.messaging.send_m.SendMessageInputBoundary;
 import use_case.messaging.send_m.SendMessageOutputBoundary;
 import use_case.messaging.send_m.SendMessageInteractor;
@@ -82,7 +86,8 @@ public class AppBuilder {
             new InMemoryChatRepository();
 
     // MessageRepository
-    private final MessageRepository messageRepository;
+    private final MessageRepository messageRepository =
+            new InMemoryMessageRepository();
 
     // UserRepository
     private final UserRepository userRepository =
@@ -98,6 +103,9 @@ public class AppBuilder {
     // DAO version using a shared external database
     static final String serviceAccountKeyPath = "src/main/resources/serviceAccountKey.json";
     final FireBaseUserDataAccessObject userDataAccessObject = new FireBaseUserDataAccessObject(
+            userRepository,
+            chatRepository,
+            messageRepository,
             serviceAccountKeyPath,
             userFactory
     );
@@ -116,41 +124,13 @@ public class AppBuilder {
     private final SearchUserViewModel searchUserViewModel = new SearchUserViewModel();
     private SearchUserView searchUserView;
 
+    // Field for send message
+    private final ChatViewModel chatViewModel = new ChatViewModel();
     private final GroupChatViewModel groupChatViewModel = new GroupChatViewModel();
     private ChatSettingView chatSettingView;
 
-    // Field for send message
-    private final ChatViewModel chatViewModel = new ChatViewModel();
-    private ViewChatHistoryController viewChatHistoryController;
-
-    private final String messagingUserId;
-    private final String messagingChatId;
-
     public AppBuilder() {
         cardPanel.setLayout(cardLayout);
-
-        MessageRepository repo;
-        try {
-            com.google.cloud.firestore.Firestore db =
-                    data_access.FirebaseClientProvider.getFirestore();
-            repo = new FirebaseMessageRepository(db);
-            System.out.println("Using FirebaseMessageRepository");
-        } catch (Exception e) {
-            e.printStackTrace();
-            repo = new InMemoryMessageRepository();
-            System.out.println("Fallback to InMemoryMessageRepository");
-        }
-        this.messageRepository = repo;
-
-        // Use repo to store
-        User me = userFactory.create("user-1", "demo");
-        me = userRepository.save(me);
-        messagingUserId = me.getName();
-
-        entity.Chat c = new entity.Chat("chat-1");
-        c.addParticipant(messagingUserId);
-        c = chatRepository.save(c);
-        messagingChatId = c.getId();
     }
 
     public AppBuilder addWelcomeView() {
@@ -270,10 +250,7 @@ public class AppBuilder {
         this.searchUserView = new SearchUserView(
                 viewManagerModel,
                 searchUserViewModel,
-                chatView,
                 groupChatViewModel,
-                chatRepository,
-                userRepository,
                 loggedInViewModel
         );
         cardPanel.add(searchUserView, searchUserView.getViewName());
@@ -290,8 +267,9 @@ public class AppBuilder {
 
         final SearchUserInputBoundary searchUsersInteractor =
                 new SearchUserInteractor(
-                        (SearchUserDataAccessInterface) userDataAccessObject,
-                        searchUserOutputBoundary
+                        userDataAccessObject,
+                        searchUserOutputBoundary,
+                        userRepository
                 );
 
         final SearchUserController searchUserController = new SearchUserController(searchUsersInteractor);
@@ -303,8 +281,34 @@ public class AppBuilder {
         return this;
     }
 
+    public AppBuilder addCreateChatUseCase() {
+        final CreateChatOutputBoundary createChatOutputBoundary =
+                new CreateChatPresenter(viewManagerModel, chatViewModel);
+
+        final CreateChatInputBoundary createChatInteractor =
+                new CreateChatInteractor(
+                        createChatOutputBoundary,
+                        userDataAccessObject,
+                        chatRepository,
+                        userRepository
+                );
+
+        final CreateChatController createChatController = new CreateChatController(createChatInteractor);
+
+        if (this.searchUserView != null) {
+            this.searchUserView.setCreateChatController(createChatController);
+        }
+
+        return this;
+    }
+
+    public AppBuilder addChatView() {
+        this.chatView = new ChatView(viewManagerModel, chatViewModel, loggedInViewModel);
+        cardPanel.add(chatView, chatView.getViewName());
+        return this;
+    }
+
     public AppBuilder addChatUseCase() {
-        SendMessageController sendMessageController;
         // Presenter send and history
         SendMessageOutputBoundary sendMessagePresenter =
                 new SendMessagePresenter(chatViewModel, viewManagerModel);
@@ -318,7 +322,8 @@ public class AppBuilder {
                         chatRepository,
                         messageRepository,
                         userRepository,
-                        sendMessagePresenter
+                        sendMessagePresenter,
+                        userDataAccessObject
                 );
 
         ViewChatHistoryInputBoundary viewHistoryInteractor =
@@ -326,20 +331,18 @@ public class AppBuilder {
                         chatRepository,
                         messageRepository,
                         userRepository,
-                        viewHistoryPresenter
+                        viewHistoryPresenter,
+                        userDataAccessObject
                 );
 
         // Controller
-        viewChatHistoryController = new ViewChatHistoryController(viewHistoryInteractor);
-        sendMessageController = new SendMessageController(sendMessageInteractor);
+        ViewChatHistoryController viewChatHistoryController = new ViewChatHistoryController(viewHistoryInteractor);
+        SendMessageController sendMessageController = new SendMessageController(sendMessageInteractor);
 
-
-        // view
-        chatView = new ChatView(viewManagerModel, loggedInViewModel, sendMessageController, viewChatHistoryController);
-        chatViewModel.addPropertyChangeListener(chatView);
-        cardPanel.add(chatView, chatView.getViewName());
-
-        chatView.setChatContext(messagingChatId, messagingUserId, "hi", false);
+        if (this.chatView != null) {
+            this.chatView.setSendMessageController(sendMessageController);
+            this.chatView.setViewChatHistoryController(viewChatHistoryController);
+        }
 
         return this;
     }

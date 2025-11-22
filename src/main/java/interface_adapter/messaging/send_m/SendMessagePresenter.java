@@ -1,7 +1,6 @@
 package interface_adapter.messaging.send_m;
 
 import interface_adapter.ViewManagerModel;
-import use_case.messaging.ChatMessageDto;
 import use_case.messaging.send_m.SendMessageOutputBoundary;
 import use_case.messaging.send_m.SendMessageOutputData;
 
@@ -19,9 +18,9 @@ public class SendMessagePresenter implements SendMessageOutputBoundary {
     @Override
     public void prepareSuccessView(SendMessageOutputData outputData) {
         ChatState state = chatViewModel.getState();
-        ChatMessageDto dto = outputData.getMessage();
+        String[] msg = outputData.getMessage();
 
-        state.addMessage(dto);
+        state.addMessage(msg);
         state.setError(null);
 
         chatViewModel.firePropertyChange();

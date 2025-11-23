@@ -21,6 +21,7 @@ public class SendMessagePresenter implements SendMessageOutputBoundary {
         String[] msg = outputData.getMessage();
 
         state.addMessage(msg);
+        state.addMessageId(msg[0]);
         state.setError(null);
 
         chatViewModel.firePropertyChange();

@@ -428,4 +428,40 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
             throw new RuntimeException("Failed to load chat", e);
         }
     }
+
+    //TODO: These methods COULD be used for the delete and edit chat use cases (you don't necessarily have to).
+    /** -------------------- FIND MESSAGES BY CHAT ID -------------------- **/
+    public List<Message> findByChatId(String chatId) {
+        try {
+            CollectionReference col = db.collection(COLLECTION_MESSAGE);
+
+            Query query = col
+                    .whereEqualTo(MESSAGE_CHAT_ID, chatId)
+                    .orderBy(MESSAGE_TIME, Query.Direction.ASCENDING);
+
+            ApiFuture<QuerySnapshot> future = query.get();
+            QuerySnapshot snapshot = future.get();
+
+            List<Message> results = new ArrayList<>();
+            for (QueryDocumentSnapshot doc : snapshot.getDocuments()) {
+                results.add(toMessage(doc));
+            }
+
+            return results;
+
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException("Failed to load chat messages", e);
+        }
+    }
+
+    /** -------------------- DELETE BY ID -------------------- **/
+    public void deleteById(String id) {
+        try {
+            DocumentReference doc = db.collection(COLLECTION_MESSAGE).document(id);
+            ApiFuture<WriteResult> future = doc.delete();
+            future.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException("Failed to delete message", e);
+        }
+    }
 }

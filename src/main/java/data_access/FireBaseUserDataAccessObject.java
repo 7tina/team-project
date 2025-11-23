@@ -22,11 +22,13 @@ import use_case.messaging.view_history.ViewChatHistoryDataAccessInterface;
 import use_case.search_user.SearchUserDataAccessInterface;
 import use_case.signup.SignupUserDataAccessInterface;
 
+import java.awt.*;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -63,11 +65,15 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
     private static final String CHAT_NAME = "Groupname";
     private static final String CHAT_USERS = "participants";
     private static final String CHAT_MESSAGE = "messageIds";
+    private static final String CHAT_COLOR = "colorhex";
+    private static final String CHAT_RECENT = "recent";
     private static final String COLLECTION_MESSAGE = "messages";
     private static final String MESSAGE_CHAT_ID = "chatId";
     private static final String MESSAGE_CONTENT = "content";
-    private static final String MESSAGES_SENDER = "senderUserId";
+    private static final String MESSAGE_SENDER = "senderUserId";
     private static final String MESSAGE_TIME = "timestamp";
+    private static final String MESSAGE_REPLY_ID = "repliedId";
+    private static final String MESSAGE_REACTION = "reactions";
     private final Firestore db;
     private final UserFactory userFactory;
     private String currentUsername;
@@ -275,9 +281,14 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
             for (QueryDocumentSnapshot document : documents) {
                 String chatId = document.getId();
                 String groupName = document.getString(CHAT_NAME);
+                Color chatColor = Color.decode(document.getString(CHAT_COLOR));
+                Long timeMs = document.getLong(CHAT_RECENT);
+                Instant timestamp = timeMs != null
+                        ? Instant.ofEpochMilli(timeMs)
+                        : Instant.now();
                 List<String> participants = (List<String>) document.get(CHAT_USERS);
                 if (participants.contains(username)) {
-                    Chat chat = new Chat(chatId, groupName);
+                    Chat chat = new Chat(chatId, groupName, chatColor, timestamp);
                     List<String> messageIds = (List<String>) document.get(CHAT_MESSAGE);
                     for (String participant : participants) {
                         chat.addParticipant(participant);
@@ -301,6 +312,8 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
             data.put(CHAT_NAME, chat.getGroupName());
             data.put(CHAT_USERS, chat.getParticipantUserIds());
             data.put(CHAT_MESSAGE, chat.getMessageIds());
+            data.put(CHAT_COLOR, colorToHex(chat.getBackgroundColor()));
+            data.put(CHAT_RECENT, chat.getLastMessage().toEpochMilli());
 
             CollectionReference col = db.collection(COLLECTION_CHAT);
             DocumentReference doc = col.document(chat.getId());
@@ -312,6 +325,10 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
         }
         chatRepository.save(chat);
         return chat;
+    }
+
+    private String colorToHex(Color color) {
+        return String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
     }
 
     @Override
@@ -337,15 +354,21 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
     private Message toMessage(DocumentSnapshot doc) {
         String id = doc.getId();
         String chatId = doc.getString(MESSAGE_CHAT_ID);
-        String senderId = doc.getString(MESSAGES_SENDER);
+        String senderId = doc.getString(MESSAGE_SENDER);
         String content = doc.getString(MESSAGE_CONTENT);
-
+        String repliedId = doc.getString(MESSAGE_REPLY_ID);
+        Map<String, String> reactions = (Map<String, String>) doc.get(MESSAGE_REACTION);
         Long timeMs = doc.getLong(MESSAGE_TIME);
         Instant timestamp = timeMs != null
                 ? Instant.ofEpochMilli(timeMs)
                 : Instant.now();
 
-        return new Message(id, chatId, senderId, content, timestamp);
+        Message message = new Message(id, chatId, senderId, repliedId, content, timestamp);
+        assert reactions != null;
+        for (Map.Entry<String, String> reaction : reactions.entrySet()) {
+            message.addReaction(reaction.getKey(), reaction.getValue());
+        }
+        return message;
     }
 
     @Override
@@ -353,7 +376,9 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
         try {
             Map<String, Object> data = new HashMap<>();
             data.put(MESSAGE_CHAT_ID, message.getChatId());
-            data.put(MESSAGES_SENDER, message.getSenderUserId());
+            data.put(MESSAGE_SENDER, message.getSenderUserId());
+            data.put(MESSAGE_REPLY_ID, message.getRepliedMessageId());
+            data.put(MESSAGE_REACTION, message.getReactions());
             data.put(MESSAGE_CONTENT, message.getContent());
             data.put(MESSAGE_TIME, message.getTimestamp().toEpochMilli());
 
@@ -362,7 +387,7 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
             if (message.getId() == null || message.getId().isEmpty()) {
                 // Auto-generate ID
                 ApiFuture<DocumentReference> future = col.add(data);
-                DocumentReference ref = future.get();
+                future.get();
                 messageRepository.save(message);
                 return message;
             } else {

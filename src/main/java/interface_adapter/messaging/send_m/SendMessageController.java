@@ -10,8 +10,8 @@ public class SendMessageController {
         this.interactor = interactor;
     }
 
-    public void execute(String chatId, String senderUserId, String content) {
-        SendMessageInputData inputData = new SendMessageInputData(chatId, senderUserId, content);
+    public void execute(String chatId, String senderUserId, String repliedMessageId, String content) {
+        SendMessageInputData inputData = new SendMessageInputData(chatId, senderUserId, repliedMessageId, content);
         interactor.execute(inputData);
     }
 }

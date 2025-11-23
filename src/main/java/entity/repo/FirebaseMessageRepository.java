@@ -112,6 +112,6 @@ public class FirebaseMessageRepository {
                 ? Instant.ofEpochMilli(timeMs)
                 : Instant.now();
 
-        return new Message(id, chatId, senderId, content, timestamp);
+        return new Message(id, chatId, senderId, null, content, timestamp);
     }
 }

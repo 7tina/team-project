@@ -1,13 +1,11 @@
 package use_case.messaging.send_m;
 
-import use_case.messaging.ChatMessageDto;
-
 public class SendMessageOutputData {
 
     private final String chatId;
-    private final ChatMessageDto message;
+    private final String[] message;
 
-    public SendMessageOutputData(String chatId, ChatMessageDto message) {
+    public SendMessageOutputData(String chatId, String[] message) {
         this.chatId = chatId;
         this.message = message;
     }
@@ -16,7 +14,7 @@ public class SendMessageOutputData {
         return chatId;
     }
 
-    public ChatMessageDto getMessage() {
+    public String[] getMessage() {
         return message;
     }
 }

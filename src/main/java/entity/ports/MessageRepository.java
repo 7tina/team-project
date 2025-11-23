@@ -9,4 +9,5 @@ public interface MessageRepository {
     Message save(Message message);
     List<Message> findByChatId(String chatId);
     void deleteById(String id);
+    void clear();
 }

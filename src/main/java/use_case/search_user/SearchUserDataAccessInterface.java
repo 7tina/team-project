@@ -8,5 +8,5 @@ public interface SearchUserDataAccessInterface {
      * @param query The search string.
      * @return A list of matching usernames (String).
      */
-    List<String> searchUsers(String query);
+    List<String> searchUsers(String userId, String query);
 }

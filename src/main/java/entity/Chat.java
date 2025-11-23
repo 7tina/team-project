@@ -9,9 +9,9 @@ public class Chat {
     private final List<String> messageIds = new ArrayList<>();
     private String groupName;
 
-    public Chat(String id) {
+    public Chat(String id, String groupName) {
         this.id = id;
-        this.groupName = null;
+        this.groupName = groupName;
     }
 
     public String getId() { return id; }

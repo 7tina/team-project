@@ -1,28 +1,96 @@
 package interface_adapter.messaging.send_m;
 
-import use_case.messaging.ChatMessageDto;
-
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The state object stored inside ChatViewModel.
  */
 public class ChatState {
 
-    private final List<ChatMessageDto> messages = new ArrayList<>();
+    private boolean first;
+    private String chatId;
+    private final List<String> participants = new ArrayList<>();
+    private final List<String> messageIds = new ArrayList<>();
+    private final List<String[]> messages = new ArrayList<>();
+    // Key: messageId, Value: nested key: userId, nested value: reaction
+    private final Map<String, Map<String, String>> messageToReaction = new HashMap<>();
+    private String groupName;
+    private boolean success;
     private String error;
 
-    public List<ChatMessageDto> getMessages() {
-        return new ArrayList<>(messages);
+    public ChatState() {}
+
+    public boolean getFirst() {return first;}
+
+    public void chatViewStart() {first=true;}
+
+    public void chatViewStop() {first=false;}
+
+    public String getChatId() {
+        return chatId;
     }
 
-    public void addMessage(ChatMessageDto message) {
-        messages.add(message);
+    public void setChatId(String chatId) {
+        this.chatId = chatId;
     }
+
+    public List<String> getParticipants() {return participants;}
+
+    public void addParticipant(String participant) {this.participants.add(participant);}
+
+    public void removeParticipant(String participant) {this.participants.remove(participant);}
+
+    public List<String> getMessageIds() {return messageIds;}
+
+    public void addMessageId(String messageId) {messageIds.add(messageId);}
+
+    public void clearMessageIds() {
+        messageIds.clear();
+    }
+
+    public List<String[]> getMessages() {return messages;}
+
+    public void addMessage(String[] message) {messages.add(message);}
 
     public void clearMessages() {
         messages.clear();
+    }
+
+    public Map<String, Map<String, String>> getMessageToReaction() {return messageToReaction;}
+
+    public void addReaction(String messageId, String userId, String reaction) {
+        Map<String, String> reactions = messageToReaction.get(messageId);
+        if (reactions != null) {reactions.put(userId, reaction);}
+        messageToReaction.put(messageId, reactions);
+    }
+
+    public void removeReaction(String messageId, String userId, String reaction) {
+        Map<String, String> reactions = messageToReaction.get(messageId);
+        if (reactions != null && reactions.containsKey(userId) && reactions.get(userId).equals(reaction)) {
+            reactions.remove(userId, reaction);
+        }
+        messageToReaction.put(messageId, reactions);
+    }
+
+    public void clearReactions() {messageToReaction.clear();}
+
+    public String getGroupName() {
+        return groupName;
+    }
+
+    public void setGroupName(String groupName) {
+        this.groupName = groupName;
+    }
+
+    public boolean isSuccess() {
+        return success;
+    }
+
+    public void setSuccess(boolean success) {
+        this.success = success;
     }
 
     public String getError() {

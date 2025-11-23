@@ -1,12 +1,11 @@
 package view;
 
 import interface_adapter.ViewManagerModel;
-import interface_adapter.logged_in.LoggedInState;
 import interface_adapter.logged_in.LoggedInViewModel;
+import interface_adapter.messaging.send_m.ChatViewModel;
 import interface_adapter.messaging.send_m.SendMessageController;
 import interface_adapter.messaging.send_m.ChatState;
 import interface_adapter.messaging.view_history.ViewChatHistoryController;
-import use_case.messaging.ChatMessageDto;
 
 import java.util.List;
 import javax.swing.*;
@@ -20,18 +19,18 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
 
     public final String viewName = "chat";
     private final ViewManagerModel viewManagerModel;
+    private final ChatViewModel chatViewModel;
     private final LoggedInViewModel loggedInViewModel;
-    private final SendMessageController sendMessageController;
-    private final ViewChatHistoryController viewChatHistoryController;
+    private SendMessageController sendMessageController;
+    private ViewChatHistoryController viewChatHistoryController;
 
     private String currentChatId;
     private String currentUserId;
     private boolean isGroupChat;
 
-    private ChatSettingView chatSettingView;
-
     // Components
     private final JLabel chatPartnerLabel; // Displays the name of the user you're chatting with
+    private final JLabel replyingToLabel;
     private final JTextArea messageInputField;
     private final JButton sendButton;
     private final JButton settingButton;
@@ -40,25 +39,14 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
     private final JPanel chatDisplayPanel;
     private final JLabel initialPrompt;
 
-    public ChatView(ViewManagerModel viewManagerModel, LoggedInViewModel loggedInViewModel, SendMessageController sendMessageController,
-                    interface_adapter.messaging.view_history.ViewChatHistoryController viewChatHistoryController) {
+    public ChatView(ViewManagerModel viewManagerModel,
+                    ChatViewModel chatViewModel,
+                    LoggedInViewModel loggedInViewModel) {
         this.viewManagerModel = viewManagerModel;
+        this.chatViewModel = chatViewModel;
         this.loggedInViewModel = loggedInViewModel;
-        this.sendMessageController = sendMessageController;
-        this.viewChatHistoryController = viewChatHistoryController;
+        this.chatViewModel.addPropertyChangeListener(this);
         this.setLayout(new BorderLayout());
-
-        // Keep the current username updated.
-        //this.viewManagerModel.addPropertyChangeListener(
-        //        e -> this.currentChatId = e.getNewValue().toString()
-        //);
-
-        //this.loggedInViewModel.addPropertyChangeListener(
-        //        e -> {
-        //            System.out.println();
-        //            this.currentUserId = ((LoggedInState) e.getNewValue()).getUsername();
-        //        }
-        //);
 
         // Top Bar (Chat Partner and Exit/Back Button)
         JPanel topBar = new JPanel(new BorderLayout());
@@ -69,7 +57,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         // Using the Profile icon again, but this time for the chat partner
         JLabel partnerIcon = new JLabel("👤");
         partnerIcon.setFont(new Font("SansSerif", Font.PLAIN, 24));
-        chatPartnerLabel = new JLabel("User"); // Placeholder
+        chatPartnerLabel = new JLabel(this.chatViewModel.getState().getGroupName()); // Placeholder
         chatPartnerLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
 
         // Right Side: Back/Exit Button (Go back to LoggedInView/Recent Chats)
@@ -78,6 +66,9 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
 
         backButton.addActionListener(e -> {
             // Navigate back to the LoggedInView
+//            chatViewModel.getState().chatViewStop();
+//            chatViewModel.firePropertyChange();
+//            will be working on this later for recent chats.
             viewManagerModel.setState("logged in");
             viewManagerModel.firePropertyChange();
         });
@@ -87,15 +78,12 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         partnerInfoPanel.add(chatPartnerLabel);
         topBar.add(partnerInfoPanel, BorderLayout.WEST);
 
-        // Right Side: Back/Exit Button (Go back to LoggedInView/Recent Chats)
+        // Right Side: Chat Settings Button
         settingButton = new JButton("⛭");  // NEW - assigns to field
         settingButton.setFont(new Font("SansSerif", Font.BOLD, 20));
 
         settingButton.addActionListener(e -> {
-            // Pass the current chat ID to settings view before navigating
-            if (chatSettingView != null) {
-                chatSettingView.setChatId(currentChatId);
-            }
+            //TODO: Make this into an actual Use Case
             viewManagerModel.setState("chat setting");
             viewManagerModel.firePropertyChange();
         });
@@ -123,7 +111,8 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         JPanel inputPanel = new JPanel(new BorderLayout(5, 5));
         inputPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 10, 10)); // Padding
 
-        messageInputField = new JTextArea(3, 1);
+        replyingToLabel = new JLabel("Replying to:");
+        messageInputField = new JTextArea(1, 1);
         messageInputField.setLineWrap(true);
         messageInputField.setWrapStyleWord(true);
         JScrollPane inputScrollPane = new JScrollPane(messageInputField);
@@ -134,6 +123,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
 
         sendButton.addActionListener(this);
 
+        inputPanel.add(replyingToLabel, BorderLayout.NORTH);
         inputPanel.add(inputScrollPane, BorderLayout.CENTER);
         inputPanel.add(sendButton, BorderLayout.EAST);
 
@@ -148,7 +138,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         if (evt.getSource().equals(sendButton)) {
             String message = messageInputField.getText().trim();
             if (!message.isEmpty()) {
-                sendMessageController.execute(currentChatId, currentUserId, message);
+                sendMessageController.execute(currentChatId, currentUserId, replyingToLabel.getText(), message);
                 messageInputField.setText("");
             }
         }
@@ -174,31 +164,40 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
             JLabel errorLabel = new JLabel(state.getError());
             errorLabel.setForeground(Color.RED);
             chatDisplayPanel.add(errorLabel);
-        } else {
-            List<ChatMessageDto> messages = state.getMessages();
+        }
+        else if (!state.getFirst()) {
+            state.chatViewStart();
+            // Set the chat context with the unique chat ID
+            setChatContext(state.getChatId(), state.getParticipants(), state.getMessageIds(),
+                    loggedInViewModel.getState().getUsername(), state.getGroupName(), false);
+        }
+        else {
+            // Array index order: [messageId, senderUserId, messageContent, messageTimestamp]
+            List<String[]> messages = state.getMessages();
 
             if (messages.isEmpty()) {
                 chatDisplayPanel.add(initialPrompt);
             } else {
-                for (ChatMessageDto msg : messages) {
+                for (String[] msg : messages) {
                     boolean fromCurrentUser =
-                            msg.getSenderUserId().equals(currentUserId);
+                            msg[1].equals(currentUserId);
 
-                    System.out.println("sender: " + msg.getSenderUserId() + " current user id: " + currentUserId + " current chat id: " + currentChatId);
+                    System.out.println("sender: " + msg[1] + " current user id: "
+                            + currentUserId + " current chat id: " + currentChatId);
 
                     JPanel row = new JPanel(new BorderLayout());
                     row.setOpaque(false);
                     row.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
-                    String displayText = msg.getContent();
+                    String displayText = msg[2];
                     if (isGroupChat && !fromCurrentUser) {
-                        displayText = msg.getSenderName() + ": " + msg.getContent();
+                        displayText = msg[1] + ": " + msg[2];
                     }
 
                     JLabel bubble = new JLabel("<html>" + displayText + "</html>");
 
                     bubble.setOpaque(true);
-                    bubble.setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
+                    bubble.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
                     if (fromCurrentUser) {
                         bubble.setBackground(new Color(0x95EC69));
@@ -236,23 +235,28 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         this.repaint();
     }
 
-    public void setChatContext(String chatId, String currentUserId, String partnerUsername, boolean isGroupChat) {
+    public void setChatContext(String chatId, List<String> userIds, List<String> messageIds,
+                               String currentUserId, String groupName, boolean isGroupChat) {
         this.currentChatId = chatId;
         this.currentUserId = currentUserId;
         this.isGroupChat = isGroupChat;
-        setChatPartner(partnerUsername);
+        setChatPartner(groupName);
 
         // Show/hide settings button based on chat type
         settingButton.setVisible(isGroupChat);
 
-        viewChatHistoryController.execute(chatId);
+        viewChatHistoryController.execute(chatId, userIds, messageIds);
     }
 
     public void setChatId(String chatId) {
         this.currentChatId = chatId;
     }
 
-    public void setChatSettingView(ChatSettingView chatSettingView) {
-        this.chatSettingView = chatSettingView;
+    public void setSendMessageController(SendMessageController sendMessageController) {
+        this.sendMessageController = sendMessageController;
+    }
+
+    public void setViewChatHistoryController(ViewChatHistoryController viewChatHistoryController) {
+        this.viewChatHistoryController = viewChatHistoryController;
     }
 }

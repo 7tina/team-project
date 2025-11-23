@@ -2,16 +2,15 @@ package use_case.messaging.view_history;
 
 import entity.Chat;
 import entity.Message;
-import entity.User;
-import use_case.messaging.ChatMessageDto;
 import entity.ports.ChatRepository;
 import entity.ports.MessageRepository;
 import entity.ports.UserRepository;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 /**
  * Use case: view the history of a given chat.
@@ -22,15 +21,18 @@ public class ViewChatHistoryInteractor implements ViewChatHistoryInputBoundary {
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
     private final ViewChatHistoryOutputBoundary presenter;
+    private final ViewChatHistoryDataAccessInterface dataAccess;
 
     public ViewChatHistoryInteractor(ChatRepository chatRepository,
                                      MessageRepository messageRepository,
                                      UserRepository userRepository,
-                                     ViewChatHistoryOutputBoundary presenter) {
+                                     ViewChatHistoryOutputBoundary presenter,
+                                     ViewChatHistoryDataAccessInterface dataAccess) {
         this.chatRepository = chatRepository;
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
         this.presenter = presenter;
+        this.dataAccess = dataAccess;
     }
 
     /**
@@ -39,6 +41,8 @@ public class ViewChatHistoryInteractor implements ViewChatHistoryInputBoundary {
      */
     public void execute(ViewChatHistoryInputData inputData) {
         String chatId = inputData.getChatId();
+        List<String> userIds = inputData.getUserIds();
+        List<String> messageIds = inputData.getMessageIds();
 
         // 1. confirm the existence of chat
         Optional<Chat> chatOpt = chatRepository.findById(chatId);
@@ -48,6 +52,7 @@ public class ViewChatHistoryInteractor implements ViewChatHistoryInputBoundary {
         }
 
         // 2. extract all the message
+        dataAccess.findChatMessages(chatId, userIds, messageIds);
         List<Message> messages = messageRepository.findByChatId(chatId);
 
         // 3. time sort
@@ -59,30 +64,35 @@ public class ViewChatHistoryInteractor implements ViewChatHistoryInputBoundary {
         }
 
         // 4. change into list
-        List<ChatMessageDto> dtos = new ArrayList<>();
+        // Array index order: [messageId, senderUserId, messageContent, messageTimestamp, repliedId]
+        List<String[]> msgs = new ArrayList<>();
+        Map<String, Map<String, String>> msgToReactions = new HashMap<>();
         for (Message m : messages) {
-            String senderName = resolveSenderName(m.getSenderUserId());
-            dtos.add(new ChatMessageDto(
-                    m.getId(),
-                    m.getSenderUserId(),
-                    senderName,
-                    m.getContent(),
-                    m.getTimestamp()
-            ));
+            String[] msg = {m.getId(), m.getSenderUserId(), m.getContent(),
+                    makeString(m.getTimestamp()), m.getRepliedMessageId()};
+            msgs.add(msg);
+        }
+        for (Message m : messages) {
+            String msgId = m.getId();
+            Map<String, String> reactions = m.getReactions();
+            msgToReactions.put(msgId, reactions);
         }
 
         ViewChatHistoryOutputData outputData =
-                new ViewChatHistoryOutputData(chatId, dtos);
+                new ViewChatHistoryOutputData(chatId, msgs, msgToReactions);
 
         presenter.prepareSuccessView(outputData);
     }
 
     /**
-     * Helper: username
+     * Helper: timestamp
      */
-    private String resolveSenderName(String senderUserId) {
-        Optional<User> userOpt = userRepository.findByUsername(senderUserId);
-        return userOpt.map(User::getName).orElse("Unknown");
+    private String makeString(Instant timestamp) {
+        ZoneId zone = ZoneId.of("UTC"); // Specify the desired time zone
+        ZonedDateTime zdt = timestamp.atZone(zone);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+        return zdt.format(formatter);
     }
 }
 

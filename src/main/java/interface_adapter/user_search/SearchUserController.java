@@ -9,8 +9,8 @@ public class SearchUserController {
         // Initialize the field with the passed-in argument
         this.searchUserInteractor = searchUserInteractor;
     }
-    public void execute(String query) {
-        SearchUserInputData inputData = new SearchUserInputData(query);
+    public void execute(String user, String query) {
+        SearchUserInputData inputData = new SearchUserInputData(user, query);
         searchUserInteractor.execute(inputData);
     }
 }

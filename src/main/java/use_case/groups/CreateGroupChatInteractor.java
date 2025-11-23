@@ -5,6 +5,8 @@ import entity.User;
 import entity.ports.ChatRepository;
 import entity.ports.UserRepository;
 
+import java.awt.*;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -104,7 +106,7 @@ public class CreateGroupChatInteractor implements CreateGroupChatInputBoundary {
 
             // Create the group chat
             String chatId = UUID.randomUUID().toString();
-            Chat chat = new Chat(chatId);
+            Chat chat = new Chat(chatId, "", Color.BLACK, Instant.now());
             chat.setGroupName(groupName.trim());
 
             // Add all participants

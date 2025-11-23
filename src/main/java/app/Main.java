@@ -13,11 +13,13 @@ public class Main {
                 .addAccountDetailsView()
                 .addSearchUserView()
                 .addSearchUserView()
+                .addChatView()
                 .addSignupUseCase()
                 .addLoginUseCase()
                 .addLogoutUseCase()
                 .addChangePasswordUseCase()
                 .addUserSearchUseCase()
+                .addCreateChatUseCase()
                 .addChatUseCase()
                 .build();
 

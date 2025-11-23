@@ -1,7 +1,9 @@
 package interface_adapter.messaging.send_m;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The state object stored inside ChatViewModel.
@@ -13,6 +15,8 @@ public class ChatState {
     private final List<String> participants = new ArrayList<>();
     private final List<String> messageIds = new ArrayList<>();
     private final List<String[]> messages = new ArrayList<>();
+    // Key: messageId, Value: nested key: userId, nested value: reaction
+    private final Map<String, Map<String, String>> messageToReaction = new HashMap<>();
     private String groupName;
     private boolean success;
     private String error;
@@ -54,6 +58,24 @@ public class ChatState {
     public void clearMessages() {
         messages.clear();
     }
+
+    public Map<String, Map<String, String>> getMessageToReaction() {return messageToReaction;}
+
+    public void addReaction(String messageId, String userId, String reaction) {
+        Map<String, String> reactions = messageToReaction.get(messageId);
+        if (reactions != null) {reactions.put(userId, reaction);}
+        messageToReaction.put(messageId, reactions);
+    }
+
+    public void removeReaction(String messageId, String userId, String reaction) {
+        Map<String, String> reactions = messageToReaction.get(messageId);
+        if (reactions != null && reactions.containsKey(userId) && reactions.get(userId).equals(reaction)) {
+            reactions.remove(userId, reaction);
+        }
+        messageToReaction.put(messageId, reactions);
+    }
+
+    public void clearReactions() {messageToReaction.clear();}
 
     public String getGroupName() {
         return groupName;

@@ -145,6 +145,7 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
     @Override
     public void actionPerformed(ActionEvent evt) {
         if (evt.getSource().equals(searchExitButton)) {
+            this.started = false;
             // Exit button to return to the home screen
             viewManagerModel.setState("logged in");
             viewManagerModel.firePropertyChange();
@@ -208,10 +209,6 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
 
                 if (state.getSearchError() != null) {
                     userListModel.addElement("Error: " + state.getSearchError());
-                }
-                else if (!this.started) {
-                    this.started = true;
-                    findUsers(loggedInViewModel.getState().getUsername(), "");
                 }
                 else if (state.getSearchResults() != null) {
                     for (String username : state.getSearchResults()) {

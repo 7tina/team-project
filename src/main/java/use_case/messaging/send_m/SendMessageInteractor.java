@@ -38,6 +38,7 @@ public class SendMessageInteractor implements SendMessageInputBoundary {
     public void execute(SendMessageInputData inputData) {
         String chatId = inputData.getChatId();
         String senderId = inputData.getSenderUserId();
+        String repliedMessageId = inputData.getRepliedMessageId();
         String content = inputData.getContent();
 
         Optional<Chat> chatOpt = chatRepository.findById(chatId);
@@ -56,6 +57,7 @@ public class SendMessageInteractor implements SendMessageInputBoundary {
                 UUID.randomUUID().toString(),
                 chatId,
                 senderId,
+                repliedMessageId,
                 content,
                 Instant.now()
         );
@@ -63,13 +65,14 @@ public class SendMessageInteractor implements SendMessageInputBoundary {
         Message saved = dataAccess.sendMessage(message);
         dataAccess.updateChat(chatId, message.getId());
 
-        // Array index order: [messageId, senderUserId, messageContent, messageTimestamp]
+        // Array index order: [messageId, senderUserId, messageContent, messageTimestamp, repliedId]
         String senderName = senderOpt.get().getName();
         String[] msg = {
                 saved.getId(),
                 senderName,
                 saved.getContent(),
-                makeString(saved.getTimestamp())};
+                makeString(saved.getTimestamp()),
+                saved.getRepliedMessageId()};
 
         SendMessageOutputData outputData =
                 new SendMessageOutputData(chatId, msg);

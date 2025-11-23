@@ -10,10 +10,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Use case: view the history of a given chat.
@@ -67,15 +64,22 @@ public class ViewChatHistoryInteractor implements ViewChatHistoryInputBoundary {
         }
 
         // 4. change into list
-        // Array index order: [messageId, senderUserId, messageContent, messageTimestamp]
+        // Array index order: [messageId, senderUserId, messageContent, messageTimestamp, repliedId]
         List<String[]> msgs = new ArrayList<>();
+        Map<String, Map<String, String>> msgToReactions = new HashMap<>();
         for (Message m : messages) {
-            String[] msg = {m.getId(), m.getSenderUserId(), m.getContent(), makeString(m.getTimestamp())};
+            String[] msg = {m.getId(), m.getSenderUserId(), m.getContent(),
+                    makeString(m.getTimestamp()), m.getRepliedMessageId()};
             msgs.add(msg);
+        }
+        for (Message m : messages) {
+            String msgId = m.getId();
+            Map<String, String> reactions = m.getReactions();
+            msgToReactions.put(msgId, reactions);
         }
 
         ViewChatHistoryOutputData outputData =
-                new ViewChatHistoryOutputData(chatId, msgs);
+                new ViewChatHistoryOutputData(chatId, msgs, msgToReactions);
 
         presenter.prepareSuccessView(outputData);
     }

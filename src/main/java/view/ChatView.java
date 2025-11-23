@@ -30,6 +30,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
 
     // Components
     private final JLabel chatPartnerLabel; // Displays the name of the user you're chatting with
+    private final JLabel replyingToLabel;
     private final JTextArea messageInputField;
     private final JButton sendButton;
     private final JButton settingButton;
@@ -110,7 +111,8 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         JPanel inputPanel = new JPanel(new BorderLayout(5, 5));
         inputPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 10, 10)); // Padding
 
-        messageInputField = new JTextArea(3, 1);
+        replyingToLabel = new JLabel("Replying to:");
+        messageInputField = new JTextArea(1, 1);
         messageInputField.setLineWrap(true);
         messageInputField.setWrapStyleWord(true);
         JScrollPane inputScrollPane = new JScrollPane(messageInputField);
@@ -121,6 +123,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
 
         sendButton.addActionListener(this);
 
+        inputPanel.add(replyingToLabel, BorderLayout.NORTH);
         inputPanel.add(inputScrollPane, BorderLayout.CENTER);
         inputPanel.add(sendButton, BorderLayout.EAST);
 
@@ -135,7 +138,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         if (evt.getSource().equals(sendButton)) {
             String message = messageInputField.getText().trim();
             if (!message.isEmpty()) {
-                sendMessageController.execute(currentChatId, currentUserId, message);
+                sendMessageController.execute(currentChatId, currentUserId, replyingToLabel.getText(), message);
                 messageInputField.setText("");
             }
         }
@@ -153,7 +156,6 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         }
 
         ChatState state = (ChatState) newValue;
-        System.out.println("here");
 
         // remove previous ui
         chatDisplayPanel.removeAll();

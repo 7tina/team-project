@@ -5,6 +5,8 @@ import entity.User;
 import entity.ports.UserRepository;
 import entity.ports.ChatRepository;
 
+import java.awt.*;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -84,7 +86,10 @@ public class CreateChatInteractor implements CreateChatInputBoundary{
             }
             if (chatId == null) {
                 // No existing chat found, create new one
-                Chat newChat = new Chat(UUID.randomUUID().toString(), targetUserID);
+                chatId = UUID.randomUUID().toString();
+                Color backgroundColor = new Color(230, 230, 230);
+                Instant timeNow = Instant.now();
+                Chat newChat = new Chat(chatId, targetUserID, backgroundColor, timeNow);
                 newChat.addParticipant(currentUserId);
                 newChat.addParticipant(targetUserId);
                 Chat chat = userDataAccessObject.saveChat(newChat);

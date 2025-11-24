@@ -272,7 +272,6 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
 
                 // Check if the group chat was created successfully
                 if (chatState.isSuccess()) {
-                    System.out.println("Group chat created successfully, navigating to chat view...");
 
                     // Check if chatView is available
                     if (chatView != null) {

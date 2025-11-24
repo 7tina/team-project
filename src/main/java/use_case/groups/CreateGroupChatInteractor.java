@@ -1,5 +1,6 @@
 package use_case.groups;
 
+import data_access.FireBaseUserDataAccessObject;
 import entity.Chat;
 import entity.User;
 import entity.ports.ChatRepository;
@@ -21,13 +22,16 @@ public class CreateGroupChatInteractor implements CreateGroupChatInputBoundary {
     private final ChatRepository chatRepository;
     private final UserRepository userRepository;
     private final CreateGroupChatOutputBoundary outputBoundary;
+    private final FireBaseUserDataAccessObject dataAccess;
 
     public CreateGroupChatInteractor(ChatRepository chatRepository,
                                      UserRepository userRepository,
-                                     CreateGroupChatOutputBoundary outputBoundary) {
+                                     CreateGroupChatOutputBoundary outputBoundary,
+                                     FireBaseUserDataAccessObject dataAccess) {
         this.chatRepository = chatRepository;
         this.userRepository = userRepository;
         this.outputBoundary = outputBoundary;
+        this.dataAccess = dataAccess;
     }
 
     @Override
@@ -117,10 +121,12 @@ public class CreateGroupChatInteractor implements CreateGroupChatInputBoundary {
             // Save the chat
             chat = chatRepository.save(chat);
 
+            Chat savedChat = dataAccess.saveChat(chat);
+
             // Prepare success output
             CreateGroupChatOutputData outputData = new CreateGroupChatOutputData(
-                    chat.getId(),
-                    chat.getGroupName(),
+                    savedChat.getId(),
+                    savedChat.getGroupName(),
                     participantIds,
                     true,
                     null

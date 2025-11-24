@@ -73,7 +73,7 @@ public class CreateChatInteractor implements CreateChatInputBoundary{
 
             if (!allChats.isEmpty()) {
                 for (Chat chat : allChats) {
-                    java.util.List<String> participants = chat.getParticipantUserIds();  // Changed from getParticipants()
+                    java.util.List<String> participants = chat.getParticipantUserIds();
                     if (participants.size() == 2 &&
                             participants.contains(currentUserId) &&
                             participants.contains(targetUserId)) {
@@ -89,8 +89,7 @@ public class CreateChatInteractor implements CreateChatInputBoundary{
                 chatId = UUID.randomUUID().toString();
                 Color backgroundColor = new Color(230, 230, 230);
                 Instant timeNow = Instant.now();
-                Chat newChat = new Chat(chatId, targetUserID, backgroundColor, timeNow);
-                newChat.addParticipant(currentUserId);
+                Chat newChat = new Chat(chatId, "", backgroundColor, timeNow);
                 newChat.addParticipant(targetUserId);
                 Chat chat = userDataAccessObject.saveChat(newChat);
                 chatId = chat.getId();

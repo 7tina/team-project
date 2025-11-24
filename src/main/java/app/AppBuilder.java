@@ -41,9 +41,7 @@ import interface_adapter.messaging.send_m.ChatViewModel;
 import use_case.create_chat.CreateChatInputBoundary;
 import use_case.create_chat.CreateChatInteractor;
 import use_case.create_chat.CreateChatOutputBoundary;
-import use_case.groups.CreateGroupChatInputBoundary;
-import use_case.groups.CreateGroupChatInteractor;
-import use_case.groups.CreateGroupChatOutputBoundary;
+import use_case.groups.*;
 import use_case.messaging.send_m.SendMessageInputBoundary;
 import use_case.messaging.send_m.SendMessageOutputBoundary;
 import use_case.messaging.send_m.SendMessageInteractor;
@@ -379,8 +377,35 @@ public class AppBuilder {
     }
 
     public AppBuilder addChatSettingView() {
-        this.chatSettingView = new ChatSettingView(viewManagerModel);
+        this.chatSettingView = new ChatSettingView(viewManagerModel, groupChatViewModel);
         cardPanel.add(chatSettingView, chatSettingView.getViewName());
+
+        if (this.chatView != null) {
+            this.chatView.setChatSettingView(this.chatSettingView);
+        }
+
+        return this;
+    }
+
+    public AppBuilder addChangeGroupNameUseCase() {
+        final ChangeGroupNameOutputBoundary changeGroupNameOutputBoundary =
+                new ChangeGroupNamePresenter(groupChatViewModel);
+
+        final ChangeGroupNameInputBoundary changeGroupNameInteractor =
+                new RenameGroupChatInteractor(
+                        chatRepository,
+                        changeGroupNameOutputBoundary,
+                        userDataAccessObject  // Pass Firebase DAO
+                );
+
+        final ChangeGroupNameController changeGroupNameController =
+                new ChangeGroupNameController(changeGroupNameInteractor);
+
+        // Wire up the controller to ChatSettingView
+        if (this.chatSettingView != null) {
+            this.chatSettingView.setChangeGroupNameController(changeGroupNameController);
+        }
+
         return this;
     }
 }

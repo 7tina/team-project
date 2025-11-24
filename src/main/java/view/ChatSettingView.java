@@ -2,17 +2,21 @@ package view;
 
 import interface_adapter.ViewManagerModel;
 import interface_adapter.groupchat.ChangeGroupNameController;
+import interface_adapter.groupchat.GroupChatState;
+import interface_adapter.groupchat.GroupChatViewModel;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 
-public class ChatSettingView extends JPanel implements ActionListener {
+public class ChatSettingView extends JPanel implements ActionListener, PropertyChangeListener {
 
     public final String viewName = "chat setting";
-
     private final ViewManagerModel viewManagerModel;
+    private final GroupChatViewModel groupChatViewModel;
 
     // Buttons
     private final JButton changeGroupNameButton;
@@ -22,8 +26,10 @@ public class ChatSettingView extends JPanel implements ActionListener {
     private ChangeGroupNameController changeGroupNameController;
     private String currentChatId;
 
-    public ChatSettingView(ViewManagerModel viewManagerModel) {
+    public ChatSettingView(ViewManagerModel viewManagerModel, GroupChatViewModel groupChatViewModel) {
         this.viewManagerModel = viewManagerModel;
+        this.groupChatViewModel = groupChatViewModel;
+        this.groupChatViewModel.addPropertyChangeListener(this);
 
         this.setLayout(new BorderLayout());
         this.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -124,6 +130,32 @@ public class ChatSettingView extends JPanel implements ActionListener {
                 System.out.println("Remove user: " + user);
                 // TODO: call controller
             }
+        }
+    }
+
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+        if (!"state".equals(evt.getPropertyName())) {
+            return;
+        }
+
+        Object newValue = evt.getNewValue();
+        if (!(newValue instanceof GroupChatState)) {
+            return;
+        }
+
+        // Only react if this view is currently active
+        if (!viewManagerModel.getState().equals(viewName)) {
+            return;
+        }
+
+        GroupChatState state = (GroupChatState) newValue;
+
+        if (state.getError() != null) {
+            JOptionPane.showMessageDialog(this,
+                    state.getError(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 

@@ -440,23 +440,29 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
     /** -------------------- FIND MESSAGES BY CHAT ID -------------------- **/
     public void deleteMessageById(String messageId) {
         try {
-            DocumentReference msgDoc = db.collection(COLLECTION_MESSAGE).document(messageId);
-            DocumentSnapshot snap = msgDoc.get().get();
-            if (!snap.exists()) return;
+            DocumentReference msgRef = db.collection(COLLECTION_MESSAGE).document(messageId);
+            DocumentSnapshot msgSnap = msgRef.get().get();
 
-            String chatId = snap.getString(MESSAGE_CHAT_ID);
+            if (!msgSnap.exists()) {
+                return;
+            }
 
-            msgDoc.delete().get();
+            String chatId = msgSnap.getString(MESSAGE_CHAT_ID);
+
+            msgRef.delete().get();
 
             db.collection(COLLECTION_CHAT)
                     .document(chatId)
                     .update(CHAT_MESSAGE, FieldValue.arrayRemove(messageId))
                     .get();
 
-            messageRepository.deleteById(messageId);
+            chatRepository.findById(chatId).ifPresent(chat -> {
+                chat.removeMessage(messageId);  // 用你刚加的 Chat.removeMessage()
+                chatRepository.save(chat);
+            });
 
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to delete message: " + messageId, e);
         }
     }
 

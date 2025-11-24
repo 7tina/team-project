@@ -10,6 +10,7 @@ import interface_adapter.messaging.send_m.SendMessageController;
 import interface_adapter.messaging.send_m.ChatState;
 import interface_adapter.messaging.view_history.ViewChatHistoryController;
 
+import java.awt.event.KeyEvent;
 import java.util.List;
 import javax.swing.*;
 import java.awt.*;
@@ -130,6 +131,20 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         sendButton.setPreferredSize(new Dimension(80, inputScrollPane.getPreferredSize().height));
 
         sendButton.addActionListener(this);
+        messageInputField.getInputMap().put(
+                KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0),
+                "sendMessage"
+        );
+        messageInputField.getActionMap().put("sendMessage", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String message = messageInputField.getText().trim();
+                if (!message.isEmpty()) {
+                    sendMessageController.execute(currentChatId, currentUserId, replyingToLabel.getText(), message);
+                    messageInputField.setText("");
+                }
+            }
+        });
 
         inputPanel.add(replyingToLabel, BorderLayout.NORTH);
         inputPanel.add(inputScrollPane, BorderLayout.CENTER);

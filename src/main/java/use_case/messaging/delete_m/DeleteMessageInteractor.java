@@ -1,72 +1,41 @@
 package use_case.messaging.delete_m;
 
-import entity.Message;
-import entity.ports.MessageRepository;
+import data_access.FireBaseUserDataAccessObject;
 
-import java.util.Optional;
 import java.time.LocalDateTime;
 
 public class DeleteMessageInteractor implements DeleteMessageInputBoundary {
+    private final FireBaseUserDataAccessObject dao;
+    private final DeleteMessageOutputBoundary presenter;
 
-    final MessageRepository messageRepository;
-    final DeleteMessageOutputBoundary presenter;
-
-    public DeleteMessageInteractor(MessageRepository messageRepository,
+    public DeleteMessageInteractor(FireBaseUserDataAccessObject dao,
                                    DeleteMessageOutputBoundary presenter) {
-        this.messageRepository = messageRepository;
+        this.dao = dao;
         this.presenter = presenter;
     }
 
     @Override
-    public void execute(DeleteMessageInputData inputData) {
-        String messageId = inputData.getMessageId();
-        String currentUserId = inputData.getCurrentUserId();
+    public void execute(DeleteMessageInputData input) {
 
-        // Lookup message using findById and handle Optional
-        Optional<Message> optionalMessage = messageRepository.findById(messageId);
-
-        if (optionalMessage.isEmpty()) {
-            DeleteMessageOutputData failOutput = new DeleteMessageOutputData(
-                    messageId,
-                    LocalDateTime.now(),
-                    false,
-                    "Error: The message to be deleted could not be found."
-            );
-            presenter.prepareFailView(failOutput);
-            return;
-        }
-
-        Message messageToDelete = optionalMessage.get();
-
-        // Only sender can delete the message.
-        if (!messageToDelete.getSenderID().equals(currentUserId)) {
-            DeleteMessageOutputData failOutput = new DeleteMessageOutputData(
-                    messageId,
-                    LocalDateTime.now(),
-                    false,
-                    "Error: You do not have permission to delete this message. You can only delete messages you sent."
-            );
-            presenter.prepareFailView(failOutput);
-            return;
-        }
-
-        // Execute the deletion using deleteById
         try {
-            messageRepository.deleteById(messageId);
+            dao.deleteMessageById(input.getMessageId());
 
-            // Prepare the success view.
-            LocalDateTime now = LocalDateTime.now();
-            DeleteMessageOutputData successOutput = new DeleteMessageOutputData(messageId, now);
-            presenter.prepareSuccessView(successOutput);
+            DeleteMessageOutputData out = new DeleteMessageOutputData(
+                    input.getMessageId(),
+                    LocalDateTime.now(),
+                    true,
+                    null
+            );
+            presenter.prepareSuccessView(out);
 
         } catch (Exception e) {
-            DeleteMessageOutputData failOutput = new DeleteMessageOutputData(
-                    messageId,
+            DeleteMessageOutputData out = new DeleteMessageOutputData(
+                    input.getMessageId(),
                     LocalDateTime.now(),
                     false,
-                    "Deletion failed due to a system error: " + e.getMessage()
+                    e.getMessage()
             );
-            presenter.prepareFailView(failOutput);
+            presenter.prepareFailView(out);
         }
     }
 }

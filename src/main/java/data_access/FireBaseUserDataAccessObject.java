@@ -42,7 +42,15 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
         SearchUserDataAccessInterface,
         CreateChatUserDataAccessInterface,
         ViewChatHistoryDataAccessInterface,
-        SendMessageDataAccessInterface {
+        SendMessageDataAccessInterface{
+
+    /**
+     * Returns the initialized Firestore instance.
+     * Required for creating other Firebase-backed repositories.
+     */
+    public Firestore getDbInstance() {
+        return this.db;
+    }
 
     // Inner class to represent the structure of a user document in Firestore
     // Note: The username is the document ID, so it is not stored in the document body.
@@ -429,39 +437,27 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
         }
     }
 
-    //TODO: These methods COULD be used for the delete and edit chat use cases (you don't necessarily have to).
     /** -------------------- FIND MESSAGES BY CHAT ID -------------------- **/
-    public List<Message> findByChatId(String chatId) {
+    public void deleteMessageById(String messageId) {
         try {
-            CollectionReference col = db.collection(COLLECTION_MESSAGE);
+            DocumentReference msgDoc = db.collection(COLLECTION_MESSAGE).document(messageId);
+            DocumentSnapshot snap = msgDoc.get().get();
+            if (!snap.exists()) return;
 
-            Query query = col
-                    .whereEqualTo(MESSAGE_CHAT_ID, chatId)
-                    .orderBy(MESSAGE_TIME, Query.Direction.ASCENDING);
+            String chatId = snap.getString(MESSAGE_CHAT_ID);
 
-            ApiFuture<QuerySnapshot> future = query.get();
-            QuerySnapshot snapshot = future.get();
+            msgDoc.delete().get();
 
-            List<Message> results = new ArrayList<>();
-            for (QueryDocumentSnapshot doc : snapshot.getDocuments()) {
-                results.add(toMessage(doc));
-            }
+            db.collection(COLLECTION_CHAT)
+                    .document(chatId)
+                    .update(CHAT_MESSAGE, FieldValue.arrayRemove(messageId))
+                    .get();
 
-            return results;
+            messageRepository.deleteById(messageId);
 
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException("Failed to load chat messages", e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
-    /** -------------------- DELETE BY ID -------------------- **/
-    public void deleteById(String id) {
-        try {
-            DocumentReference doc = db.collection(COLLECTION_MESSAGE).document(id);
-            ApiFuture<WriteResult> future = doc.delete();
-            future.get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException("Failed to delete message", e);
-        }
-    }
 }

@@ -2,6 +2,9 @@ package view;
 
 import interface_adapter.ViewManagerModel;
 import interface_adapter.logged_in.LoggedInViewModel;
+import interface_adapter.messaging.delete_m.DeleteMessageController;
+import interface_adapter.messaging.delete_m.DeleteMessageState;
+import interface_adapter.messaging.delete_m.DeleteMessageViewModel;
 import interface_adapter.messaging.send_m.ChatViewModel;
 import interface_adapter.messaging.send_m.SendMessageController;
 import interface_adapter.messaging.send_m.ChatState;
@@ -21,8 +24,10 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
     private final ViewManagerModel viewManagerModel;
     private final ChatViewModel chatViewModel;
     private final LoggedInViewModel loggedInViewModel;
+    private final DeleteMessageViewModel deleteMessageViewModel;
     private SendMessageController sendMessageController;
     private ViewChatHistoryController viewChatHistoryController;
+    private DeleteMessageController deleteMessageController;
 
     private String currentChatId;
     private String currentUserId;
@@ -41,11 +46,14 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
 
     public ChatView(ViewManagerModel viewManagerModel,
                     ChatViewModel chatViewModel,
-                    LoggedInViewModel loggedInViewModel) {
+                    LoggedInViewModel loggedInViewModel,
+                    DeleteMessageViewModel deleteMessageViewModel) {
         this.viewManagerModel = viewManagerModel;
         this.chatViewModel = chatViewModel;
         this.loggedInViewModel = loggedInViewModel;
         this.chatViewModel.addPropertyChangeListener(this);
+        this.deleteMessageViewModel = deleteMessageViewModel;
+        deleteMessageViewModel.addPropertyChangeListener(this);
         this.setLayout(new BorderLayout());
 
         // Top Bar (Chat Partner and Exit/Back Button)
@@ -150,6 +158,33 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
             return;
         }
 
+        if (evt.getSource() instanceof DeleteMessageViewModel) {
+
+            DeleteMessageState ds = deleteMessageViewModel.getState();
+
+            if (!ds.isSuccess()) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        ds.getError() == null ? "Delete failed." : ds.getError(),
+                        "Delete Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
+                return;
+            }
+
+            if (viewChatHistoryController != null && currentChatId != null) {
+                ChatState currentState = chatViewModel.getState();
+                viewChatHistoryController.execute(
+                        currentChatId,
+                        currentState.getParticipants(),
+                        currentState.getMessageIds()
+                );
+            }
+
+            return;
+        }
+
+
         Object newValue = evt.getNewValue();
         if (!(newValue instanceof ChatState)) {
             return;
@@ -179,6 +214,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
                 chatDisplayPanel.add(initialPrompt);
             } else {
                 for (String[] msg : messages) {
+                    final String currentMessageId = msg[0];
                     boolean fromCurrentUser =
                             msg[1].equals(currentUserId);
 
@@ -199,11 +235,56 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
                     bubble.setOpaque(true);
                     bubble.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
+                    // features button
+                    JButton optionButton = new JButton("...");
+                    optionButton.setFont(new Font("SansSerif", Font.BOLD, 8));
+                    optionButton.setMargin(new Insets(2, 4, 2, 4));
+                    optionButton.setFocusPainted(false);
+
+                    // sth
+                    JPopupMenu popupMenu = new JPopupMenu();
+                    JMenuItem deleteItem = new JMenuItem("Delete");
+                    //TODO: other button
+                    //JMenuItem replyItem = new JMenuItem("Reply");
+                    //JMenuItem reactItem = new JMenuItem("React");
+
+                    deleteItem.addActionListener(e -> {
+                        // confirmation
+                        int confirm = JOptionPane.showConfirmDialog(
+                                this,
+                                "Are you sure you want to delete this message?",
+                                "Confirm Deletion",
+                                JOptionPane.YES_NO_OPTION);
+
+                        if (confirm == JOptionPane.YES_OPTION) {
+                            if (deleteMessageController != null) {
+                                deleteMessageController.execute(currentMessageId, currentUserId);
+                            } else {
+                                JOptionPane.showMessageDialog(this, "Delete controller not set.");
+                            }
+                        }
+
+                    });
+
+                    //popupMenu.add(replyItem);
+                    //popupMenu.add(reactItem);
+                    popupMenu.addSeparator();
+                    popupMenu.add(deleteItem);
+
+                    optionButton.addActionListener(e -> {
+                        popupMenu.show(optionButton, optionButton.getWidth(), 0);
+                    });
+
                     if (fromCurrentUser) {
                         bubble.setBackground(new Color(0x95EC69));
-                        // green
+                        JPanel messageBubbleWithActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+                        messageBubbleWithActions.setOpaque(false);
+                        messageBubbleWithActions.add(optionButton);
+                        // background color
+                        bubble.setBackground(new Color(0x95EC69));
                         bubble.setForeground(Color.BLACK);
-                        row.add(bubble, BorderLayout.EAST);
+                        messageBubbleWithActions.add(bubble);
+                        row.add(messageBubbleWithActions, BorderLayout.EAST);
                     } else {
                         bubble.setBackground(new Color(230, 230, 230));
                         // black
@@ -258,5 +339,9 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
 
     public void setViewChatHistoryController(ViewChatHistoryController viewChatHistoryController) {
         this.viewChatHistoryController = viewChatHistoryController;
+    }
+
+    public void setDeleteMessageController(DeleteMessageController deleteMessageController) {
+        this.deleteMessageController = deleteMessageController;
     }
 }

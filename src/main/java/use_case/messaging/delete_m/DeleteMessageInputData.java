@@ -9,11 +9,5 @@ public class DeleteMessageInputData {
         this.currentUserId = currentUserId;
     }
 
-    String getMessageId() {
-        return messageId;
-    }
-
-    String getCurrentUserId() {
-        return currentUserId;
-    }
+    public String getMessageId() { return messageId; }
 }

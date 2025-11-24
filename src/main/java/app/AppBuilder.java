@@ -19,6 +19,9 @@ import interface_adapter.login.LoginPresenter;
 import interface_adapter.login.LoginViewModel;
 import interface_adapter.logout.LogoutController;
 import interface_adapter.logout.LogoutPresenter;
+import interface_adapter.messaging.delete_m.DeleteMessageController;
+import interface_adapter.messaging.delete_m.DeleteMessagePresenter;
+import interface_adapter.messaging.delete_m.DeleteMessageViewModel;
 import interface_adapter.messaging.view_history.ViewChatHistoryController;
 import interface_adapter.messaging.view_history.ViewChatHistoryPresenter;
 import interface_adapter.signup.SignupController;
@@ -39,6 +42,9 @@ import interface_adapter.messaging.send_m.ChatViewModel;
 import use_case.create_chat.CreateChatInputBoundary;
 import use_case.create_chat.CreateChatInteractor;
 import use_case.create_chat.CreateChatOutputBoundary;
+import use_case.messaging.delete_m.DeleteMessageInputBoundary;
+import use_case.messaging.delete_m.DeleteMessageInteractor;
+import use_case.messaging.delete_m.DeleteMessageOutputBoundary;
 import use_case.messaging.send_m.SendMessageInputBoundary;
 import use_case.messaging.send_m.SendMessageOutputBoundary;
 import use_case.messaging.send_m.SendMessageInteractor;
@@ -74,6 +80,8 @@ import view.AccountDetailsView;
 import view.ChatSettingView;
 
 import entity.ports.MessageRepository;
+import data_access.FirebaseMessageRepository;
+import com.google.cloud.firestore.Firestore;
 
 import javax.swing.*;
 import java.awt.*;
@@ -93,6 +101,12 @@ public class AppBuilder {
     private final UserRepository userRepository =
             new InMemoryUserRepository();
 
+    // Delete Message ViewModel
+    private final DeleteMessageViewModel deleteMessageViewModel = new DeleteMessageViewModel();
+
+    // Firebase Message Repository
+    final MessageRepository firebaseMessageRepository;
+
     final UserFactory userFactory = new UserFactory();
     final ViewManagerModel viewManagerModel = new ViewManagerModel();
     ViewManager viewManager = new ViewManager(cardPanel, cardLayout, viewManagerModel);
@@ -109,6 +123,11 @@ public class AppBuilder {
             serviceAccountKeyPath,
             userFactory
     );
+
+    {
+        Firestore dbInstance = userDataAccessObject.getDbInstance();
+        firebaseMessageRepository = new FirebaseMessageRepository(dbInstance);
+    }
 
     private SignupView signupView;
     private SignupViewModel signupViewModel;
@@ -303,7 +322,11 @@ public class AppBuilder {
     }
 
     public AppBuilder addChatView() {
-        this.chatView = new ChatView(viewManagerModel, chatViewModel, loggedInViewModel);
+        this.chatView = new ChatView(
+                viewManagerModel,
+                chatViewModel,
+                loggedInViewModel,
+                deleteMessageViewModel);
         cardPanel.add(chatView, chatView.getViewName());
         return this;
     }
@@ -315,6 +338,9 @@ public class AppBuilder {
 
         ViewChatHistoryOutputBoundary viewHistoryPresenter =
                 new ViewChatHistoryPresenter(chatViewModel, viewManagerModel);
+
+        DeleteMessageOutputBoundary deleteMessagePresenter =
+                new DeleteMessagePresenter(deleteMessageViewModel);
 
         // Interactor
         SendMessageInputBoundary sendMessageInteractor =
@@ -335,13 +361,22 @@ public class AppBuilder {
                         userDataAccessObject
                 );
 
+        DeleteMessageInputBoundary deleteMessageInteractor =
+                new DeleteMessageInteractor(
+                        userDataAccessObject,
+                        deleteMessagePresenter
+                );
+
+
         // Controller
         ViewChatHistoryController viewChatHistoryController = new ViewChatHistoryController(viewHistoryInteractor);
         SendMessageController sendMessageController = new SendMessageController(sendMessageInteractor);
+        DeleteMessageController deleteMessageController = new DeleteMessageController(deleteMessageInteractor);
 
         if (this.chatView != null) {
             this.chatView.setSendMessageController(sendMessageController);
             this.chatView.setViewChatHistoryController(viewChatHistoryController);
+            this.chatView.setDeleteMessageController(deleteMessageController);
         }
 
         return this;

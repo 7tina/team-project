@@ -32,7 +32,7 @@ public class DeleteMessagePresenter implements DeleteMessageOutputBoundary {
     @Override
     public void prepareFailView(DeleteMessageOutputData output) {
         DeleteMessageState state = deleteMessageViewModel.getState();
-        state.setDeletedMessageId(output.getDeletedMessageId());
+        state.setDeletedMessageId(output.getMessageId());
         state.setSuccess(false);
         state.setError(output.getFailReason());
         deleteMessageViewModel.setState(state);

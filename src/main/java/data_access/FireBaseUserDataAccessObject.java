@@ -17,6 +17,7 @@ import use_case.change_password.ChangePasswordUserDataAccessInterface;
 import use_case.create_chat.CreateChatUserDataAccessInterface;
 import use_case.login.LoginUserDataAccessInterface;
 import use_case.logout.LogoutUserDataAccessInterface;
+import use_case.messaging.delete_m.DeleteMessageDataAccessInterface;
 import use_case.messaging.send_m.SendMessageDataAccessInterface;
 import use_case.messaging.view_history.ViewChatHistoryDataAccessInterface;
 import use_case.search_user.SearchUserDataAccessInterface;
@@ -42,6 +43,7 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
         SearchUserDataAccessInterface,
         CreateChatUserDataAccessInterface,
         ViewChatHistoryDataAccessInterface,
+        DeleteMessageDataAccessInterface,
         SendMessageDataAccessInterface{
 
     /**

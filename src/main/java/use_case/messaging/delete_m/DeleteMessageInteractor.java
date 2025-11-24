@@ -1,14 +1,13 @@
 package use_case.messaging.delete_m;
 
-import data_access.FireBaseUserDataAccessObject;
-
 import java.time.LocalDateTime;
 
 public class DeleteMessageInteractor implements DeleteMessageInputBoundary {
-    private final FireBaseUserDataAccessObject dao;
+
+    private final DeleteMessageDataAccessInterface dao;
     private final DeleteMessageOutputBoundary presenter;
 
-    public DeleteMessageInteractor(FireBaseUserDataAccessObject dao,
+    public DeleteMessageInteractor(DeleteMessageDataAccessInterface dao,
                                    DeleteMessageOutputBoundary presenter) {
         this.dao = dao;
         this.presenter = presenter;
@@ -17,11 +16,13 @@ public class DeleteMessageInteractor implements DeleteMessageInputBoundary {
     @Override
     public void execute(DeleteMessageInputData input) {
 
+        String messageId = input.getMessageId();
+
         try {
-            dao.deleteMessageById(input.getMessageId());
+            dao.deleteMessageById(messageId);
 
             DeleteMessageOutputData out = new DeleteMessageOutputData(
-                    input.getMessageId(),
+                    messageId,
                     LocalDateTime.now(),
                     true,
                     null
@@ -30,7 +31,7 @@ public class DeleteMessageInteractor implements DeleteMessageInputBoundary {
 
         } catch (Exception e) {
             DeleteMessageOutputData out = new DeleteMessageOutputData(
-                    input.getMessageId(),
+                    messageId,
                     LocalDateTime.now(),
                     false,
                     e.getMessage()

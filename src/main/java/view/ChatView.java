@@ -201,6 +201,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
                     boolean fromCurrentUser = msg[1].equals(currentUserId);
                     String messageId = msg[0];
                     String content = msg[2];
+                    String timestamp = msg[3];
 
                     String repliedMessageId = msg.length > 4 ? msg[4] : null;
                     String repliedPreview = null;
@@ -225,7 +226,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
                     int maxBubbleWidth = (int)(viewportWidth * 0.66);
 
                     // Build wrapped bubble
-                    JPanel bubble = createWrappedBubble(content, repliedPreview, fromCurrentUser, maxBubbleWidth);
+                    JPanel bubble = createWrappedBubble(content,timestamp, repliedPreview, fromCurrentUser, maxBubbleWidth);
 
                     JButton actionButton = new JButton("⋯");
                     actionButton.setFocusable(false);
@@ -356,7 +357,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
     // --------------------------------------------------------
     // PERFECT WRAPPED BUBBLE (this is the fixed version)
     // --------------------------------------------------------
-    private JPanel createWrappedBubble(String text, String repliedPreview,
+    private JPanel createWrappedBubble(String text, String time, String repliedPreview,
                                        boolean fromCurrentUser, int maxWidth) {
 
         // Container panel
@@ -388,6 +389,21 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         bubble.setMaximumSize(new Dimension(maxWidth + 20, preferred.height + 30));
 
         bubble.add(label);
+
+        JLabel timeLabel = new JLabel(time);
+        timeLabel.setFont(new Font("SansSerif", Font.PLAIN, 10));
+        timeLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        // Color depends on who sent the message
+        if (fromCurrentUser) {
+            timeLabel.setForeground(new Color(80,80,80));   // dark gray
+        } else {
+            timeLabel.setForeground(new Color(50,50,50));   // darker gray
+        }
+
+        bubble.add(Box.createVerticalStrut(3));
+        bubble.add(timeLabel);
+
 
         return bubble;
     }

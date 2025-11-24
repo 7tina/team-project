@@ -52,14 +52,19 @@ public class SignupView extends JPanel implements ActionListener, PropertyChange
                 // This creates an anonymous subclass of ActionListener and instantiates it.
                 new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
+
                         if (evt.getSource().equals(signUp)) {
                             final SignupState currentState = signupViewModel.getState();
 
-                            signupController.execute(
-                                    currentState.getUsername(),
-                                    currentState.getPassword(),
-                                    currentState.getRepeatPassword()
-                            );
+                            // Add the validation check here
+                            if (currentState.getUsername() != null && !currentState.getUsername().trim().isEmpty()) {
+
+                                signupController.execute(
+                                        currentState.getUsername(),
+                                        currentState.getPassword(),
+                                        currentState.getRepeatPassword()
+                                );
+                            }
                         }
                     }
                 }
@@ -68,6 +73,10 @@ public class SignupView extends JPanel implements ActionListener, PropertyChange
         toLogin.addActionListener(
                 new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
+                        usernameInputField.setText("");
+                        passwordInputField.setText("");
+                        repeatPasswordInputField.setText("");
+
                         signupController.switchToLoginView();
                     }
                 }

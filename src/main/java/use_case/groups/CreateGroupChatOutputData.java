@@ -2,6 +2,9 @@ package use_case.groups;
 
 import java.util.List;
 
+/**
+ * Output Data for the Create Group Chat Use Case.
+ */
 public class CreateGroupChatOutputData {
     private final String chatId;
     private final String groupName;
@@ -9,6 +12,9 @@ public class CreateGroupChatOutputData {
     private final boolean success;
     private final String errorMessage;
 
+    /**
+     * Constructor for successful group chat creation.
+     */
     public CreateGroupChatOutputData(String chatId, String groupName,
                                      List<String> participantUserIds,
                                      boolean success, String errorMessage) {

@@ -12,7 +12,6 @@ public class Main {
                 .addLoggedInView()
                 .addAccountDetailsView()
                 .addSearchUserView()
-                .addSearchUserView()
                 .addChatView()
                 .addSignupUseCase()
                 .addLoginUseCase()
@@ -20,6 +19,7 @@ public class Main {
                 .addChangePasswordUseCase()
                 .addUserSearchUseCase()
                 .addCreateChatUseCase()
+                .addCreateGroupChatUseCase()
                 .addChatUseCase()
                 .build();
 

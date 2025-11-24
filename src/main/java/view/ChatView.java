@@ -181,7 +181,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         if (!"state".equals(evt.getPropertyName())) return;
         if (!(evt.getNewValue() instanceof ChatState)) return;
 
-        ChatState state = (ChatState) newValue;
+        ChatState state = (ChatState) evt.getNewValue();
 
         if (!state.getFirst() && state.getChatId() != null && state.getGroupName() != null) {
             state.chatViewStart();
@@ -428,7 +428,6 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
 
         return bubble;
     }
-}
     public void setChatSettingView(ChatSettingView chatSettingView) {
         this.chatSettingView = chatSettingView;
     }

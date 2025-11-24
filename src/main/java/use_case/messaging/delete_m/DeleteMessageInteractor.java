@@ -26,7 +26,13 @@ public class DeleteMessageInteractor implements DeleteMessageInputBoundary {
         Optional<Message> optionalMessage = messageRepository.findById(messageId);
 
         if (optionalMessage.isEmpty()) {
-            presenter.prepareFailView("Error: The message to be deleted could not be found.");
+            DeleteMessageOutputData failOutput = new DeleteMessageOutputData(
+                    messageId,
+                    LocalDateTime.now(),
+                    false,
+                    "Error: The message to be deleted could not be found."
+            );
+            presenter.prepareFailView(failOutput);
             return;
         }
 
@@ -34,7 +40,13 @@ public class DeleteMessageInteractor implements DeleteMessageInputBoundary {
 
         // Only sender can delete the message.
         if (!messageToDelete.getSenderID().equals(currentUserId)) {
-            presenter.prepareFailView("Error: You do not have permission to delete this message. You can only delete messages that you have sent.");
+            DeleteMessageOutputData failOutput = new DeleteMessageOutputData(
+                    messageId,
+                    LocalDateTime.now(),
+                    false,
+                    "Error: You do not have permission to delete this message. You can only delete messages you sent."
+            );
+            presenter.prepareFailView(failOutput);
             return;
         }
 
@@ -48,7 +60,13 @@ public class DeleteMessageInteractor implements DeleteMessageInputBoundary {
             presenter.prepareSuccessView(successOutput);
 
         } catch (Exception e) {
-            presenter.prepareFailView("Deletion failed due to a system error: " + e.getMessage());
+            DeleteMessageOutputData failOutput = new DeleteMessageOutputData(
+                    messageId,
+                    LocalDateTime.now(),
+                    false,
+                    "Deletion failed due to a system error: " + e.getMessage()
+            );
+            presenter.prepareFailView(failOutput);
         }
     }
 }

@@ -13,6 +13,7 @@ import entity.repo.InMemoryUserRepository;
 import interface_adapter.ViewManagerModel;
 import interface_adapter.create_chat.CreateChatController;
 import interface_adapter.create_chat.CreateChatPresenter;
+import interface_adapter.groupchat.*;
 import interface_adapter.logged_in.ChangePasswordController;
 import interface_adapter.logged_in.ChangePasswordPresenter;
 import interface_adapter.logged_in.LoggedInViewModel;
@@ -30,11 +31,6 @@ import interface_adapter.signup.SignupViewModel;
 import interface_adapter.user_search.SearchUserController;
 import interface_adapter.user_search.SearchUserPresenter;
 import interface_adapter.user_search.SearchUserViewModel;
-import interface_adapter.groupchat.ChangeGroupNameController;
-import interface_adapter.groupchat.ChangeGroupNamePresenter;
-import interface_adapter.groupchat.CreateGroupChatController;
-import interface_adapter.groupchat.CreateGroupChatPresenter;
-import interface_adapter.groupchat.GroupChatViewModel;
 import interface_adapter.messaging.send_m.SendMessageController;
 import interface_adapter.messaging.send_m.SendMessagePresenter;
 import interface_adapter.messaging.send_m.ChatViewModel;
@@ -404,6 +400,28 @@ public class AppBuilder {
         // Wire up the controller to ChatSettingView
         if (this.chatSettingView != null) {
             this.chatSettingView.setChangeGroupNameController(changeGroupNameController);
+        }
+
+        return this;
+    }
+
+    public AppBuilder addRemoveUserUseCase() {
+        final RemoveUserOutputBoundary removeUserOutputBoundary =
+                new RemoveUserPresenter(groupChatViewModel);
+
+        final RemoveUserInputBoundary removeUserInteractor =
+                new RemoveUserFromGroupInteractor(
+                        chatRepository,           // ChatRepository for finding/saving chats
+                        removeUserOutputBoundary,
+                        userDataAccessObject      // Firebase DAO for getUserIdByUsername
+                );
+
+        final RemoveUserController removeUserController =
+                new RemoveUserController(removeUserInteractor);
+
+        // Wire up the controller to ChatSettingView
+        if (this.chatSettingView != null) {
+            this.chatSettingView.setRemoveUserController(removeUserController);
         }
 
         return this;

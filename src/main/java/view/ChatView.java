@@ -80,10 +80,6 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         settingButton.setFont(new Font("SansSerif", Font.BOLD, 20));
 
         settingButton.addActionListener(e -> {
-            System.out.println("Settings button clicked!");
-            System.out.println("currentChatId: " + currentChatId);
-            System.out.println("chatSettingView is null? " + (chatSettingView == null));
-
             if (currentChatId == null) {
                 JOptionPane.showMessageDialog(this,
                         "Chat is still loading. Please wait a moment and try again.",
@@ -93,7 +89,6 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
             }
 
             if (chatSettingView != null) {
-                System.out.println("Setting chatId in ChatSettingView: " + currentChatId);
                 chatSettingView.setChatId(currentChatId);
             }
             viewManagerModel.setState("chat setting");
@@ -205,9 +200,6 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
                 for (String[] msg : messages) {
                     boolean fromCurrentUser =
                             msg[1].equals(currentUserId);
-
-                    System.out.println("sender: " + msg[1] + " current user id: "
-                            + currentUserId + " current chat id: " + currentChatId);
 
                     JPanel row = new JPanel(new BorderLayout());
                     row.setOpaque(false);

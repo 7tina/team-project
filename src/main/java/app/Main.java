@@ -21,6 +21,7 @@ public class Main {
                 .addCreateChatUseCase()
                 .addCreateGroupChatUseCase()
                 .addChatUseCase()
+                .addChatSettingView()
                 .build();
 
         application.pack();

@@ -378,4 +378,9 @@ public class AppBuilder {
         return this;
     }
 
+    public AppBuilder addChatSettingView() {
+        this.chatSettingView = new ChatSettingView(viewManagerModel);
+        cardPanel.add(chatSettingView, chatSettingView.getViewName());
+        return this;
+    }
 }

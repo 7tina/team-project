@@ -23,6 +23,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
     private final LoggedInViewModel loggedInViewModel;
     private SendMessageController sendMessageController;
     private ViewChatHistoryController viewChatHistoryController;
+    private ChatSettingView chatSettingView;
 
     private String currentChatId;
     private String currentUserId;
@@ -65,10 +66,6 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         backButton.setFont(new Font("SansSerif", Font.BOLD, 20));
 
         backButton.addActionListener(e -> {
-            // Navigate back to the LoggedInView
-//            chatViewModel.getState().chatViewStop();
-//            chatViewModel.firePropertyChange();
-//            will be working on this later for recent chats.
             viewManagerModel.setState("logged in");
             viewManagerModel.firePropertyChange();
         });
@@ -83,7 +80,22 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         settingButton.setFont(new Font("SansSerif", Font.BOLD, 20));
 
         settingButton.addActionListener(e -> {
-            //TODO: Make this into an actual Use Case
+            System.out.println("Settings button clicked!");
+            System.out.println("currentChatId: " + currentChatId);
+            System.out.println("chatSettingView is null? " + (chatSettingView == null));
+
+            if (currentChatId == null) {
+                JOptionPane.showMessageDialog(this,
+                        "Chat is still loading. Please wait a moment and try again.",
+                        "Please Wait",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            if (chatSettingView != null) {
+                System.out.println("Setting chatId in ChatSettingView: " + currentChatId);
+                chatSettingView.setChatId(currentChatId);
+            }
             viewManagerModel.setState("chat setting");
             viewManagerModel.firePropertyChange();
         });
@@ -157,6 +169,24 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
 
         ChatState state = (ChatState) newValue;
 
+        if (!state.getFirst() && state.getChatId() != null && state.getGroupName() != null) {
+            state.chatViewStart();
+
+            // Determine if it's a group chat based on number of participants
+            boolean isGroup = state.getParticipants().size() > 2;
+
+            // Set the chat context
+            setChatContext(
+                    state.getChatId(),
+                    state.getParticipants(),
+                    state.getMessageIds(),
+                    loggedInViewModel.getState().getUsername(),
+                    state.getGroupName(),
+                    isGroup
+            );
+            return;
+        }
+
         // remove previous ui
         chatDisplayPanel.removeAll();
 
@@ -164,12 +194,6 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
             JLabel errorLabel = new JLabel(state.getError());
             errorLabel.setForeground(Color.RED);
             chatDisplayPanel.add(errorLabel);
-        }
-        else if (!state.getFirst()) {
-            state.chatViewStart();
-            // Set the chat context with the unique chat ID
-            setChatContext(state.getChatId(), state.getParticipants(), state.getMessageIds(),
-                    loggedInViewModel.getState().getUsername(), state.getGroupName(), false);
         }
         else {
             // Array index order: [messageId, senderUserId, messageContent, messageTimestamp]
@@ -244,7 +268,6 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
 
         // Show/hide settings button based on chat type
         settingButton.setVisible(isGroupChat);
-
         viewChatHistoryController.execute(chatId, userIds, messageIds);
     }
 
@@ -258,5 +281,9 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
 
     public void setViewChatHistoryController(ViewChatHistoryController viewChatHistoryController) {
         this.viewChatHistoryController = viewChatHistoryController;
+    }
+
+    public void setChatSettingView(ChatSettingView chatSettingView) {
+        this.chatSettingView = chatSettingView;
     }
 }

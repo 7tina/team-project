@@ -24,6 +24,13 @@ public class CreateChatPresenter implements CreateChatOutputBoundary {
     public void prepareSuccessView(CreateChatOutputData response) {
         ChatState state = new ChatState();
         state.setChatId(response.getChatId());
+
+        String displayName = response.getGroupName();
+        if (displayName == null || displayName.isEmpty()) {
+            // Individual chat - use target user's name
+            displayName = response.getGroupName();  // This should actually be the target username
+        }
+
         state.setGroupName(response.getGroupName());
         for (String userId : response.getUsers()) {state.addParticipant(userId);}
         for (String messageId : response.getMessageIds()) {state.addMessageId(messageId);}

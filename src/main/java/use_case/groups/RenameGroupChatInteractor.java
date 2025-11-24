@@ -1,5 +1,6 @@
 package use_case.groups;
 
+import data_access.FireBaseUserDataAccessObject;
 import entity.ports.ChatRepository;
 import java.util.Optional;
 
@@ -11,12 +12,14 @@ public class RenameGroupChatInteractor implements ChangeGroupNameInputBoundary {
 
     private final ChatRepository chatRepository;
     private final ChangeGroupNameOutputBoundary outputBoundary;
+    private final FireBaseUserDataAccessObject dataAccess;
 
     public RenameGroupChatInteractor(
             ChatRepository chatRepository,
-            ChangeGroupNameOutputBoundary outputBoundary) {
+            ChangeGroupNameOutputBoundary outputBoundary, FireBaseUserDataAccessObject dataAccess) {
         this.chatRepository = chatRepository;
         this.outputBoundary = outputBoundary;
+        this.dataAccess = dataAccess;
     }
 
     @Override
@@ -68,6 +71,7 @@ public class RenameGroupChatInteractor implements ChangeGroupNameInputBoundary {
 
             // Save the updated chat
             chat = chatRepository.save(chat);
+            dataAccess.saveChat(chat);
 
             // Prepare success output
             ChangeGroupNameOutputData outputData = new ChangeGroupNameOutputData(

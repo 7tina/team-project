@@ -38,5 +38,7 @@ public class Message {
     public Instant getTimestamp() { return timestamp; }
 
     public void addReaction(String userId, String reaction) { reactions.put(userId, reaction); }
+
+    public String getSenderID() { return this.senderUserId; }
 }
 

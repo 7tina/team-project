@@ -199,6 +199,8 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
+        String currentUser = loggedInViewModel.getState().getUsername();
+
         if ("state".equals(evt.getPropertyName())) {
             Object newValue = evt.getNewValue();
 
@@ -212,7 +214,9 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
                 }
                 else if (state.getSearchResults() != null) {
                     for (String username : state.getSearchResults()) {
-                        userListModel.addElement(username);
+                        if (!username.equals(currentUser)) {
+                            userListModel.addElement(username);
+                        }
                     }
                     if (state.getSearchResults().isEmpty()) {
                         userListModel.addElement("No users found.");

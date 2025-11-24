@@ -1,6 +1,8 @@
 package app;
 
 import data_access.FireBaseUserDataAccessObject;
+import data_access.FirebaseClientProvider;
+import data_access.FirestoreUserRepository;
 import entity.UserFactory;
 import entity.User;
 import entity.ports.ChatRepository;
@@ -45,6 +47,7 @@ import use_case.create_chat.CreateChatOutputBoundary;
 import use_case.messaging.delete_m.DeleteMessageInputBoundary;
 import use_case.messaging.delete_m.DeleteMessageInteractor;
 import use_case.messaging.delete_m.DeleteMessageOutputBoundary;
+import use_case.groups.*;
 import use_case.messaging.send_m.SendMessageInputBoundary;
 import use_case.messaging.send_m.SendMessageOutputBoundary;
 import use_case.messaging.send_m.SendMessageInteractor;
@@ -110,6 +113,11 @@ public class AppBuilder {
     final UserFactory userFactory = new UserFactory();
     final ViewManagerModel viewManagerModel = new ViewManagerModel();
     ViewManager viewManager = new ViewManager(cardPanel, cardLayout, viewManagerModel);
+
+    private final UserRepository userRepository = new FirestoreUserRepository(
+            FirebaseClientProvider.getFirestore(),
+            userFactory
+    );
 
     // set which data access implementation to use, can be any
     // of the classes from the data_access package
@@ -328,6 +336,9 @@ public class AppBuilder {
                 loggedInViewModel,
                 deleteMessageViewModel);
         cardPanel.add(chatView, chatView.getViewName());
+        if (this.searchUserView != null) {
+            this.searchUserView.setChatView(this.chatView);
+        }
         return this;
     }
 
@@ -377,6 +388,61 @@ public class AppBuilder {
             this.chatView.setSendMessageController(sendMessageController);
             this.chatView.setViewChatHistoryController(viewChatHistoryController);
             this.chatView.setDeleteMessageController(deleteMessageController);
+        }
+
+        return this;
+    }
+
+    /**
+     * Adds the Create Group Chat Use Case to the application.
+     * @return this builder
+     */
+    public AppBuilder addCreateGroupChatUseCase() {
+        final CreateGroupChatOutputBoundary createGroupChatOutputBoundary =
+                new CreateGroupChatPresenter(groupChatViewModel, viewManagerModel);
+
+        final CreateGroupChatInputBoundary createGroupChatInteractor =
+                new CreateGroupChatInteractor(chatRepository, userRepository, createGroupChatOutputBoundary, userDataAccessObject);
+
+        final CreateGroupChatController createGroupChatController =
+                new CreateGroupChatController(createGroupChatInteractor);
+
+        // Wire up the controller to SearchUserView
+        if (this.searchUserView != null) {
+            this.searchUserView.setCreateGroupChatController(createGroupChatController);
+        }
+
+        return this;
+    }
+
+    public AppBuilder addChatSettingView() {
+        this.chatSettingView = new ChatSettingView(viewManagerModel, groupChatViewModel);
+        cardPanel.add(chatSettingView, chatSettingView.getViewName());
+
+        if (this.chatView != null) {
+            this.chatView.setChatSettingView(this.chatSettingView);
+        }
+
+        return this;
+    }
+
+    public AppBuilder addChangeGroupNameUseCase() {
+        final ChangeGroupNameOutputBoundary changeGroupNameOutputBoundary =
+                new ChangeGroupNamePresenter(groupChatViewModel);
+
+        final ChangeGroupNameInputBoundary changeGroupNameInteractor =
+                new RenameGroupChatInteractor(
+                        chatRepository,
+                        changeGroupNameOutputBoundary,
+                        userDataAccessObject  // Pass Firebase DAO
+                );
+
+        final ChangeGroupNameController changeGroupNameController =
+                new ChangeGroupNameController(changeGroupNameInteractor);
+
+        // Wire up the controller to ChatSettingView
+        if (this.chatSettingView != null) {
+            this.chatSettingView.setChangeGroupNameController(changeGroupNameController);
         }
 
         return this;

@@ -459,7 +459,7 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
                     .get();
 
             chatRepository.findById(chatId).ifPresent(chat -> {
-                chat.removeMessage(messageId);  // 用你刚加的 Chat.removeMessage()
+                chat.removeMessage(messageId);
                 chatRepository.save(chat);
             });
 

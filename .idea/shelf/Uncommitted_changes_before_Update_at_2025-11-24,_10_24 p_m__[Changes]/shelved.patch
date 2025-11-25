@@ -1,0 +1,17 @@
+Index: src/main/java/entity/Chat.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package entity;\n\nimport java.awt.*;\nimport java.time.Instant;\nimport java.util.ArrayList;\nimport java.util.List;\n\npublic class Chat {\n    private final String id;\n    private final List<String> participantUserIds = new ArrayList<>();\n    private final List<String> messageIds = new ArrayList<>();\n    private String groupName;\n    private Color backgroundColor;\n    private Instant lastMessage;\n\n    public Chat(String id, String groupName, Color backgroundColor, Instant lastMessage) {\n        this.id = id;\n        this.groupName = groupName;\n        this.backgroundColor = backgroundColor;\n        this.lastMessage = lastMessage;\n    }\n\n    public String getId() { return id; }\n\n    public List<String> getParticipantUserIds() { return participantUserIds; }\n\n    public List<String> getMessageIds() { return messageIds; }\n\n    public String getGroupName() { return this.groupName;}\n\n    public Color getBackgroundColor() { return this.backgroundColor; }\n\n    public Instant getLastMessage() { return this.lastMessage; }\n\n    public void addParticipant(String userId) { participantUserIds.add(userId); }\n\n    public void addMessage(String messageId) { messageIds.add(messageId); }\n\n    public void setGroupName(String groupName) {this.groupName = groupName; }\n\n    public void setBackgroundColor(Color backgroundColor) { this.backgroundColor = backgroundColor; }\n\n    public void setLastMessage(Instant lastMessage) { this.lastMessage = lastMessage; }\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/entity/Chat.java b/src/main/java/entity/Chat.java
+--- a/src/main/java/entity/Chat.java	(revision 5ea425abce4b71b4b9bb9b6c8626f672c40cfb3f)
++++ b/src/main/java/entity/Chat.java	(date 1764037497425)
+@@ -41,4 +41,4 @@
+     public void setBackgroundColor(Color backgroundColor) { this.backgroundColor = backgroundColor; }
+ 
+     public void setLastMessage(Instant lastMessage) { this.lastMessage = lastMessage; }
+-}
+\ No newline at end of file
++}

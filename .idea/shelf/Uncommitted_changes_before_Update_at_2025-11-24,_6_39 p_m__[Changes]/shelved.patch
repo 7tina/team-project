@@ -1,0 +1,204 @@
+Index: src/test/java/goc/chat/usecase/messaging/ViewChatHistoryInteractorTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package goc.chat.usecase.messaging;\n\nimport entity.Chat;\nimport entity.Message;\nimport entity.UserFactory;\nimport entity.User;\nimport entity.repo.InMemoryChatRepository;\nimport entity.repo.InMemoryMessageRepository;\nimport entity.repo.InMemoryUserRepository;\nimport use_case.messaging.*;\nimport use_case.messaging.view_history.ViewChatHistoryInputData;\nimport use_case.messaging.view_history.ViewChatHistoryInteractor;\nimport use_case.messaging.view_history.ViewChatHistoryOutputBoundary;\nimport use_case.messaging.view_history.ViewChatHistoryOutputData;\nimport entity.ports.ChatRepository;\nimport entity.ports.MessageRepository;\nimport entity.ports.UserRepository;\n\nimport org.junit.jupiter.api.BeforeEach;\nimport org.junit.jupiter.api.Test;\n\nimport java.time.Instant;\nimport java.util.List;\n\nimport static org.junit.jupiter.api.Assertions.*;\n\n/**\n * Unit tests for ViewChatHistoryInteractor.\n */\npublic class ViewChatHistoryInteractorTest {\n\n    private ChatRepository chatRepo;\n    private MessageRepository messageRepo;\n    private UserRepository userRepo;\n    private CapturingPresenter presenter;\n    private ViewChatHistoryInteractor interactor;\n\n    @BeforeEach\n    void setUp() {\n        // use in-memory repositories as fake database\n        chatRepo = new InMemoryChatRepository();\n        messageRepo = new InMemoryMessageRepository();\n        userRepo = new InMemoryUserRepository();\n        presenter = new CapturingPresenter();\n\n        interactor = new ViewChatHistoryInteractor(\n                chatRepo, messageRepo, userRepo, presenter\n        );\n    }\n\n    /**\n     * Happy path: chat exists and has two messages.\n     * They should be returned in chronological order (oldest -> newest).\n     */\n    @Test\n    void testMessagesAreReturnedInChronologicalOrder() {\n        // 1. create chat\n        Chat chat = new Chat(\"chat-1\");\n        chatRepo.save(chat);\n\n        // 2. create users\n        UserFactory userFactory = new UserFactory();\n        User alice = userFactory.create(\"u1\", \"Alice\", \"alice@example.com\");\n        User bob   = userFactory.create(\"u2\", \"Bob\",   \"bob@example.com\");\n        userRepo.save(alice);\n        userRepo.save(bob);\n\n        // 3. create messages (save them in reverse time order on purpose)\n        Message later = new Message(\n                \"m2\",\n                \"chat-1\",\n                \"u2\",\n                \"Later message\",\n                Instant.parse(\"2025-11-14T11:00:00Z\")\n        );\n        Message earlier = new Message(\n                \"m1\",\n                \"chat-1\",\n                \"u1\",\n                \"Earlier message\",\n                Instant.parse(\"2025-11-14T10:00:00Z\")\n        );\n\n        messageRepo.save(later);\n        messageRepo.save(earlier);\n\n        // 4. execute use case\n        ViewChatHistoryInputData input =\n                new ViewChatHistoryInputData(\"chat-1\");\n        interactor.execute(input);\n\n        // 5. assertions: success branch, messages sorted\n        assertNotNull(presenter.successData);\n        assertNull(presenter.errorMessage);\n        assertNull(presenter.noMessagesChatId);\n\n        List<ChatMessageDto> msgs = presenter.successData.getMessages();\n        assertEquals(2, msgs.size());\n\n        // first message should be the earlier one\n        assertEquals(\"Earlier message\", msgs.get(0).getContent());\n        assertEquals(\"Alice\", msgs.get(0).getSenderName());\n\n        // second message should be the later one\n        assertEquals(\"Later message\", msgs.get(1).getContent());\n        assertEquals(\"Bob\", msgs.get(1).getSenderName());\n    }\n\n    /**\n     * Chat exists but has no messages.\n     */\n    @Test\n    void testNoMessagesInChat() {\n        Chat chat = new Chat(\"empty-chat\");\n        chatRepo.save(chat);\n\n        ViewChatHistoryInputData input =\n                new ViewChatHistoryInputData(\"empty-chat\");\n        interactor.execute(input);\n\n        assertNull(presenter.successData);\n        assertNull(presenter.errorMessage);\n        assertEquals(\"empty-chat\", presenter.noMessagesChatId);\n    }\n\n    /**\n     * Chat does not exist.\n     */\n    @Test\n    void testChatNotFound() {\n        ViewChatHistoryInputData input =\n                new ViewChatHistoryInputData(\"does-not-exist\");\n        interactor.execute(input);\n\n        assertNull(presenter.successData);\n        assertNull(presenter.noMessagesChatId);\n        assertNotNull(presenter.errorMessage);\n        assertTrue(presenter.errorMessage.contains(\"Chat not found\"));\n    }\n\n    /**\n     * Simple presenter used only for capturing what the interactor sends out.\n     */\n    private static class CapturingPresenter\n            implements ViewChatHistoryOutputBoundary {\n\n        ViewChatHistoryOutputData successData;\n        String noMessagesChatId;\n        String errorMessage;\n\n        @Override\n        public void prepareSuccessView(ViewChatHistoryOutputData outputData) {\n            this.successData = outputData;\n        }\n\n        @Override\n        public void prepareNoMessagesView(String chatId) {\n            this.noMessagesChatId = chatId;\n        }\n\n        @Override\n        public void prepareFailView(String errorMessage) {\n            this.errorMessage = errorMessage;\n        }\n    }\n}\n\n\n\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/goc/chat/usecase/messaging/ViewChatHistoryInteractorTest.java b/src/test/java/goc/chat/usecase/messaging/ViewChatHistoryInteractorTest.java
+--- a/src/test/java/goc/chat/usecase/messaging/ViewChatHistoryInteractorTest.java	(revision aeeac06ae4e09c3e0bdaccde9833809180abbe43)
++++ b/src/test/java/goc/chat/usecase/messaging/ViewChatHistoryInteractorTest.java	(date 1764027260603)
+@@ -2,30 +2,34 @@
+ 
+ import entity.Chat;
+ import entity.Message;
++import entity.User;
+ import entity.UserFactory;
+-import entity.User;
++import entity.ports.ChatRepository;
++import entity.ports.MessageRepository;
++import entity.ports.UserRepository;
+ import entity.repo.InMemoryChatRepository;
+ import entity.repo.InMemoryMessageRepository;
+ import entity.repo.InMemoryUserRepository;
+-import use_case.messaging.*;
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.Test;
+ import use_case.messaging.view_history.ViewChatHistoryInputData;
+ import use_case.messaging.view_history.ViewChatHistoryInteractor;
+ import use_case.messaging.view_history.ViewChatHistoryOutputBoundary;
+ import use_case.messaging.view_history.ViewChatHistoryOutputData;
+-import entity.ports.ChatRepository;
+-import entity.ports.MessageRepository;
+-import entity.ports.UserRepository;
+-
+-import org.junit.jupiter.api.BeforeEach;
+-import org.junit.jupiter.api.Test;
+ 
+ import java.time.Instant;
++import java.util.Arrays;
++import java.util.Collections;
+ import java.util.List;
+ 
+ import static org.junit.jupiter.api.Assertions.*;
+ 
+ /**
+  * Unit tests for ViewChatHistoryInteractor.
++ *
++ * Current design:
++ * - ViewChatHistoryInputData(chatId, participantIds, messageIds)
++ * - ViewChatHistoryOutputData exposes List<String> messages (plain text only).
+  */
+ public class ViewChatHistoryInteractorTest {
+ 
+@@ -37,7 +41,6 @@
+ 
+     @BeforeEach
+     void setUp() {
+-        // use in-memory repositories as fake database
+         chatRepo = new InMemoryChatRepository();
+         messageRepo = new InMemoryMessageRepository();
+         userRepo = new InMemoryUserRepository();
+@@ -50,22 +53,27 @@
+ 
+     /**
+      * Happy path: chat exists and has two messages.
+-     * They should be returned in chronological order (oldest -> newest).
++     * They should be returned in chronological order (oldest -> newest),
++     * and we only check the text content.
+      */
+     @Test
+-    void testMessagesAreReturnedInChronologicalOrder() {
+-        // 1. create chat
++    void messagesAreReturnedInChronologicalOrder() {
++        // 1. Create chat with participants + message IDs
+         Chat chat = new Chat("chat-1");
++        chat.addParticipant("u1");
++        chat.addParticipant("u2");
++        chat.addMessage("m1");
++        chat.addMessage("m2");
+         chatRepo.save(chat);
+ 
+-        // 2. create users
++        // 2. Create users (interactor might validate them)
+         UserFactory userFactory = new UserFactory();
+         User alice = userFactory.create("u1", "Alice", "alice@example.com");
+         User bob   = userFactory.create("u2", "Bob",   "bob@example.com");
+         userRepo.save(alice);
+         userRepo.save(bob);
+ 
+-        // 3. create messages (save them in reverse time order on purpose)
++        // 3. Create messages (deliberately saved in reverse time order)
+         Message later = new Message(
+                 "m2",
+                 "chat-1",
+@@ -84,38 +92,45 @@
+         messageRepo.save(later);
+         messageRepo.save(earlier);
+ 
+-        // 4. execute use case
++        // 4. Build input data with all three arguments
++        List<String> participantIds = Arrays.asList("u1", "u2");
++        List<String> messageIds     = Arrays.asList("m1", "m2");
++
+         ViewChatHistoryInputData input =
+-                new ViewChatHistoryInputData("chat-1");
++                new ViewChatHistoryInputData("chat-1", participantIds, messageIds);
++
++        // 5. Execute use case
+         interactor.execute(input);
+ 
+-        // 5. assertions: success branch, messages sorted
++        // 6. Assertions: success branch, messages sorted by time
+         assertNotNull(presenter.successData);
+         assertNull(presenter.errorMessage);
+         assertNull(presenter.noMessagesChatId);
+ 
+-        List<ChatMessageDto> msgs = presenter.successData.getMessages();
++        List<String> msgs = presenter.successData.getMessages();
+         assertEquals(2, msgs.size());
+ 
+-        // first message should be the earlier one
+-        assertEquals("Earlier message", msgs.get(0).getContent());
+-        assertEquals("Alice", msgs.get(0).getSenderName());
+-
+-        // second message should be the later one
+-        assertEquals("Later message", msgs.get(1).getContent());
+-        assertEquals("Bob", msgs.get(1).getSenderName());
++        // Oldest first
++        assertEquals("Earlier message", msgs.get(0));
++        assertEquals("Later message",   msgs.get(1));
+     }
+ 
+     /**
+      * Chat exists but has no messages.
+      */
+     @Test
+-    void testNoMessagesInChat() {
++    void noMessagesInChat() {
+         Chat chat = new Chat("empty-chat");
++        chat.addParticipant("u1");
++        chat.addParticipant("u2");
++        // no messageIds added
+         chatRepo.save(chat);
+ 
++        List<String> participantIds = Arrays.asList("u1", "u2");
++        List<String> messageIds     = Collections.emptyList();
++
+         ViewChatHistoryInputData input =
+-                new ViewChatHistoryInputData("empty-chat");
++                new ViewChatHistoryInputData("empty-chat", participantIds, messageIds);
+         interactor.execute(input);
+ 
+         assertNull(presenter.successData);
+@@ -127,9 +142,14 @@
+      * Chat does not exist.
+      */
+     @Test
+-    void testChatNotFound() {
++    void chatNotFound() {
++        // even if we pass participants / messageIds, the chat itself is missing
+         ViewChatHistoryInputData input =
+-                new ViewChatHistoryInputData("does-not-exist");
++                new ViewChatHistoryInputData(
++                        "does-not-exist",
++                        Collections.emptyList(),
++                        Collections.emptyList()
++                );
+         interactor.execute(input);
+ 
+         assertNull(presenter.successData);
+@@ -139,7 +159,7 @@
+     }
+ 
+     /**
+-     * Simple presenter used only for capturing what the interactor sends out.
++     * Simple presenter for capturing output from the interactor.
+      */
+     private static class CapturingPresenter
+             implements ViewChatHistoryOutputBoundary {
+@@ -164,6 +184,3 @@
+         }
+     }
+ }
+-
+-
+-
+Index: .idea/misc.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project version=\"4\">\n  <component name=\"ExternalStorageConfigurationManager\" enabled=\"true\" />\n  <component name=\"MavenProjectsManager\">\n    <option name=\"originalFiles\">\n      <list>\n        <option value=\"$PROJECT_DIR$/pom.xml\" />\n      </list>\n    </option>\n  </component>\n  <component name=\"ProjectRootManager\" version=\"2\" languageLevel=\"JDK_17\" default=\"true\" project-jdk-name=\"corretto-24\" project-jdk-type=\"JavaSDK\" />\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/misc.xml b/.idea/misc.xml
+--- a/.idea/misc.xml	(revision aeeac06ae4e09c3e0bdaccde9833809180abbe43)
++++ b/.idea/misc.xml	(date 1764026339032)
+@@ -8,5 +8,5 @@
+       </list>
+     </option>
+   </component>
+-  <component name="ProjectRootManager" version="2" languageLevel="JDK_17" default="true" project-jdk-name="corretto-24" project-jdk-type="JavaSDK" />
++  <component name="ProjectRootManager" version="2" languageLevel="JDK_24" default="true" project-jdk-name="corretto-24" project-jdk-type="JavaSDK" />
+ </project>
+\ No newline at end of file

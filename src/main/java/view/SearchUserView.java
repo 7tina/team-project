@@ -9,18 +9,13 @@ import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import interface_adapter.groupchat.CreateGroupChatController;
-import interface_adapter.groupchat.GroupChatState;
 import interface_adapter.groupchat.GroupChatViewModel;
 import interface_adapter.logged_in.LoggedInState;
 import interface_adapter.logged_in.LoggedInViewModel;
-import interface_adapter.user_search.SearchUserController;
-import interface_adapter.user_search.SearchUserViewModel;
-import interface_adapter.user_search.SearchUserState;
+import interface_adapter.search_user.SearchUserController;
+import interface_adapter.search_user.SearchUserViewModel;
+import interface_adapter.search_user.SearchUserState;
 import interface_adapter.create_chat.CreateChatController;
-import entity.Chat;
-import entity.User;
-import java.util.Optional;
-import java.util.UUID;
 
 import java.util.List;
 

@@ -2,7 +2,6 @@ package app;
 
 import data_access.FireBaseUserDataAccessObject;
 import entity.UserFactory;
-import entity.User;
 import entity.ports.ChatRepository;
 import entity.ports.UserRepository;
 import entity.repo.InMemoryChatRepository;
@@ -25,13 +24,9 @@ import interface_adapter.signup.SignupController;
 import interface_adapter.signup.SignupPresenter;
 import interface_adapter.signup.SignupViewModel;
 // Corrected SearchUser Imports (Assuming your packages are named 'search_user')
-import interface_adapter.user_search.SearchUserController;
-import interface_adapter.user_search.SearchUserPresenter;
-import interface_adapter.user_search.SearchUserViewModel;
-import interface_adapter.groupchat.ChangeGroupNameController;
-import interface_adapter.groupchat.ChangeGroupNamePresenter;
-import interface_adapter.groupchat.CreateGroupChatController;
-import interface_adapter.groupchat.CreateGroupChatPresenter;
+import interface_adapter.search_user.SearchUserController;
+import interface_adapter.search_user.SearchUserPresenter;
+import interface_adapter.search_user.SearchUserViewModel;
 import interface_adapter.groupchat.GroupChatViewModel;
 import interface_adapter.messaging.send_m.SendMessageController;
 import interface_adapter.messaging.send_m.SendMessagePresenter;
@@ -49,7 +44,6 @@ import use_case.messaging.view_history.ViewChatHistoryOutputBoundary;
 import use_case.search_user.SearchUserInputBoundary;
 import use_case.search_user.SearchUserInteractor;
 import use_case.search_user.SearchUserOutputBoundary;
-import use_case.search_user.SearchUserDataAccessInterface;
 
 import use_case.change_password.ChangePasswordInputBoundary;
 import use_case.change_password.ChangePasswordInteractor;

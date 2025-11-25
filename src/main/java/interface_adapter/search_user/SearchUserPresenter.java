@@ -1,4 +1,4 @@
-package interface_adapter.user_search;
+package interface_adapter.search_user;
 
 import use_case.search_user.SearchUserOutputBoundary;
 import use_case.search_user.SearchUserOutputData;

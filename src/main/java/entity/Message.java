@@ -39,4 +39,3 @@ public class Message {
 
     public void addReaction(String userId, String reaction) { reactions.put(userId, reaction); }
 }
-

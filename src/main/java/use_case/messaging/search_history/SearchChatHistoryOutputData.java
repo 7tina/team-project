@@ -1,18 +1,16 @@
 package use_case.messaging.search_history;
 
-import entity.Message;
-
 import java.util.List;
 
 public class SearchChatHistoryOutputData {
 
     private final String chatId;
     private final String keyword;
-    private final List<Message> messages;
+    private final List<String[]> messages;
 
     public SearchChatHistoryOutputData(String chatId,
                                        String keyword,
-                                       List<Message> messages) {
+                                       List<String[]> messages) {
         this.chatId = chatId;
         this.keyword = keyword;
         this.messages = messages;
@@ -26,7 +24,7 @@ public class SearchChatHistoryOutputData {
         return keyword;
     }
 
-    public List<Message> getMessages() {
+    public List<String[]> getMessages() {
         return messages;
     }
 }

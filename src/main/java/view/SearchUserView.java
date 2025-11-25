@@ -9,13 +9,12 @@ import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import interface_adapter.groupchat.CreateGroupChatController;
-import interface_adapter.groupchat.GroupChatState;
 import interface_adapter.groupchat.GroupChatViewModel;
 import interface_adapter.logged_in.LoggedInState;
 import interface_adapter.logged_in.LoggedInViewModel;
-import interface_adapter.user_search.SearchUserController;
-import interface_adapter.user_search.SearchUserViewModel;
-import interface_adapter.user_search.SearchUserState;
+import interface_adapter.search_user.SearchUserController;
+import interface_adapter.search_user.SearchUserViewModel;
+import interface_adapter.search_user.SearchUserState;
 import interface_adapter.create_chat.CreateChatController;
 
 import java.util.List;
@@ -240,7 +239,9 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-       if ("state".equals(evt.getPropertyName())) {
+        String currentUser = loggedInViewModel.getState().getUsername();
+
+        if ("state".equals(evt.getPropertyName())) {
             Object newValue = evt.getNewValue();
 
             // Check if it's SearchUserState
@@ -253,7 +254,9 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
                 }
                 else if (state.getSearchResults() != null) {
                     for (String username : state.getSearchResults()) {
-                        userListModel.addElement(username);
+                        if (!username.equals(currentUser)) {
+                            userListModel.addElement(username);
+                        }
                     }
                     if (state.getSearchResults().isEmpty()) {
                         userListModel.addElement("No users found.");

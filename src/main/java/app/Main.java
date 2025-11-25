@@ -25,6 +25,7 @@ public class Main {
                 .addChangeGroupNameUseCase()
                 .addRemoveUserUseCase()
                 .addAddUserUseCase()
+                .addDeleteMessageUseCase()
                 .build();
 
         application.pack();

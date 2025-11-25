@@ -6,12 +6,12 @@ import interface_adapter.messaging.send_m.ChatViewModel;
 import interface_adapter.messaging.send_m.SendMessageController;
 import interface_adapter.messaging.send_m.ChatState;
 import interface_adapter.messaging.view_history.ViewChatHistoryController;
+import interface_adapter.messaging.delete_m.DeleteMessageController;
 
 import java.util.List;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
@@ -23,6 +23,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
     private final LoggedInViewModel loggedInViewModel;
     private SendMessageController sendMessageController;
     private ViewChatHistoryController viewChatHistoryController;
+    private DeleteMessageController deleteMessageController;
     private ChatSettingView chatSettingView;
 
     private String currentChatId;
@@ -36,6 +37,11 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
     private final JButton sendButton;
     private final JButton settingButton;
 
+    private final JPanel replyPreviewBox;         // NEW
+    private final JLabel replyPreviewText;        // NEW
+    private final JButton cancelReplyButton;      // NEW
+    private String replyingToMessageId = null;    // NEW
+
     // Use this to display the initial prompt or history
     private final JPanel chatDisplayPanel;
     private final JLabel initialPrompt;
@@ -43,6 +49,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
     public ChatView(ViewManagerModel viewManagerModel,
                     ChatViewModel chatViewModel,
                     LoggedInViewModel loggedInViewModel) {
+
         this.viewManagerModel = viewManagerModel;
         this.chatViewModel = chatViewModel;
         this.loggedInViewModel = loggedInViewModel;
@@ -53,15 +60,12 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         JPanel topBar = new JPanel(new BorderLayout());
         topBar.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // Left Side: Chat Partner Name (Placeholder)
         JPanel partnerInfoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        // Using the Profile icon again, but this time for the chat partner
         JLabel partnerIcon = new JLabel("👤");
         partnerIcon.setFont(new Font("SansSerif", Font.PLAIN, 24));
-        chatPartnerLabel = new JLabel(this.chatViewModel.getState().getGroupName()); // Placeholder
+        chatPartnerLabel = new JLabel(this.chatViewModel.getState().getGroupName());
         chatPartnerLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
 
-        // Right Side: Back/Exit Button (Go back to LoggedInView/Recent Chats)
         JButton backButton = new JButton("⬅");
         backButton.setFont(new Font("SansSerif", Font.BOLD, 20));
 
@@ -75,10 +79,8 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         partnerInfoPanel.add(chatPartnerLabel);
         topBar.add(partnerInfoPanel, BorderLayout.WEST);
 
-        // Right Side: Chat Settings Button
-        settingButton = new JButton("⛭");  // NEW - assigns to field
+        settingButton = new JButton("⛭");
         settingButton.setFont(new Font("SansSerif", Font.BOLD, 20));
-
         settingButton.addActionListener(e -> {
             if (currentChatId == null) {
                 JOptionPane.showMessageDialog(this,
@@ -94,50 +96,80 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
             viewManagerModel.setState("chat setting");
             viewManagerModel.firePropertyChange();
         });
-
-
         topBar.add(settingButton, BorderLayout.EAST);
 
-        // Chat Display Area (Main Content)
         chatDisplayPanel = new JPanel();
-        // change to y-axis display frame
         chatDisplayPanel.setLayout(new BoxLayout(chatDisplayPanel, BoxLayout.Y_AXIS));
 
-        // Initial Prompt: "Send 'User' a message to start a chat!"
-        initialPrompt = new JLabel("<html><div style='text-align: center;'>Send \"" + chatPartnerLabel.getText() +
+        initialPrompt = new JLabel("<html><div style='text-align: center;'>Send \"" +
+                chatPartnerLabel.getText() +
                 "\" a message to start a chat!</div></html>");
         initialPrompt.setFont(new Font("SansSerif", Font.ITALIC, 16));
-
         chatDisplayPanel.add(initialPrompt);
 
         JScrollPane chatScrollPane = new JScrollPane(chatDisplayPanel);
         chatScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         chatScrollPane.setBorder(BorderFactory.createEmptyBorder());
 
-        // Input Panel (Text field and Send Button)
-        JPanel inputPanel = new JPanel(new BorderLayout(5, 5));
-        inputPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 10, 10)); // Padding
+        // -------------------------------
+        // Reply Preview Box
+        // -------------------------------
+        replyPreviewBox = new JPanel(new BorderLayout());
+        replyPreviewBox.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(200, 200, 200), 1, true),
+                BorderFactory.createEmptyBorder(5, 8, 5, 8)
+        ));
+        replyPreviewBox.setBackground(new Color(245, 245, 245));
+        replyPreviewBox.setVisible(false);
+
+        replyPreviewText = new JLabel("Replying to: ");
+        cancelReplyButton = new JButton("✕");
+        cancelReplyButton.setFocusable(false);
+        cancelReplyButton.setBorderPainted(false);
+        cancelReplyButton.setContentAreaFilled(false);
+        cancelReplyButton.addActionListener(e -> clearReplyPreview());
+        replyPreviewBox.add(replyPreviewText, BorderLayout.WEST);
+        replyPreviewBox.add(cancelReplyButton, BorderLayout.EAST);
 
         replyingToLabel = new JLabel("Replying to:");
+        replyingToLabel.setVisible(false);
+
         messageInputField = new JTextArea(1, 1);
         messageInputField.setLineWrap(true);
         messageInputField.setWrapStyleWord(true);
         JScrollPane inputScrollPane = new JScrollPane(messageInputField);
 
+        // press enter for sending
+        InputMap im = messageInputField.getInputMap(JComponent.WHEN_FOCUSED);
+        ActionMap am = messageInputField.getActionMap();
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "sendMessage");
+        am.put("sendMessage", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                sendButton.doClick();
+            }
+        });
+
         sendButton = new JButton("Send");
         sendButton.setFont(new Font("SansSerif", Font.BOLD, 14));
         sendButton.setPreferredSize(new Dimension(80, inputScrollPane.getPreferredSize().height));
-
         sendButton.addActionListener(this);
 
-        inputPanel.add(replyingToLabel, BorderLayout.NORTH);
+        JPanel inputPanel = new JPanel(new BorderLayout(5, 5));
+        inputPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 10, 10));
+        inputPanel.add(replyPreviewBox, BorderLayout.NORTH);
         inputPanel.add(inputScrollPane, BorderLayout.CENTER);
         inputPanel.add(sendButton, BorderLayout.EAST);
 
-        // Assembly
         this.add(topBar, BorderLayout.NORTH);
         this.add(chatScrollPane, BorderLayout.CENTER);
         this.add(inputPanel, BorderLayout.SOUTH);
+    }
+
+    private void clearReplyPreview() {
+        replyingToMessageId = null;
+        replyPreviewBox.setVisible(false);
+        replyPreviewText.setText("");
     }
 
     @Override
@@ -145,24 +177,24 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         if (evt.getSource().equals(sendButton)) {
             String message = messageInputField.getText().trim();
             if (!message.isEmpty()) {
-                sendMessageController.execute(currentChatId, currentUserId, replyingToLabel.getText(), message);
+                sendMessageController.execute(
+                        currentChatId,
+                        currentUserId,
+                        replyingToMessageId,
+                        message
+                );
                 messageInputField.setText("");
+                clearReplyPreview();
             }
         }
     }
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        if (!"state".equals(evt.getPropertyName())) {
-            return;
-        }
+        if (!"state".equals(evt.getPropertyName())) return;
+        if (!(evt.getNewValue() instanceof ChatState)) return;
 
-        Object newValue = evt.getNewValue();
-        if (!(newValue instanceof ChatState)) {
-            return;
-        }
-
-        ChatState state = (ChatState) newValue;
+        ChatState state = (ChatState) evt.getNewValue();
 
         if (!state.getFirst() && state.getChatId() != null && state.getGroupName() != null) {
             state.chatViewStart();
@@ -191,6 +223,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
             chatDisplayPanel.add(errorLabel);
         }
         else {
+
             // Array index order: [messageId, senderUserId, messageContent, messageTimestamp]
             List<String[]> messages = state.getMessages();
 
@@ -198,45 +231,149 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
                 chatDisplayPanel.add(initialPrompt);
             } else {
                 for (String[] msg : messages) {
-                    boolean fromCurrentUser =
-                            msg[1].equals(currentUserId);
 
-                    JPanel row = new JPanel(new BorderLayout());
+                    boolean fromCurrentUser = msg[1].equals(currentUserId);
+                    String messageId = msg[0];
+                    String content = msg[2];
+                    String timestamp = msg[3];
+
+                    String repliedMessageId = msg.length > 4 ? msg[4] : null;
+                    String repliedPreview = null;
+
+                    if (repliedMessageId != null && !repliedMessageId.isEmpty()) {
+                        for (String[] m : messages) {
+                            if (m[0].equals(repliedMessageId)) {
+                                String original = m[2];
+                                repliedPreview = original.length() > 25 ?
+                                        original.substring(0, 25) + "…" : original;
+                                break;
+                            }
+                        }
+                    }
+
+                    JPanel row = new JPanel();
+                    row.setLayout(new BoxLayout(row, BoxLayout.X_AXIS));
                     row.setOpaque(false);
                     row.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
-                    String displayText = msg[2];
-                    if (isGroupChat && !fromCurrentUser) {
-                        displayText = msg[1] + ": " + msg[2];
-                    }
+                    int viewportWidth = chatDisplayPanel.getParent().getWidth();
+                    int maxBubbleWidth = (int)(viewportWidth * 0.66);
 
-                    JLabel bubble = new JLabel("<html>" + displayText + "</html>");
+                    // Build wrapped bubble
+                    JPanel bubble = createWrappedBubble(content,timestamp, repliedPreview, fromCurrentUser, maxBubbleWidth);
 
-                    bubble.setOpaque(true);
-                    bubble.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+                    JButton actionButton = new JButton("⋯");
+                    actionButton.setFocusable(false);
+                    actionButton.setPreferredSize(new Dimension(28, 20));
+                    actionButton.setMargin(new Insets(0, 4, 0, 4));
+
+                    JPopupMenu menu = buildPopupMenu(fromCurrentUser, messageId, content);
+                    actionButton.addActionListener(e -> menu.show(actionButton, 0, actionButton.getHeight()));
+
+                    bubble.addMouseListener(new MouseAdapter() {
+                        @Override
+                        public void mouseClicked(MouseEvent e) {
+                            replyingToMessageId = messageId;
+
+                            String preview = content.length() > 20 ?
+                                    content.substring(0, 20) + "…" : content;
+
+                            replyPreviewText.setText("Replying to: " + preview);
+                            replyPreviewBox.setVisible(true);
+                        }
+                    });
 
                     if (fromCurrentUser) {
-                        bubble.setBackground(new Color(0x95EC69));
-                        // green
-                        bubble.setForeground(Color.BLACK);
-                        row.add(bubble, BorderLayout.EAST);
+                        row.add(Box.createHorizontalGlue());
+                        row.add(bubble);
+                        row.add(Box.createHorizontalStrut(4));
+                        row.add(actionButton);
                     } else {
-                        bubble.setBackground(new Color(230, 230, 230));
-                        // black
-                        bubble.setForeground(Color.BLACK);
-                        row.add(bubble, BorderLayout.WEST);
+                        row.add(actionButton);
+                        row.add(Box.createHorizontalStrut(4));
+                        row.add(bubble);
+                        row.add(Box.createHorizontalGlue());
                     }
+
                     chatDisplayPanel.add(row);
                 }
             }
         }
+
         chatDisplayPanel.revalidate();
         chatDisplayPanel.repaint();
     }
 
-    public String getViewName() {
-        return viewName;
+    // -------------------------------
+    // Popup Menu Builder
+    // -------------------------------
+    private JPopupMenu buildPopupMenu(boolean fromCurrentUser, String messageId, String content) {
+        JPopupMenu menu = new JPopupMenu();
+
+        if (fromCurrentUser) {
+            JMenuItem deleteItem = new JMenuItem("Delete");
+            deleteItem.addActionListener(e -> {
+                int choice = JOptionPane.showConfirmDialog(
+                        this,
+                        "Delete this message?",
+                        "Confirm Delete",
+                        JOptionPane.YES_NO_OPTION
+                );
+
+                if (choice == JOptionPane.YES_OPTION) {
+                    if (deleteMessageController == null) {
+                        JOptionPane.showMessageDialog(this,
+                                "DeleteMessageController not set.",
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                    if (messageId.equals(replyingToMessageId)) {
+                        clearReplyPreview();
+                    }
+                    deleteMessageController.execute(messageId, currentUserId);
+                }
+            });
+            menu.add(deleteItem);
+
+            JMenuItem replyItem = new JMenuItem("Reply");
+            replyItem.addActionListener(e -> {
+                replyingToMessageId = messageId;
+                String shortText = content.length() > 20 ? content.substring(0, 20) + "…" : content;
+                replyPreviewText.setText("Replying to: " + shortText);
+                replyPreviewBox.setVisible(true);
+            });
+            menu.add(replyItem);
+        }
+        else {
+            JMenuItem replyItem = new JMenuItem("Reply");
+            replyItem.addActionListener(e -> {
+                replyingToMessageId = messageId;
+                String shortText = content.length() > 20 ? content.substring(0, 20) + "…" : content;
+                replyPreviewText.setText("Replying to: " + shortText);
+                replyPreviewBox.setVisible(true);
+            });
+            menu.add(replyItem);
+
+            JMenuItem reactItem = new JMenuItem("React");
+            reactItem.addActionListener(e -> JOptionPane.showMessageDialog(this,
+                    "React feature coming soon."));
+            menu.add(reactItem);
+
+            JMenuItem clearReaction = new JMenuItem("Clear Reaction");
+            clearReaction.addActionListener(e -> JOptionPane.showMessageDialog(this,
+                    "Clear Reaction feature coming soon."));
+            menu.add(clearReaction);
+        }
+
+        menu.addSeparator();
+        JMenuItem cancel = new JMenuItem("Cancel");
+        menu.add(cancel);
+
+        return menu;
     }
+
+    public String getViewName() { return viewName; }
 
     /**
      * Public method to set the chat partner's username and update the view.
@@ -244,8 +381,8 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
      */
     public void setChatPartner(String username) {
         this.chatPartnerLabel.setText(username);
-        // Update the initial prompt to reflect the new user
-        this.initialPrompt.setText("<html><div style='text-align: center;'>Send \"" + username +
+        this.initialPrompt.setText("<html><div style='text-align: center;'>Send \"" +
+                username +
                 "\" a message to start a chat!</div></div>");
         this.revalidate();
         this.repaint();
@@ -257,15 +394,11 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         this.currentUserId = currentUserId;
         this.isGroupChat = isGroupChat;
         setChatPartner(groupName);
-
-        // Show/hide settings button based on chat type
         settingButton.setVisible(isGroupChat);
         viewChatHistoryController.execute(chatId, userIds, messageIds);
     }
 
-    public void setChatId(String chatId) {
-        this.currentChatId = chatId;
-    }
+    public void setChatId(String chatId) { this.currentChatId = chatId; }
 
     public void setSendMessageController(SendMessageController sendMessageController) {
         this.sendMessageController = sendMessageController;
@@ -275,6 +408,63 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         this.viewChatHistoryController = viewChatHistoryController;
     }
 
+    public void setDeleteMessageController(DeleteMessageController controller) {
+        this.deleteMessageController = controller;
+    }
+
+    // --------------------------------------------------------
+    // PERFECT WRAPPED BUBBLE (this is the fixed version)
+    // --------------------------------------------------------
+    private JPanel createWrappedBubble(String text, String time, String repliedPreview,
+                                       boolean fromCurrentUser, int maxWidth) {
+
+        // Container panel
+        JPanel bubble = new JPanel();
+        bubble.setLayout(new BoxLayout(bubble, BoxLayout.Y_AXIS));
+        bubble.setBorder(BorderFactory.createEmptyBorder(6, 10, 6, 10));
+        bubble.setOpaque(true);
+        bubble.setBackground(fromCurrentUser ? new Color(0x95EC69) : new Color(230, 230, 230));
+
+        // Reply header (if exists)
+        if (repliedPreview != null) {
+            JLabel replyHeader = new JLabel("↪ " + repliedPreview);
+            replyHeader.setFont(new Font("SansSerif", Font.PLAIN, 11));
+            replyHeader.setForeground(new Color(100, 100, 100));
+            replyHeader.setAlignmentX(Component.LEFT_ALIGNMENT);
+            bubble.add(replyHeader);
+        }
+
+        // Main text label
+        JLabel label = new JLabel("<html>" + text + "</html>");
+        label.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        // Wrap width calculation
+        label.setSize(new Dimension(maxWidth, Integer.MAX_VALUE));
+        Dimension preferred = label.getPreferredSize();
+
+        label.setMaximumSize(new Dimension(maxWidth, preferred.height + 10));
+        bubble.setMaximumSize(new Dimension(maxWidth + 20, preferred.height + 30));
+
+        bubble.add(label);
+
+        JLabel timeLabel = new JLabel(time);
+        timeLabel.setFont(new Font("SansSerif", Font.PLAIN, 10));
+        timeLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        // Color depends on who sent the message
+        if (fromCurrentUser) {
+            timeLabel.setForeground(new Color(80,80,80));   // dark gray
+        } else {
+            timeLabel.setForeground(new Color(50,50,50));   // darker gray
+        }
+
+        bubble.add(Box.createVerticalStrut(3));
+        bubble.add(timeLabel);
+
+
+        return bubble;
+    }
     public void setChatSettingView(ChatSettingView chatSettingView) {
         this.chatSettingView = chatSettingView;
     }

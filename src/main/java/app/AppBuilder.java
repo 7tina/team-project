@@ -4,7 +4,6 @@ import data_access.FireBaseUserDataAccessObject;
 import data_access.FirebaseClientProvider;
 import data_access.FirestoreUserRepository;
 import entity.UserFactory;
-import entity.User;
 import entity.ports.ChatRepository;
 import entity.ports.UserRepository;
 import entity.repo.InMemoryChatRepository;
@@ -22,15 +21,18 @@ import interface_adapter.login.LoginPresenter;
 import interface_adapter.login.LoginViewModel;
 import interface_adapter.logout.LogoutController;
 import interface_adapter.logout.LogoutPresenter;
+import interface_adapter.messaging.delete_m.DeleteMessageController;
+import interface_adapter.messaging.delete_m.DeleteMessagePresenter;
 import interface_adapter.messaging.view_history.ViewChatHistoryController;
 import interface_adapter.messaging.view_history.ViewChatHistoryPresenter;
 import interface_adapter.signup.SignupController;
 import interface_adapter.signup.SignupPresenter;
 import interface_adapter.signup.SignupViewModel;
 // Corrected SearchUser Imports (Assuming your packages are named 'search_user')
-import interface_adapter.user_search.SearchUserController;
-import interface_adapter.user_search.SearchUserPresenter;
-import interface_adapter.user_search.SearchUserViewModel;
+import interface_adapter.search_user.SearchUserController;
+import interface_adapter.search_user.SearchUserPresenter;
+import interface_adapter.search_user.SearchUserViewModel;
+import interface_adapter.groupchat.GroupChatViewModel;
 import interface_adapter.messaging.send_m.SendMessageController;
 import interface_adapter.messaging.send_m.SendMessagePresenter;
 import interface_adapter.messaging.send_m.ChatViewModel;
@@ -38,6 +40,9 @@ import use_case.create_chat.CreateChatInputBoundary;
 import use_case.create_chat.CreateChatInteractor;
 import use_case.create_chat.CreateChatOutputBoundary;
 import use_case.groups.*;
+import use_case.messaging.delete_m.DeleteMessageInputBoundary;
+import use_case.messaging.delete_m.DeleteMessageInteractor;
+import use_case.messaging.delete_m.DeleteMessageOutputBoundary;
 import use_case.messaging.send_m.SendMessageInputBoundary;
 import use_case.messaging.send_m.SendMessageOutputBoundary;
 import use_case.messaging.send_m.SendMessageInteractor;
@@ -48,7 +53,6 @@ import use_case.messaging.view_history.ViewChatHistoryOutputBoundary;
 import use_case.search_user.SearchUserInputBoundary;
 import use_case.search_user.SearchUserInteractor;
 import use_case.search_user.SearchUserOutputBoundary;
-import use_case.search_user.SearchUserDataAccessInterface;
 
 import use_case.change_password.ChangePasswordInputBoundary;
 import use_case.change_password.ChangePasswordInteractor;
@@ -444,6 +448,18 @@ public class AppBuilder {
         // Wire up the controller to ChatSettingView
         if (this.chatSettingView != null) {
             this.chatSettingView.setAddUserController(addUserController);
+    public AppBuilder addDeleteMessageUseCase() {
+        DeleteMessageOutputBoundary deletePresenter =
+                new DeleteMessagePresenter(chatViewModel, viewManagerModel);
+
+        DeleteMessageInputBoundary deleteInteractor =
+                new DeleteMessageInteractor(userDataAccessObject, deletePresenter);
+
+        DeleteMessageController deleteController =
+                new DeleteMessageController(deleteInteractor);
+
+        if (this.chatView != null) {
+            this.chatView.setDeleteMessageController(deleteController);
         }
 
         return this;

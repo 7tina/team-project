@@ -17,6 +17,7 @@ import use_case.change_password.ChangePasswordUserDataAccessInterface;
 import use_case.create_chat.CreateChatUserDataAccessInterface;
 import use_case.login.LoginUserDataAccessInterface;
 import use_case.logout.LogoutUserDataAccessInterface;
+import use_case.messaging.delete_m.DeleteMessageDataAccessInterface;
 import use_case.messaging.send_m.SendMessageDataAccessInterface;
 import use_case.messaging.view_history.ViewChatHistoryDataAccessInterface;
 import use_case.search_user.SearchUserDataAccessInterface;
@@ -42,7 +43,8 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
         SearchUserDataAccessInterface,
         CreateChatUserDataAccessInterface,
         ViewChatHistoryDataAccessInterface,
-        SendMessageDataAccessInterface {
+        SendMessageDataAccessInterface,
+        DeleteMessageDataAccessInterface {
 
     // Inner class to represent the structure of a user document in Firestore
     // Note: The username is the document ID, so it is not stored in the document body.
@@ -455,13 +457,35 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
     }
 
     /** -------------------- DELETE BY ID -------------------- **/
-    public void deleteById(String id) {
+    @Override
+    public void deleteMessageById(String messageId) {
         try {
-            DocumentReference doc = db.collection(COLLECTION_MESSAGE).document(id);
-            ApiFuture<WriteResult> future = doc.delete();
-            future.get();
+            DocumentReference msgRef = db.collection(COLLECTION_MESSAGE).document(messageId);
+            DocumentSnapshot msgSnap = msgRef.get().get();
+
+            String chatId = null;
+            if (msgSnap.exists()) {
+                chatId = msgSnap.getString(MESSAGE_CHAT_ID);
+            }
+
+            msgRef.delete().get();
+
+            if (chatId != null) {
+                DocumentReference chatRef = db.collection(COLLECTION_CHAT).document(chatId);
+                DocumentSnapshot chatSnap = chatRef.get().get();
+
+                if (chatSnap.exists()) {
+                    List<String> ids = (List<String>) chatSnap.get(CHAT_MESSAGE);
+                    if (ids != null && ids.remove(messageId)) {
+                        chatRef.update(CHAT_MESSAGE, ids).get();
+                    }
+                }
+            }
+
+            messageRepository.deleteById(messageId);
+
         } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException("Failed to delete message", e);
+            throw new RuntimeException("Failed to delete message " + messageId, e);
         }
     }
 }

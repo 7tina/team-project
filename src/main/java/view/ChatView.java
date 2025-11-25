@@ -6,6 +6,7 @@ import interface_adapter.messaging.send_m.ChatViewModel;
 import interface_adapter.messaging.send_m.SendMessageController;
 import interface_adapter.messaging.send_m.ChatState;
 import interface_adapter.messaging.view_history.ViewChatHistoryController;
+import interface_adapter.messaging.delete_m.DeleteMessageController;
 
 import java.util.List;
 import javax.swing.*;
@@ -22,6 +23,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
     private final LoggedInViewModel loggedInViewModel;
     private SendMessageController sendMessageController;
     private ViewChatHistoryController viewChatHistoryController;
+    private DeleteMessageController deleteMessageController;
     private ChatSettingView chatSettingView;
 
     private String currentChatId;
@@ -136,6 +138,17 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         messageInputField.setLineWrap(true);
         messageInputField.setWrapStyleWord(true);
         JScrollPane inputScrollPane = new JScrollPane(messageInputField);
+
+        // press enter for sending
+        InputMap im = messageInputField.getInputMap(JComponent.WHEN_FOCUSED);
+        ActionMap am = messageInputField.getActionMap();
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "sendMessage");
+        am.put("sendMessage", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                sendButton.doClick();
+            }
+        });
 
         sendButton = new JButton("Send");
         sendButton.setFont(new Font("SansSerif", Font.BOLD, 14));
@@ -299,8 +312,28 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
 
         if (fromCurrentUser) {
             JMenuItem deleteItem = new JMenuItem("Delete");
-            deleteItem.addActionListener(e -> JOptionPane.showMessageDialog(this,
-                    "Delete feature coming soon."));
+            deleteItem.addActionListener(e -> {
+                int choice = JOptionPane.showConfirmDialog(
+                        this,
+                        "Delete this message?",
+                        "Confirm Delete",
+                        JOptionPane.YES_NO_OPTION
+                );
+
+                if (choice == JOptionPane.YES_OPTION) {
+                    if (deleteMessageController == null) {
+                        JOptionPane.showMessageDialog(this,
+                                "DeleteMessageController not set.",
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                    if (messageId.equals(replyingToMessageId)) {
+                        clearReplyPreview();
+                    }
+                    deleteMessageController.execute(messageId, currentUserId);
+                }
+            });
             menu.add(deleteItem);
 
             JMenuItem replyItem = new JMenuItem("Reply");
@@ -373,6 +406,10 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
 
     public void setViewChatHistoryController(ViewChatHistoryController viewChatHistoryController) {
         this.viewChatHistoryController = viewChatHistoryController;
+    }
+
+    public void setDeleteMessageController(DeleteMessageController controller) {
+        this.deleteMessageController = controller;
     }
 
     // --------------------------------------------------------

@@ -1,9 +1,7 @@
 package view;
 
 import interface_adapter.ViewManagerModel;
-import interface_adapter.groupchat.ChangeGroupNameController;
-import interface_adapter.groupchat.GroupChatState;
-import interface_adapter.groupchat.GroupChatViewModel;
+import interface_adapter.groupchat.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -24,6 +22,8 @@ public class ChatSettingView extends JPanel implements ActionListener, PropertyC
     private final JButton removeUserButton;
 
     private ChangeGroupNameController changeGroupNameController;
+    private RemoveUserController removeUserController;
+    private AddUserController addUserController;
     private String currentChatId;
 
     public ChatSettingView(ViewManagerModel viewManagerModel, GroupChatViewModel groupChatViewModel) {
@@ -118,18 +118,80 @@ public class ChatSettingView extends JPanel implements ActionListener, PropertyC
             changeGroupNameController.execute(currentChatId, newName.trim());
         }
         else if (evt.getSource().equals(addUserButton)) {
-            String user = JOptionPane.showInputDialog(this, "Enter username to add:");
-            if (user != null && !user.trim().isEmpty()) {
-                System.out.println("Add user: " + user);
-                // TODO: call controller
+            if (addUserController == null) {
+                JOptionPane.showMessageDialog(this,
+                        "Controller not initialized",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
             }
+
+            if (currentChatId == null) {
+                JOptionPane.showMessageDialog(this,
+                        "No chat selected",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            String user = JOptionPane.showInputDialog(this,
+                    "Enter username to add:",
+                    "Add User",
+                    JOptionPane.PLAIN_MESSAGE);
+
+            // Check if user cancelled
+            if (user == null) {
+                return;
+            }
+
+            // Check if username is empty
+            if (user.trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this,
+                        "Username cannot be empty",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            addUserController.execute(currentChatId, user.trim());
         }
         else if (evt.getSource().equals(removeUserButton)) {
-            String user = JOptionPane.showInputDialog(this, "Enter username to remove:");
-            if (user != null && !user.trim().isEmpty()) {
-                System.out.println("Remove user: " + user);
-                // TODO: call controller
+            if (removeUserController == null) {
+                JOptionPane.showMessageDialog(this,
+                        "Controller not initialized",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
             }
+
+            if (currentChatId == null) {
+                JOptionPane.showMessageDialog(this,
+                        "No chat selected",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            String user = JOptionPane.showInputDialog(this,
+                    "Enter username to remove:",
+                    "Remove User",
+                    JOptionPane.PLAIN_MESSAGE);
+
+            // Check if user cancelled
+            if (user == null) {
+                return;
+            }
+
+            // Check if username is empty
+            if (user.trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this,
+                        "Username cannot be empty",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            removeUserController.execute(currentChatId, user.trim());
         }
     }
 
@@ -171,5 +233,13 @@ public class ChatSettingView extends JPanel implements ActionListener, PropertyC
     // Setter for the controller
     public void setChangeGroupNameController(ChangeGroupNameController controller) {
         this.changeGroupNameController = controller;
+    }
+
+    public void setRemoveUserController(RemoveUserController controller) {
+        this.removeUserController = controller;
+    }
+
+    public void setAddUserController(AddUserController controller) {
+        this.addUserController = controller;
     }
 }

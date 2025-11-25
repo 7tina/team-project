@@ -12,6 +12,7 @@ import entity.repo.InMemoryUserRepository;
 import interface_adapter.ViewManagerModel;
 import interface_adapter.create_chat.CreateChatController;
 import interface_adapter.create_chat.CreateChatPresenter;
+import interface_adapter.groupchat.*;
 import interface_adapter.logged_in.ChangePasswordController;
 import interface_adapter.logged_in.ChangePasswordPresenter;
 import interface_adapter.logged_in.LoggedInViewModel;
@@ -408,6 +409,45 @@ public class AppBuilder {
         return this;
     }
 
+    public AppBuilder addRemoveUserUseCase() {
+        final RemoveUserOutputBoundary removeUserOutputBoundary =
+                new RemoveUserPresenter(groupChatViewModel);
+
+        final RemoveUserInputBoundary removeUserInteractor =
+                new RemoveUserFromGroupInteractor(
+                        chatRepository,           // ChatRepository for finding/saving chats
+                        removeUserOutputBoundary,
+                        userDataAccessObject      // Firebase DAO for getUserIdByUsername
+                );
+
+        final RemoveUserController removeUserController =
+                new RemoveUserController(removeUserInteractor);
+
+        // Wire up the controller to ChatSettingView
+        if (this.chatSettingView != null) {
+            this.chatSettingView.setRemoveUserController(removeUserController);
+        }
+
+        return this;
+    }
+
+    public AppBuilder addAddUserUseCase() {
+        final AddUserOutputBoundary addUserOutputBoundary =
+                new AddUserPresenter(groupChatViewModel);
+
+        final AddUserInputBoundary addUserInteractor =
+                new AddUserToGroupInteractor(
+                        chatRepository,           // ChatRepository for finding/saving chats
+                        addUserOutputBoundary,
+                        userDataAccessObject      // Firebase DAO for getUserIdByUsername
+                );
+
+        final AddUserController addUserController =
+                new AddUserController(addUserInteractor);
+
+        // Wire up the controller to ChatSettingView
+        if (this.chatSettingView != null) {
+            this.chatSettingView.setAddUserController(addUserController);
     public AppBuilder addDeleteMessageUseCase() {
         DeleteMessageOutputBoundary deletePresenter =
                 new DeleteMessagePresenter(chatViewModel, viewManagerModel);

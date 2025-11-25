@@ -23,6 +23,8 @@ public class Main {
                 .addCreateGroupChatUseCase()
                 .addChatUseCase()
                 .addChangeGroupNameUseCase()
+                .addRemoveUserUseCase()
+                .addAddUserUseCase()
                 .addDeleteMessageUseCase()
                 .build();
 

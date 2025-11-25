@@ -431,6 +431,26 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
         }
     }
 
+    /**
+     * Gets a user ID by their username.
+     * In this system, the username IS the user ID (document ID).
+     * This method verifies the user exists before returning the username.
+     * @param username The username to look up.
+     * @return The user ID (same as username), or null if user doesn't exist.
+     */
+    public String getUserIdByUsername(String username) {
+        if (username == null || username.trim().isEmpty()) {
+            return null;
+        }
+
+        // Check if user exists
+        if (existsByName(username.trim())) {
+            return username.trim();
+        }
+
+        return null;
+    }
+
     //TODO: These methods COULD be used for the delete and edit chat use cases (you don't necessarily have to).
     /** -------------------- FIND MESSAGES BY CHAT ID -------------------- **/
     public List<Message> findByChatId(String chatId) {

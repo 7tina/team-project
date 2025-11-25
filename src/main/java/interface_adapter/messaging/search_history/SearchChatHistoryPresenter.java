@@ -1,8 +1,8 @@
 package interface_adapter.messaging.search_history;
 
+import entity.Message;
 import interface_adapter.messaging.send_m.ChatState;
 import interface_adapter.messaging.send_m.ChatViewModel;
-import use_case.messaging.ChatMessageDto;
 import use_case.messaging.search_history.SearchChatHistoryOutputBoundary;
 import use_case.messaging.search_history.SearchChatHistoryOutputData;
 
@@ -22,9 +22,9 @@ public class SearchChatHistoryPresenter implements SearchChatHistoryOutputBounda
         state.clearMessages();
         state.setError(null);
 
-        List<ChatMessageDto> messages = outputData.getMessages();
-        for (ChatMessageDto dto : messages) {
-            state.addMessage(dto);
+        List<Message> messages = outputData.getMessages();
+        for (Message message : messages) {
+            state.addMessage(message);
         }
 
         chatViewModel.firePropertyChange();

@@ -4,6 +4,7 @@ import use_case.messaging.search_history.SearchChatHistoryInputBoundary;
 import use_case.messaging.search_history.SearchChatHistoryInputData;
 
 public class SearchChatHistoryController {
+
     private final SearchChatHistoryInputBoundary interactor;
 
     public SearchChatHistoryController(SearchChatHistoryInputBoundary interactor) {

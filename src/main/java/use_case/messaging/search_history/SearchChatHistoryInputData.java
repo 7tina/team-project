@@ -1,6 +1,7 @@
 package use_case.messaging.search_history;
 
 public class SearchChatHistoryInputData {
+
     private final String chatId;
     private final String keyword;
 
@@ -9,6 +10,11 @@ public class SearchChatHistoryInputData {
         this.keyword = keyword;
     }
 
-    public String getChatId() { return chatId; }
-    public String getKeyword() { return keyword; }
+    public String getChatId() {
+        return chatId;
+    }
+
+    public String getKeyword() {
+        return keyword;
+    }
 }

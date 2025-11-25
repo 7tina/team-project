@@ -24,6 +24,7 @@ public class Main {
                 .addChatUseCase()
                 .addChangeGroupNameUseCase()
                 .addRemoveUserUseCase()
+                .addAddUserUseCase()
                 .build();
 
         application.pack();

@@ -426,4 +426,26 @@ public class AppBuilder {
 
         return this;
     }
+
+    public AppBuilder addAddUserUseCase() {
+        final AddUserOutputBoundary addUserOutputBoundary =
+                new AddUserPresenter(groupChatViewModel);
+
+        final AddUserInputBoundary addUserInteractor =
+                new AddUserToGroupInteractor(
+                        chatRepository,           // ChatRepository for finding/saving chats
+                        addUserOutputBoundary,
+                        userDataAccessObject      // Firebase DAO for getUserIdByUsername
+                );
+
+        final AddUserController addUserController =
+                new AddUserController(addUserInteractor);
+
+        // Wire up the controller to ChatSettingView
+        if (this.chatSettingView != null) {
+            this.chatSettingView.setAddUserController(addUserController);
+        }
+
+        return this;
+    }
 }

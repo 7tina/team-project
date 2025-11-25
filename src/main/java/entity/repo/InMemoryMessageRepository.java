@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 /**
  * Will only store the messages of the current chat and will clear when not in use.
-*/
+ */
 public class InMemoryMessageRepository implements MessageRepository {
 
     private final Map<String, Message> messages = new HashMap<>();

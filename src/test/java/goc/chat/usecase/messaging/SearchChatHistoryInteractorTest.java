@@ -2,25 +2,22 @@ package goc.chat.usecase.messaging;
 
 import entity.Chat;
 import entity.Message;
-import entity.User;
 import entity.ports.ChatRepository;
 import entity.ports.MessageRepository;
-import entity.ports.UserRepository;
 import entity.repo.InMemoryChatRepository;
 import entity.repo.InMemoryMessageRepository;
-import entity.repo.InMemoryUserRepository;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import use_case.messaging.search_history.SearchChatHistoryInputBoundary;
 import use_case.messaging.search_history.SearchChatHistoryInputData;
 import use_case.messaging.search_history.SearchChatHistoryInteractor;
 import use_case.messaging.search_history.SearchChatHistoryOutputBoundary;
 import use_case.messaging.search_history.SearchChatHistoryOutputData;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import java.awt.Color;
 import java.time.Instant;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -31,139 +28,144 @@ public class SearchChatHistoryInteractorTest {
 
     private ChatRepository chatRepository;
     private MessageRepository messageRepository;
-    private UserRepository userRepository;
     private TestPresenter presenter;
-    private SearchChatHistoryInteractor interactor;
+    private SearchChatHistoryInputBoundary interactor;
 
     @BeforeEach
     public void setUp() {
         chatRepository = new InMemoryChatRepository();
         messageRepository = new InMemoryMessageRepository();
-        userRepository = new InMemoryUserRepository();
         presenter = new TestPresenter();
         interactor = new SearchChatHistoryInteractor(
-                chatRepository, messageRepository, userRepository, presenter
+                chatRepository, messageRepository, presenter
         );
 
-        // prepare one chat, one user, and a few messages
+        // Prepare one chat.
         Chat chat = new Chat(
                 "chat-1",
                 "Test Group",
                 Color.WHITE,
                 Instant.now()
         );
-        chat.addParticipant("alice");
         chatRepository.save(chat);
 
-        User alice = new User("alice", "password");
-        userRepository.save(alice);
-
+        // Message constructor:
+        // Message(String id, String chatId, String senderUserId,
+        //         String repliedMessageId, String content, Instant timestamp)
         Message m1 = new Message(
-                "m1",
-                "chat-1",
-                "alice",
-                null,
-                "hello world",
-                Instant.now()
+                "m1",          // id
+                "chat-1",      // chatId
+                "user-1",      // senderUserId
+                null,          // repliedMessageId
+                "hello world", // content
+                Instant.now()  // timestamp
         );
         Message m2 = new Message(
                 "m2",
                 "chat-1",
-                "alice",
+                "user-2",
                 null,
-                "this does not match",
-                Instant.now().plusSeconds(1)
+                "something else",
+                Instant.now()
+        );
+        Message m3 = new Message(
+                "m3",
+                "chat-1",
+                "user-1",
+                null,
+                "HELLO again",
+                Instant.now()
         );
 
         messageRepository.save(m1);
         messageRepository.save(m2);
-
-        chat.addMessage("m1");
-        chat.addMessage("m2");
+        messageRepository.save(m3);
     }
 
     @Test
-    public void testSearchFindsMatchingMessages() {
+    public void searchSuccess_returnsMatchingMessages() {
         SearchChatHistoryInputData input =
                 new SearchChatHistoryInputData("chat-1", "hello");
 
         interactor.execute(input);
 
-        assertNull(presenter.errorMessage, "No error expected");
-        assertFalse(presenter.noMatchesCalled, "No-matches presenter should not be called");
-        assertNotNull(presenter.outputData, "Output data should be set");
+        assertNull(presenter.lastFailError);
+        assertNull(presenter.lastNoMatchesChatId);
 
-        List<String[]> result = presenter.outputData.getMessages();
-        assertEquals(1, result.size(), "Exactly one message should match");
+        assertNotNull(presenter.lastSuccessOutput);
+        List<Message> messages = presenter.lastSuccessOutput.getMessages();
 
-        String[] msg = result.get(0);
-        // format in interactor: [id, senderId, senderName, content, time]
-        assertEquals("m1", msg[0]);
-        assertEquals("alice", msg[1]);
-        assertEquals("alice", msg[2]);
-        assertEquals("hello world", msg[3]);
-        assertNotNull(msg[4], "Timestamp string should not be null");
+        // Should match m1 and m3 (case-insensitive).
+        assertEquals(2, messages.size());
+        List<String> ids = messages.stream()
+                .map(Message::getId)
+                .collect(Collectors.toList());
+        assertTrue(ids.contains("m1"));
+        assertTrue(ids.contains("m3"));
     }
 
     @Test
-    public void testSearchNoMatches() {
+    public void searchNoMatches_callsNoMatchesView() {
         SearchChatHistoryInputData input =
-                new SearchChatHistoryInputData("chat-1", "xyz-not-present");
+                new SearchChatHistoryInputData("chat-1", "xyz");
 
         interactor.execute(input);
 
-        assertTrue(presenter.noMatchesCalled, "No-matches presenter should be called");
-        assertNull(presenter.outputData, "Output data should be null when no matches");
-        assertNull(presenter.errorMessage, "Error message should be null");
+        assertNull(presenter.lastFailError);
+        assertNull(presenter.lastSuccessOutput);
+
+        assertEquals("chat-1", presenter.lastNoMatchesChatId);
+        assertEquals("xyz", presenter.lastNoMatchesKeyword);
     }
 
     @Test
-    public void testSearchChatNotFound() {
+    public void chatNotFound_callsFailView() {
         SearchChatHistoryInputData input =
-                new SearchChatHistoryInputData("non-existent-chat", "hello");
+                new SearchChatHistoryInputData("unknown", "hello");
 
         interactor.execute(input);
 
-        assertNull(presenter.outputData, "Output data should be null when chat not found");
-        assertFalse(presenter.noMatchesCalled, "No-matches presenter should not be called");
-        assertNotNull(presenter.errorMessage, "Error message should be set");
-        assertTrue(presenter.errorMessage.contains("Chat not found"));
+        assertNull(presenter.lastSuccessOutput);
+        assertNull(presenter.lastNoMatchesChatId);
+        assertNotNull(presenter.lastFailError);
+        assertTrue(presenter.lastFailError.contains("Chat not found"));
     }
 
     @Test
-    public void testSearchEmptyKeyword() {
+    public void emptyKeyword_callsFailView() {
         SearchChatHistoryInputData input =
-                new SearchChatHistoryInputData("chat-1", "   ");
+                new SearchChatHistoryInputData("chat-1", "");
 
         interactor.execute(input);
 
-        assertNull(presenter.outputData, "Output data should be null");
-        assertFalse(presenter.noMatchesCalled, "No-matches presenter should not be called");
-        assertNotNull(presenter.errorMessage, "Error message should be set for empty keyword");
-        assertTrue(presenter.errorMessage.contains("must not be empty"));
+        assertNull(presenter.lastSuccessOutput);
+        assertNull(presenter.lastNoMatchesChatId);
+        assertEquals("Search keyword must not be empty.", presenter.lastFailError);
     }
 
-    /**
-     * Simple presenter stub to capture interactor output.
-     */
+    // ------------------ Test Presenter ------------------
+
     private static class TestPresenter implements SearchChatHistoryOutputBoundary {
-        SearchChatHistoryOutputData outputData;
-        String errorMessage;
-        boolean noMatchesCalled = false;
+
+        SearchChatHistoryOutputData lastSuccessOutput;
+        String lastFailError;
+        String lastNoMatchesChatId;
+        String lastNoMatchesKeyword;
 
         @Override
         public void prepareSuccessView(SearchChatHistoryOutputData outputData) {
-            this.outputData = outputData;
+            this.lastSuccessOutput = outputData;
         }
 
         @Override
         public void prepareNoMatchesView(String chatId, String keyword) {
-            this.noMatchesCalled = true;
+            this.lastNoMatchesChatId = chatId;
+            this.lastNoMatchesKeyword = keyword;
         }
 
         @Override
         public void prepareFailView(String errorMessage) {
-            this.errorMessage = errorMessage;
+            this.lastFailError = errorMessage;
         }
     }
 }

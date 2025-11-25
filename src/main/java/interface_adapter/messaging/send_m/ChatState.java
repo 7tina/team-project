@@ -100,4 +100,11 @@ public class ChatState {
     public void setError(String error) {
         this.error = error;
     }
+
+    public void setMessages(List<String[]> newMessages) { this.messages.clear(); this.messages.addAll(newMessages); }
+
+    public void setMessageIds(List<String> newMessageIds) {
+        this.messageIds.clear();
+        this.messageIds.addAll(newMessageIds);
+    }
 }

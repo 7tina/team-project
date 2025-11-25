@@ -448,6 +448,11 @@ public class AppBuilder {
         // Wire up the controller to ChatSettingView
         if (this.chatSettingView != null) {
             this.chatSettingView.setAddUserController(addUserController);
+        }
+
+        return this;
+    }
+
     public AppBuilder addDeleteMessageUseCase() {
         DeleteMessageOutputBoundary deletePresenter =
                 new DeleteMessagePresenter(chatViewModel, viewManagerModel);

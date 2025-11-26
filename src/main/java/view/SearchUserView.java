@@ -8,9 +8,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import interface_adapter.groupchat.*;
 import interface_adapter.logged_in.LoggedInState;
 import interface_adapter.logged_in.LoggedInViewModel;
+import interface_adapter.messaging.ChatState;
+import interface_adapter.messaging.ChatViewModel;
 import interface_adapter.search_user.SearchUserController;
 import interface_adapter.search_user.SearchUserViewModel;
 import interface_adapter.search_user.SearchUserState;
@@ -25,11 +26,10 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
     private SearchUserController searchUserController;
     private final ViewManagerModel viewManagerModel;
     private final SearchUserViewModel searchUserViewModel;
-    private final GroupChatViewModel groupChatViewModel;
+    private final ChatViewModel chatViewModel;
     private final LoggedInViewModel loggedInViewModel;
 
     private CreateChatController createChatController;
-    private CreateGroupChatController createGroupChatController;
 
     // Reference to ChatView for navigation
     private ChatView chatView;
@@ -48,16 +48,16 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
 
 
     public SearchUserView(ViewManagerModel viewManagerModel, SearchUserViewModel searchUserViewModel,
-                          GroupChatViewModel groupChatViewModel,
+                          ChatViewModel chatViewModel,
                           LoggedInViewModel loggedInViewModel) {
 
         this.viewManagerModel = viewManagerModel;
         this.searchUserViewModel = searchUserViewModel;
-        this.groupChatViewModel = groupChatViewModel;
+        this.chatViewModel = chatViewModel;
         this.loggedInViewModel = loggedInViewModel;
         this.searchUserViewModel.addPropertyChangeListener(this);
-        this.groupChatViewModel.addPropertyChangeListener(this);
         this.loggedInViewModel.addPropertyChangeListener(this);
+        this.chatViewModel.addPropertyChangeListener(this);
 
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         this.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -167,10 +167,10 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
 
             if (selectedUsernames.size() == 1) {
                 // Individual chat
-                startIndividualChat(selectedUsernames.get(0));
+                startIndividualChat(selectedUsernames, false);
             } else {
                 // Group chat
-                startGroupChat(selectedUsernames);
+                startGroupChat(selectedUsernames, true);
             }
         }
     }
@@ -179,22 +179,18 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
         this.createChatController = controller;
     }
 
-    public void setCreateGroupChatController(CreateGroupChatController controller) {
-        this.createGroupChatController = controller;
-    }
-
     // Setter for ChatView
     public void setChatView(ChatView chatView) {
         this.chatView = chatView;
     }
 
-    private void startIndividualChat(String username) {
+    private void startIndividualChat(List<String> selectedUsernames, boolean isGroupChat) {
         // Get current logged-in user from session
         String currentUsername = loggedInViewModel.getState().getUsername();
 
         // Find the target user
         if (createChatController != null) {
-            createChatController.execute(currentUsername, username);
+            createChatController.execute(currentUsername, selectedUsernames, "", isGroupChat);
         } else {
             JOptionPane.showMessageDialog(this,
                     "Chat feature not initialized",
@@ -203,7 +199,7 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
         }
     }
 
-    private void startGroupChat(List<String> usernames) {
+    private void startGroupChat(List<String> usernames, boolean isGroupChat) {
         // Prompt user for group name
         String groupName = JOptionPane.showInputDialog(this,
                 "Enter a name for the group chat:",
@@ -223,11 +219,11 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
             return;
         }
 
-        if (createGroupChatController != null) {
+        if (createChatController != null) {
             // Get current username
             String currentUsername = loggedInViewModel.getState().getUsername();
 
-            createGroupChatController.execute(currentUsername, usernames, groupName.trim());
+            createChatController.execute(currentUsername, usernames, groupName.trim(), isGroupChat);
         } else {
             JOptionPane.showMessageDialog(this,
                     "Group chat feature not initialized",
@@ -268,50 +264,10 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
                 findUsers(loggedInViewModel.getState().getUsername(), "");
             }
 
-            // Check if it's GroupChatState
-            else if (newValue instanceof GroupChatState) {
-                GroupChatState chatState = (GroupChatState) newValue;
-
-                // Check if the group chat was created successfully
-                if (chatState.isSuccess()) {
-
-                    // Check if chatView is available
-                    if (chatView != null) {
-                        // Get current username
-                        String currentUsername = loggedInViewModel.getState().getUsername();
-
-                        // ADD THIS NULL CHECK:
-                        String groupName = chatState.getGroupName();
-                        if (groupName == null || groupName.isEmpty()) {
-                            System.err.println("ERROR: groupName is null or empty!");
-                            JOptionPane.showMessageDialog(this,
-                                    "Group name is missing. Please try again.",
-                                    "Error",
-                                    JOptionPane.ERROR_MESSAGE);
-                            return;  // Don't navigate if group name is missing
-                        }
-
-                        // Call setChatContext with the correct signature matching ChatView
-                        chatView.setChatContext(
-                                chatState.getChatId(),           // chatId
-                                chatState.getParticipants(),     // List<String> userIds (participants)
-                                chatState.getMessageIds(),       // List<String> messageIds
-                                currentUsername,                 // currentUserId (using username)
-                                groupName,                       // groupName - NOW VERIFIED NOT NULL
-                                true                             // isGroupChat = true
-                        );
-
-                        viewManagerModel.setState("chat");
-                        viewManagerModel.firePropertyChange();
-                    } else {
-                        System.err.println("ERROR: chatView is null!");
-                        JOptionPane.showMessageDialog(this,
-                                "Chat view not initialized",
-                                "Error",
-                                JOptionPane.ERROR_MESSAGE);
-                    }
-                }
-                else if (chatState.getError() != null) {
+            // Check if it's ChatState
+            else if (newValue instanceof ChatState) {
+                ChatState chatState = (ChatState) newValue;
+                if (chatState.getError() != null) {
                     // Show error message if group chat creation failed
                     JOptionPane.showMessageDialog(this,
                             chatState.getError(),

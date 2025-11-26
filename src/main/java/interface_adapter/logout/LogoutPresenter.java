@@ -27,6 +27,7 @@ public class LogoutPresenter implements LogoutOutputBoundary {
 
     @Override
     public void prepareSuccessView(LogoutOutputData response) {
+        System.out.println("Logged Out: " + response.getUsername());
         // We need to switch to the login view, which should have
         // an empty username and password.
 
@@ -38,7 +39,7 @@ public class LogoutPresenter implements LogoutOutputBoundary {
         loggedInViewModel.firePropertyChange();
 
         LoginState loginState = loginViewModel.getState();
-        loginState.setUsername(response.getUsername());
+        loginState.setUsername(null);
         loginState.setPassword(null); // Clear password
         loginState.setLoginError(null); // Clear any old error message
 

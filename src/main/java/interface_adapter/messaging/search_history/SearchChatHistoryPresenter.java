@@ -1,8 +1,8 @@
 package interface_adapter.messaging.search_history;
 
 import entity.Message;
-import interface_adapter.messaging.send_m.ChatState;
-import interface_adapter.messaging.send_m.ChatViewModel;
+import interface_adapter.messaging.ChatState;
+import interface_adapter.messaging.ChatViewModel;
 import use_case.messaging.search_history.SearchChatHistoryOutputBoundary;
 import use_case.messaging.search_history.SearchChatHistoryOutputData;
 

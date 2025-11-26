@@ -2,9 +2,9 @@ package view;
 
 import interface_adapter.ViewManagerModel;
 import interface_adapter.logged_in.LoggedInViewModel;
-import interface_adapter.messaging.send_m.ChatViewModel;
+import interface_adapter.messaging.ChatViewModel;
 import interface_adapter.messaging.send_m.SendMessageController;
-import interface_adapter.messaging.send_m.ChatState;
+import interface_adapter.messaging.ChatState;
 import interface_adapter.messaging.view_history.ViewChatHistoryController;
 import interface_adapter.messaging.delete_m.DeleteMessageController;
 
@@ -200,7 +200,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
             state.chatViewStart();
 
             // Determine if it's a group chat based on number of participants
-            boolean isGroup = state.getParticipants().size() > 2;
+            boolean isGroup = state.getIsGroup();
 
             // Set the chat context
             setChatContext(
@@ -223,6 +223,8 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
             chatDisplayPanel.add(errorLabel);
         }
         else {
+
+            chatPartnerLabel.setText(state.getGroupName());
 
             // Array index order: [messageId, senderUserId, messageContent, messageTimestamp]
             List<String[]> messages = state.getMessages();

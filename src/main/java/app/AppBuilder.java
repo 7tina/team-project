@@ -8,11 +8,15 @@ import entity.ports.ChatRepository;
 import entity.ports.UserRepository;
 import entity.repo.InMemoryChatRepository;
 import entity.repo.InMemoryMessageRepository;
-import entity.repo.InMemoryUserRepository;
 import interface_adapter.ViewManagerModel;
 import interface_adapter.create_chat.CreateChatController;
 import interface_adapter.create_chat.CreateChatPresenter;
-import interface_adapter.groupchat.*;
+import interface_adapter.groupchat.adduser.AddUserController;
+import interface_adapter.groupchat.adduser.AddUserPresenter;
+import interface_adapter.groupchat.changegroupname.ChangeGroupNameController;
+import interface_adapter.groupchat.changegroupname.ChangeGroupNamePresenter;
+import interface_adapter.groupchat.removeuser.RemoveUserController;
+import interface_adapter.groupchat.removeuser.RemoveUserPresenter;
 import interface_adapter.logged_in.ChangePasswordController;
 import interface_adapter.logged_in.ChangePasswordPresenter;
 import interface_adapter.logged_in.LoggedInViewModel;
@@ -32,14 +36,21 @@ import interface_adapter.signup.SignupViewModel;
 import interface_adapter.search_user.SearchUserController;
 import interface_adapter.search_user.SearchUserPresenter;
 import interface_adapter.search_user.SearchUserViewModel;
-import interface_adapter.groupchat.GroupChatViewModel;
 import interface_adapter.messaging.send_m.SendMessageController;
 import interface_adapter.messaging.send_m.SendMessagePresenter;
-import interface_adapter.messaging.send_m.ChatViewModel;
+import interface_adapter.messaging.ChatViewModel;
 import use_case.create_chat.CreateChatInputBoundary;
 import use_case.create_chat.CreateChatInteractor;
 import use_case.create_chat.CreateChatOutputBoundary;
-import use_case.groups.*;
+import use_case.groups.adduser.AddUserInputBoundary;
+import use_case.groups.adduser.AddUserOutputBoundary;
+import use_case.groups.adduser.AddUserInteractor;
+import use_case.groups.changegroupname.ChangeGroupNameInputBoundary;
+import use_case.groups.changegroupname.ChangeGroupNameInteractor;
+import use_case.groups.changegroupname.ChangeGroupNameOutputBoundary;
+import use_case.groups.removeuser.RemoveUserInteractor;
+import use_case.groups.removeuser.RemoveUserInputBoundary;
+import use_case.groups.removeuser.RemoveUserOutputBoundary;
 import use_case.messaging.delete_m.DeleteMessageInputBoundary;
 import use_case.messaging.delete_m.DeleteMessageInteractor;
 import use_case.messaging.delete_m.DeleteMessageOutputBoundary;
@@ -130,7 +141,6 @@ public class AppBuilder {
 
     // Field for send message
     private final ChatViewModel chatViewModel = new ChatViewModel();
-    private final GroupChatViewModel groupChatViewModel = new GroupChatViewModel();
     private ChatSettingView chatSettingView;
 
     public AppBuilder() {
@@ -254,7 +264,7 @@ public class AppBuilder {
         this.searchUserView = new SearchUserView(
                 viewManagerModel,
                 searchUserViewModel,
-                groupChatViewModel,
+                chatViewModel,
                 loggedInViewModel
         );
         cardPanel.add(searchUserView, searchUserView.getViewName());
@@ -354,30 +364,8 @@ public class AppBuilder {
         return this;
     }
 
-    /**
-     * Adds the Create Group Chat Use Case to the application.
-     * @return this builder
-     */
-    public AppBuilder addCreateGroupChatUseCase() {
-        final CreateGroupChatOutputBoundary createGroupChatOutputBoundary =
-                new CreateGroupChatPresenter(groupChatViewModel, viewManagerModel);
-
-        final CreateGroupChatInputBoundary createGroupChatInteractor =
-                new CreateGroupChatInteractor(chatRepository, userRepository, createGroupChatOutputBoundary, userDataAccessObject);
-
-        final CreateGroupChatController createGroupChatController =
-                new CreateGroupChatController(createGroupChatInteractor);
-
-        // Wire up the controller to SearchUserView
-        if (this.searchUserView != null) {
-            this.searchUserView.setCreateGroupChatController(createGroupChatController);
-        }
-
-        return this;
-    }
-
     public AppBuilder addChatSettingView() {
-        this.chatSettingView = new ChatSettingView(viewManagerModel, groupChatViewModel);
+        this.chatSettingView = new ChatSettingView(viewManagerModel, chatViewModel);
         cardPanel.add(chatSettingView, chatSettingView.getViewName());
 
         if (this.chatView != null) {
@@ -389,10 +377,10 @@ public class AppBuilder {
 
     public AppBuilder addChangeGroupNameUseCase() {
         final ChangeGroupNameOutputBoundary changeGroupNameOutputBoundary =
-                new ChangeGroupNamePresenter(groupChatViewModel);
+                new ChangeGroupNamePresenter(chatViewModel);
 
         final ChangeGroupNameInputBoundary changeGroupNameInteractor =
-                new RenameGroupChatInteractor(
+                new ChangeGroupNameInteractor(
                         chatRepository,
                         changeGroupNameOutputBoundary,
                         userDataAccessObject  // Pass Firebase DAO
@@ -411,10 +399,10 @@ public class AppBuilder {
 
     public AppBuilder addRemoveUserUseCase() {
         final RemoveUserOutputBoundary removeUserOutputBoundary =
-                new RemoveUserPresenter(groupChatViewModel);
+                new RemoveUserPresenter(chatViewModel);
 
         final RemoveUserInputBoundary removeUserInteractor =
-                new RemoveUserFromGroupInteractor(
+                new RemoveUserInteractor(
                         chatRepository,           // ChatRepository for finding/saving chats
                         removeUserOutputBoundary,
                         userDataAccessObject      // Firebase DAO for getUserIdByUsername
@@ -433,10 +421,10 @@ public class AppBuilder {
 
     public AppBuilder addAddUserUseCase() {
         final AddUserOutputBoundary addUserOutputBoundary =
-                new AddUserPresenter(groupChatViewModel);
+                new AddUserPresenter(chatViewModel);
 
         final AddUserInputBoundary addUserInteractor =
-                new AddUserToGroupInteractor(
+                new AddUserInteractor(
                         chatRepository,           // ChatRepository for finding/saving chats
                         addUserOutputBoundary,
                         userDataAccessObject      // Firebase DAO for getUserIdByUsername

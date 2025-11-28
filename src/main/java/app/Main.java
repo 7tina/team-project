@@ -1,11 +1,16 @@
 package app;
 
-import javax.swing.*;
+import javax.swing.JFrame;
 
 public class Main {
+
+    /**
+     * The main entry point of the application.
+     * @param args command line arguments
+     */
     public static void main(String[] args) {
-        AppBuilder appBuilder = new AppBuilder();
-        JFrame application = appBuilder
+        final AppBuilder appBuilder = new AppBuilder();
+        final JFrame application = appBuilder
                 .addWelcomeView()
                 .addLoginView()
                 .addSignupView()

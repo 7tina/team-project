@@ -234,7 +234,7 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        String currentUser = loggedInViewModel.getState().getUsername(); // <--- Get current user
+        String currentUsername = loggedInViewModel.getState().getUsername();
 
         if ("state".equals(evt.getPropertyName())) {
             Object newValue = evt.getNewValue();
@@ -251,11 +251,12 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
                     boolean usersAdded = false;
 
                     for (String username : state.getSearchResults()) {
-                        String currentUser1 = loggedInViewModel.getState().getUsername(); // Get current user here for safety
+                        String currentUser1 = loggedInViewModel.getState().getUsername(); // Get current user
 
+                        // This check prevents the current user from being added to the list
                         if (!username.equals(currentUser1)) {
                             userListModel.addElement(username);
-                            usersAdded = true; // Mark that at least one user was successfully added
+                            usersAdded = true;
                         }
                     }
 

@@ -480,6 +480,19 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         if (viewChatHistoryController != null) {
             viewChatHistoryController.execute(chatId, userIds, messageIds);
         }
+
+        String displayName = groupName; // Default for group chats or if set correctly
+
+        if (!isGroupChat && userIds.size() == 2) {
+            // For individual chat, find the participant who is NOT the current user
+            for (String userId : userIds) {
+                if (!userId.equals(currentUserId)) {
+                    displayName = userId; // The name of the other person
+                    break;
+                }
+            }
+        }
+        setChatPartner(displayName);
     }
 
     public void setChatId(String chatId) {

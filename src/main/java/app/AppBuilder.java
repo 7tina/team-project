@@ -29,6 +29,8 @@ import interface_adapter.messaging.delete_m.DeleteMessageController;
 import interface_adapter.messaging.delete_m.DeleteMessagePresenter;
 import interface_adapter.messaging.view_history.ViewChatHistoryController;
 import interface_adapter.messaging.view_history.ViewChatHistoryPresenter;
+import interface_adapter.recent_chat.RecentChatsController;
+import interface_adapter.recent_chat.RecentChatsPresenter;
 import interface_adapter.signup.SignupController;
 import interface_adapter.signup.SignupPresenter;
 import interface_adapter.signup.SignupViewModel;
@@ -61,6 +63,9 @@ import use_case.messaging.send_m.SendMessageInteractor;
 import use_case.messaging.view_history.ViewChatHistoryInputBoundary;
 import use_case.messaging.view_history.ViewChatHistoryInteractor;
 import use_case.messaging.view_history.ViewChatHistoryOutputBoundary;
+import use_case.recent_chat.RecentChatsInputBoundary;
+import use_case.recent_chat.RecentChatsInteractor;
+import use_case.recent_chat.RecentChatsOutputBoundary;
 import use_case.search_user.SearchUserInputBoundary;
 import use_case.search_user.SearchUserInteractor;
 import use_case.search_user.SearchUserOutputBoundary;
@@ -455,6 +460,28 @@ public class AppBuilder {
             this.chatView.setDeleteMessageController(deleteController);
         }
 
+        return this;
+    }
+
+    public AppBuilder addRecentChatsUseCase() {
+        RecentChatsOutputBoundary recentChatsPresenter =
+                new RecentChatsPresenter(viewManagerModel, loggedInViewModel, chatViewModel);
+
+        RecentChatsInputBoundary recentChatsInteractor =
+                new RecentChatsInteractor(recentChatsPresenter,
+                        userDataAccessObject,
+                        messageRepository,
+                        userRepository,
+                        chatRepository);
+
+        RecentChatsController recentChatsController =
+                new RecentChatsController(recentChatsInteractor);
+        if (this.chatView != null) {
+            this.chatView.setRecentChatsController(recentChatsController);
+        }
+        if (this.chatView != null) {
+            this.chatView.setRecentChatsController(recentChatsController);
+        }
         return this;
     }
 }

@@ -25,6 +25,7 @@ public class Main {
                 .addRemoveUserUseCase()
                 .addAddUserUseCase()
                 .addDeleteMessageUseCase()
+                .addRecentChatsUseCase()
                 .build();
 
         application.pack();

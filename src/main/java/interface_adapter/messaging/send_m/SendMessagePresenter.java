@@ -1,6 +1,8 @@
 package interface_adapter.messaging.send_m;
 
 import interface_adapter.ViewManagerModel;
+import interface_adapter.messaging.ChatState;
+import interface_adapter.messaging.ChatViewModel;
 import use_case.messaging.send_m.SendMessageOutputBoundary;
 import use_case.messaging.send_m.SendMessageOutputData;
 

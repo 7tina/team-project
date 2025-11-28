@@ -1,20 +1,35 @@
 package interface_adapter.logged_in;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
 /**
  * The State information representing the logged-in user.
  */
 public class LoggedInState {
 
     private String username = "";
+    private String userId = "";
     private String usernameError = null;
 
     private String password = "";
     private String passwordError;
 
+    private List<String> chatNames = new ArrayList<>();
+    private HashMap<String, String> nameToChatIds = new HashMap<>();
+    private String recentChatsError = null;
+
     public LoggedInState(LoggedInState copy) {
         username = copy.username;
+        userId = copy.userId;
         password = copy.password;
         passwordError = copy.passwordError;
+    }
+
+    // Because of the previous copy constructor, the default constructor must be explicit.
+    public LoggedInState() {
+
     }
 
     public String getUsernameError() {
@@ -23,11 +38,6 @@ public class LoggedInState {
 
     public void setUsernameError(String usernameError) {
         this.usernameError = usernameError;
-    }
-
-    // Because of the previous copy constructor, the default constructor must be explicit.
-    public LoggedInState() {
-
     }
 
     public String getUsername() {
@@ -52,5 +62,24 @@ public class LoggedInState {
 
     public String getPasswordError() {
         return passwordError;
+    }
+
+    public void setChatNames(List<String> chatNames) {
+        this.chatNames = chatNames;
+    }
+    public List<String> getChatNames() {return chatNames;}
+
+    public String getNameToChatIds(String chatName) {
+        return nameToChatIds.get(chatName);
+    }
+
+    public void setNameToChatIds(HashMap<String, String> nameToChatIds) {this.nameToChatIds = nameToChatIds;}
+
+    public void setRecentChatsError(String recentChatsError) {
+        this.recentChatsError = recentChatsError;
+    }
+
+    public String getRecentChatsError() {
+        return recentChatsError;
     }
 }

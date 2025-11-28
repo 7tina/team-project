@@ -1,9 +1,8 @@
 package interface_adapter.create_chat;
 
 import interface_adapter.ViewManagerModel;
-import interface_adapter.groupchat.GroupChatState;
-import interface_adapter.messaging.send_m.ChatState;
-import interface_adapter.messaging.send_m.ChatViewModel;
+import interface_adapter.messaging.ChatState;
+import interface_adapter.messaging.ChatViewModel;
 import use_case.create_chat.CreateChatOutputBoundary;
 import use_case.create_chat.CreateChatOutputData;
 
@@ -23,8 +22,10 @@ public class CreateChatPresenter implements CreateChatOutputBoundary {
     @Override
     public void prepareSuccessView(CreateChatOutputData response) {
         ChatState state = new ChatState();
+        state.setIsGroup(response.isGroupChat());
         state.setChatId(response.getChatId());
-        state.setGroupName(response.getGroupName());
+        if (response.isGroupChat()) {state.setGroupName(response.getGroupName());}
+        else {state.setGroupName(response.getUsers().get(1));}
         for (String userId : response.getUsers()) {state.addParticipant(userId);}
         for (String messageId : response.getMessageIds()) {state.addMessageId(messageId);}
         state.setSuccess(true);

@@ -1,15 +1,22 @@
 package app;
 
 import data_access.FireBaseUserDataAccessObject;
+import data_access.FirebaseClientProvider;
+import data_access.FirestoreUserRepository;
 import entity.UserFactory;
 import entity.ports.ChatRepository;
 import entity.ports.UserRepository;
 import entity.repo.InMemoryChatRepository;
 import entity.repo.InMemoryMessageRepository;
-import entity.repo.InMemoryUserRepository;
 import interface_adapter.ViewManagerModel;
 import interface_adapter.create_chat.CreateChatController;
 import interface_adapter.create_chat.CreateChatPresenter;
+import interface_adapter.groupchat.adduser.AddUserController;
+import interface_adapter.groupchat.adduser.AddUserPresenter;
+import interface_adapter.groupchat.changegroupname.ChangeGroupNameController;
+import interface_adapter.groupchat.changegroupname.ChangeGroupNamePresenter;
+import interface_adapter.groupchat.removeuser.RemoveUserController;
+import interface_adapter.groupchat.removeuser.RemoveUserPresenter;
 import interface_adapter.logged_in.ChangePasswordController;
 import interface_adapter.logged_in.ChangePasswordPresenter;
 import interface_adapter.logged_in.LoggedInViewModel;
@@ -18,8 +25,12 @@ import interface_adapter.login.LoginPresenter;
 import interface_adapter.login.LoginViewModel;
 import interface_adapter.logout.LogoutController;
 import interface_adapter.logout.LogoutPresenter;
+import interface_adapter.messaging.delete_m.DeleteMessageController;
+import interface_adapter.messaging.delete_m.DeleteMessagePresenter;
 import interface_adapter.messaging.view_history.ViewChatHistoryController;
 import interface_adapter.messaging.view_history.ViewChatHistoryPresenter;
+import interface_adapter.recent_chat.RecentChatsController;
+import interface_adapter.recent_chat.RecentChatsPresenter;
 import interface_adapter.signup.SignupController;
 import interface_adapter.signup.SignupPresenter;
 import interface_adapter.signup.SignupViewModel;
@@ -27,13 +38,24 @@ import interface_adapter.signup.SignupViewModel;
 import interface_adapter.search_user.SearchUserController;
 import interface_adapter.search_user.SearchUserPresenter;
 import interface_adapter.search_user.SearchUserViewModel;
-import interface_adapter.groupchat.GroupChatViewModel;
 import interface_adapter.messaging.send_m.SendMessageController;
 import interface_adapter.messaging.send_m.SendMessagePresenter;
-import interface_adapter.messaging.send_m.ChatViewModel;
+import interface_adapter.messaging.ChatViewModel;
 import use_case.create_chat.CreateChatInputBoundary;
 import use_case.create_chat.CreateChatInteractor;
 import use_case.create_chat.CreateChatOutputBoundary;
+import use_case.groups.adduser.AddUserInputBoundary;
+import use_case.groups.adduser.AddUserOutputBoundary;
+import use_case.groups.adduser.AddUserInteractor;
+import use_case.groups.changegroupname.ChangeGroupNameInputBoundary;
+import use_case.groups.changegroupname.ChangeGroupNameInteractor;
+import use_case.groups.changegroupname.ChangeGroupNameOutputBoundary;
+import use_case.groups.removeuser.RemoveUserInteractor;
+import use_case.groups.removeuser.RemoveUserInputBoundary;
+import use_case.groups.removeuser.RemoveUserOutputBoundary;
+import use_case.messaging.delete_m.DeleteMessageInputBoundary;
+import use_case.messaging.delete_m.DeleteMessageInteractor;
+import use_case.messaging.delete_m.DeleteMessageOutputBoundary;
 import use_case.messaging.send_m.SendMessageInputBoundary;
 import use_case.messaging.send_m.SendMessageOutputBoundary;
 import use_case.messaging.send_m.SendMessageInteractor;
@@ -41,6 +63,9 @@ import use_case.messaging.send_m.SendMessageInteractor;
 import use_case.messaging.view_history.ViewChatHistoryInputBoundary;
 import use_case.messaging.view_history.ViewChatHistoryInteractor;
 import use_case.messaging.view_history.ViewChatHistoryOutputBoundary;
+import use_case.recent_chat.RecentChatsInputBoundary;
+import use_case.recent_chat.RecentChatsInteractor;
+import use_case.recent_chat.RecentChatsOutputBoundary;
 import use_case.search_user.SearchUserInputBoundary;
 import use_case.search_user.SearchUserInteractor;
 import use_case.search_user.SearchUserOutputBoundary;
@@ -83,13 +108,14 @@ public class AppBuilder {
     private final MessageRepository messageRepository =
             new InMemoryMessageRepository();
 
-    // UserRepository
-    private final UserRepository userRepository =
-            new InMemoryUserRepository();
-
     final UserFactory userFactory = new UserFactory();
     final ViewManagerModel viewManagerModel = new ViewManagerModel();
     ViewManager viewManager = new ViewManager(cardPanel, cardLayout, viewManagerModel);
+
+    private final UserRepository userRepository = new FirestoreUserRepository(
+            FirebaseClientProvider.getFirestore(),
+            userFactory
+    );
 
     // set which data access implementation to use, can be any
     // of the classes from the data_access package
@@ -120,7 +146,6 @@ public class AppBuilder {
 
     // Field for send message
     private final ChatViewModel chatViewModel = new ChatViewModel();
-    private final GroupChatViewModel groupChatViewModel = new GroupChatViewModel();
     private ChatSettingView chatSettingView;
 
     public AppBuilder() {
@@ -244,7 +269,7 @@ public class AppBuilder {
         this.searchUserView = new SearchUserView(
                 viewManagerModel,
                 searchUserViewModel,
-                groupChatViewModel,
+                chatViewModel,
                 loggedInViewModel
         );
         cardPanel.add(searchUserView, searchUserView.getViewName());
@@ -299,6 +324,9 @@ public class AppBuilder {
     public AppBuilder addChatView() {
         this.chatView = new ChatView(viewManagerModel, chatViewModel, loggedInViewModel);
         cardPanel.add(chatView, chatView.getViewName());
+        if (this.searchUserView != null) {
+            this.searchUserView.setChatView(this.chatView);
+        }
         return this;
     }
 
@@ -338,6 +366,122 @@ public class AppBuilder {
             this.chatView.setViewChatHistoryController(viewChatHistoryController);
         }
 
+        return this;
+    }
+
+    public AppBuilder addChatSettingView() {
+        this.chatSettingView = new ChatSettingView(viewManagerModel, chatViewModel);
+        cardPanel.add(chatSettingView, chatSettingView.getViewName());
+
+        if (this.chatView != null) {
+            this.chatView.setChatSettingView(this.chatSettingView);
+        }
+
+        return this;
+    }
+
+    public AppBuilder addChangeGroupNameUseCase() {
+        final ChangeGroupNameOutputBoundary changeGroupNameOutputBoundary =
+                new ChangeGroupNamePresenter(chatViewModel);
+
+        final ChangeGroupNameInputBoundary changeGroupNameInteractor =
+                new ChangeGroupNameInteractor(
+                        chatRepository,
+                        changeGroupNameOutputBoundary,
+                        userDataAccessObject  // Pass Firebase DAO
+                );
+
+        final ChangeGroupNameController changeGroupNameController =
+                new ChangeGroupNameController(changeGroupNameInteractor);
+
+        // Wire up the controller to ChatSettingView
+        if (this.chatSettingView != null) {
+            this.chatSettingView.setChangeGroupNameController(changeGroupNameController);
+        }
+
+        return this;
+    }
+
+    public AppBuilder addRemoveUserUseCase() {
+        final RemoveUserOutputBoundary removeUserOutputBoundary =
+                new RemoveUserPresenter(chatViewModel);
+
+        final RemoveUserInputBoundary removeUserInteractor =
+                new RemoveUserInteractor(
+                        chatRepository,           // ChatRepository for finding/saving chats
+                        removeUserOutputBoundary,
+                        userDataAccessObject      // Firebase DAO for getUserIdByUsername
+                );
+
+        final RemoveUserController removeUserController =
+                new RemoveUserController(removeUserInteractor);
+
+        // Wire up the controller to ChatSettingView
+        if (this.chatSettingView != null) {
+            this.chatSettingView.setRemoveUserController(removeUserController);
+        }
+
+        return this;
+    }
+
+    public AppBuilder addAddUserUseCase() {
+        final AddUserOutputBoundary addUserOutputBoundary =
+                new AddUserPresenter(chatViewModel);
+
+        final AddUserInputBoundary addUserInteractor =
+                new AddUserInteractor(
+                        chatRepository,           // ChatRepository for finding/saving chats
+                        addUserOutputBoundary,
+                        userDataAccessObject      // Firebase DAO for getUserIdByUsername
+                );
+
+        final AddUserController addUserController =
+                new AddUserController(addUserInteractor);
+
+        // Wire up the controller to ChatSettingView
+        if (this.chatSettingView != null) {
+            this.chatSettingView.setAddUserController(addUserController);
+        }
+
+        return this;
+    }
+
+    public AppBuilder addDeleteMessageUseCase() {
+        DeleteMessageOutputBoundary deletePresenter =
+                new DeleteMessagePresenter(chatViewModel, viewManagerModel);
+
+        DeleteMessageInputBoundary deleteInteractor =
+                new DeleteMessageInteractor(userDataAccessObject, deletePresenter);
+
+        DeleteMessageController deleteController =
+                new DeleteMessageController(deleteInteractor);
+
+        if (this.chatView != null) {
+            this.chatView.setDeleteMessageController(deleteController);
+        }
+
+        return this;
+    }
+
+    public AppBuilder addRecentChatsUseCase() {
+        RecentChatsOutputBoundary recentChatsPresenter =
+                new RecentChatsPresenter(viewManagerModel, loggedInViewModel, chatViewModel);
+
+        RecentChatsInputBoundary recentChatsInteractor =
+                new RecentChatsInteractor(recentChatsPresenter,
+                        userDataAccessObject,
+                        messageRepository,
+                        userRepository,
+                        chatRepository);
+
+        RecentChatsController recentChatsController =
+                new RecentChatsController(recentChatsInteractor);
+        if (this.chatView != null) {
+            this.chatView.setRecentChatsController(recentChatsController);
+        }
+        if (this.chatView != null) {
+            this.chatView.setRecentChatsController(recentChatsController);
+        }
         return this;
     }
 }

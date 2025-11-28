@@ -15,10 +15,15 @@ import entity.ports.UserRepository;
 import entity.ports.MessageRepository;
 import use_case.change_password.ChangePasswordUserDataAccessInterface;
 import use_case.create_chat.CreateChatUserDataAccessInterface;
+import use_case.groups.adduser.AddUserDataAccessInterface;
+import use_case.groups.changegroupname.ChangeGroupNameDataAccessInterface;
+import use_case.groups.removeuser.RemoveUserDataAccessInterface;
 import use_case.login.LoginUserDataAccessInterface;
 import use_case.logout.LogoutUserDataAccessInterface;
+import use_case.messaging.delete_m.DeleteMessageDataAccessInterface;
 import use_case.messaging.send_m.SendMessageDataAccessInterface;
 import use_case.messaging.view_history.ViewChatHistoryDataAccessInterface;
+import use_case.recent_chat.RecentChatsUserDataAccessInterface;
 import use_case.search_user.SearchUserDataAccessInterface;
 import use_case.signup.SignupUserDataAccessInterface;
 
@@ -30,7 +35,6 @@ import java.time.Instant;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 /**
  * Data Access Object for user data implemented using Google Cloud Firestore.
@@ -42,7 +46,12 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
         SearchUserDataAccessInterface,
         CreateChatUserDataAccessInterface,
         ViewChatHistoryDataAccessInterface,
-        SendMessageDataAccessInterface {
+        SendMessageDataAccessInterface,
+        DeleteMessageDataAccessInterface,
+        AddUserDataAccessInterface,
+        RemoveUserDataAccessInterface,
+        ChangeGroupNameDataAccessInterface,
+        RecentChatsUserDataAccessInterface {
 
     // Inner class to represent the structure of a user document in Firestore
     // Note: The username is the document ID, so it is not stored in the document body.
@@ -61,6 +70,7 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
     }
 
     private static final String COLLECTION_NAME = "users";
+    private static final String NAME_PASSWORD = "password";
     private static final String COLLECTION_CHAT = "chats";
     private static final String CHAT_NAME = "Groupname";
     private static final String CHAT_USERS = "participants";
@@ -195,7 +205,7 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
         DocumentReference docRef = db.collection(COLLECTION_NAME).document(user.getName());
 
         // Create a Map with the field to update
-        Map<String, Object> updates = Map.of("password", user.getPassword());
+        Map<String, Object> updates = Map.of(NAME_PASSWORD, user.getPassword());
 
         // Asynchronously update the document
         ApiFuture<WriteResult> future = docRef.update(updates);
@@ -327,6 +337,11 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
         return chat;
     }
 
+    /**
+     * Helper function that converts java's color class into a hex representation string.
+     * @param color is the color stored using java's color class.
+     * @return the color as a string.
+     */
     private String colorToHex(Color color) {
         return String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
     }
@@ -351,6 +366,12 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
         }
     }
 
+    /**
+     * Helper function made using extract method.
+     * Converts a document snapshot from firebase to a Message entity.
+     * @param doc is the document snapshot.
+     * @return the message as a message entity.
+     */
     private Message toMessage(DocumentSnapshot doc) {
         String id = doc.getId();
         String chatId = doc.getString(MESSAGE_CHAT_ID);
@@ -403,6 +424,7 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
         }
     }
 
+    @Override
     public void updateChat(String chatId, String messageId) {
         try {
             DocumentReference doc = db.collection(COLLECTION_CHAT).document(chatId);
@@ -417,6 +439,99 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
 
                 // Create a Map with the field to update
                 Map<String, Object> updates = Map.of(CHAT_MESSAGE, messages);
+
+                // Asynchronously update the document
+                ApiFuture<WriteResult> futures = doc.update(updates);
+                futures.get();
+            } else {
+                System.err.println("Chat document not found");
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException("Failed to load chat", e);
+        }
+    }
+
+    @Override
+    public void changeGroupName(String chatId, String groupName) {
+        DocumentReference docRef = db.collection(COLLECTION_CHAT).document(chatId);
+
+        // Create a Map with the field to update
+        Map<String, Object> updates = Map.of(CHAT_NAME, groupName);
+
+        // Asynchronously update the document
+        ApiFuture<WriteResult> future = docRef.update(updates);
+
+        try {
+            future.get(); // Wait for the update to complete
+        } catch (InterruptedException | ExecutionException e) {
+            System.err.println("ERROR changing name for group chat " + chatId + ": " + e.getMessage());
+            throw new RuntimeException("Database error during changeGroupName operation.", e);
+        }
+    }
+
+    /**
+     * Gets a user ID by their username.
+     * In this system, the username IS the user ID (document ID).
+     * This method verifies the user exists before returning the username.
+     * @param username The username to look up.
+     * @return The user ID (same as username), or null if user doesn't exist.
+     */
+    @Override
+    public String getUserIdByUsername(String username) {
+        if (username == null || username.trim().isEmpty()) {
+            return null;
+        }
+
+        // Check if user exists
+        if (existsByName(username.trim())) {
+            return username.trim();
+        }
+
+        return null;
+    }
+
+    @Override
+    public void addUser(String chatId, String userId) {
+        try {
+            DocumentReference doc = db.collection(COLLECTION_CHAT).document(chatId);
+
+            ApiFuture<DocumentSnapshot> future = doc.get();
+            DocumentSnapshot snapshot = future.get();
+
+            if (snapshot.exists()) {
+                Map<String, Object> data = snapshot.getData();  // <-- Your HashMap
+                List<String> participants = (List<String>) data.get(CHAT_USERS);
+                participants.add(userId);
+
+                // Create a Map with the field to update
+                Map<String, Object> updates = Map.of(CHAT_USERS, participants);
+
+                // Asynchronously update the document
+                ApiFuture<WriteResult> futures = doc.update(updates);
+                futures.get();
+            } else {
+                System.err.println("Chat document not found");
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException("Failed to load chat", e);
+        }
+    }
+
+    @Override
+    public void removeUser(String chatId, String userId) {
+        try {
+            DocumentReference doc = db.collection(COLLECTION_CHAT).document(chatId);
+
+            ApiFuture<DocumentSnapshot> future = doc.get();
+            DocumentSnapshot snapshot = future.get();
+
+            if (snapshot.exists()) {
+                Map<String, Object> data = snapshot.getData();  // <-- Your HashMap
+                List<String> participants = (List<String>) data.get(CHAT_USERS);
+                participants.remove(userId);
+
+                // Create a Map with the field to update
+                Map<String, Object> updates = Map.of(CHAT_USERS, participants);
 
                 // Asynchronously update the document
                 ApiFuture<WriteResult> futures = doc.update(updates);
@@ -455,13 +570,35 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
     }
 
     /** -------------------- DELETE BY ID -------------------- **/
-    public void deleteById(String id) {
+    @Override
+    public void deleteMessageById(String messageId) {
         try {
-            DocumentReference doc = db.collection(COLLECTION_MESSAGE).document(id);
-            ApiFuture<WriteResult> future = doc.delete();
-            future.get();
+            DocumentReference msgRef = db.collection(COLLECTION_MESSAGE).document(messageId);
+            DocumentSnapshot msgSnap = msgRef.get().get();
+
+            String chatId = null;
+            if (msgSnap.exists()) {
+                chatId = msgSnap.getString(MESSAGE_CHAT_ID);
+            }
+
+            msgRef.delete().get();
+
+            if (chatId != null) {
+                DocumentReference chatRef = db.collection(COLLECTION_CHAT).document(chatId);
+                DocumentSnapshot chatSnap = chatRef.get().get();
+
+                if (chatSnap.exists()) {
+                    List<String> ids = (List<String>) chatSnap.get(CHAT_MESSAGE);
+                    if (ids != null && ids.remove(messageId)) {
+                        chatRef.update(CHAT_MESSAGE, ids).get();
+                    }
+                }
+            }
+
+            messageRepository.deleteById(messageId);
+
         } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException("Failed to delete message", e);
+            throw new RuntimeException("Failed to delete message " + messageId, e);
         }
     }
 }

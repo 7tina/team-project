@@ -41,4 +41,6 @@ public class Chat {
     public void setBackgroundColor(Color backgroundColor) { this.backgroundColor = backgroundColor; }
 
     public void setLastMessage(Instant lastMessage) { this.lastMessage = lastMessage; }
+
+    public void removeParticipant(String userId) { participantUserIds.remove(userId); }
 }

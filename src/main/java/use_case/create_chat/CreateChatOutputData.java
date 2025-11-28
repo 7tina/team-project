@@ -3,6 +3,7 @@ package use_case.create_chat;
 import java.util.List;
 
 public class CreateChatOutputData {
+    private boolean isGroupChat;
     private final String chatId;
     private final String groupName;
     private final List<String> users;
@@ -10,9 +11,10 @@ public class CreateChatOutputData {
     private final boolean success;
     private final String message;
 
-    public CreateChatOutputData(String chatId, String name,
+    public CreateChatOutputData(boolean isGroupChat, String chatId, String name,
                                 List<String> users, List<String> messageIds,
                                 boolean success, String message) {
+        this.isGroupChat = isGroupChat;
         this.chatId = chatId;
         this.groupName = name;
         this.users = users;
@@ -32,4 +34,6 @@ public class CreateChatOutputData {
     public boolean isSuccess() {return success;}
 
     public String getMessage() {return message;}
+
+    public boolean isGroupChat() {return isGroupChat;}
 }

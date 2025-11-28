@@ -1,7 +1,11 @@
 package view;
 
 import interface_adapter.ViewManagerModel;
-import interface_adapter.groupchat.*;
+import interface_adapter.groupchat.adduser.AddUserController;
+import interface_adapter.groupchat.changegroupname.ChangeGroupNameController;
+import interface_adapter.groupchat.removeuser.RemoveUserController;
+import interface_adapter.messaging.ChatViewModel;
+import interface_adapter.messaging.ChatState;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,9 +16,9 @@ import java.beans.PropertyChangeListener;
 
 public class ChatSettingView extends JPanel implements ActionListener, PropertyChangeListener {
 
-    public final String viewName = "chat setting";
+    public static final String viewName = "chat setting";
     private final ViewManagerModel viewManagerModel;
-    private final GroupChatViewModel groupChatViewModel;
+    private final ChatViewModel chatViewModel;
 
     // Buttons
     private final JButton changeGroupNameButton;
@@ -26,10 +30,10 @@ public class ChatSettingView extends JPanel implements ActionListener, PropertyC
     private AddUserController addUserController;
     private String currentChatId;
 
-    public ChatSettingView(ViewManagerModel viewManagerModel, GroupChatViewModel groupChatViewModel) {
+    public ChatSettingView(ViewManagerModel viewManagerModel, ChatViewModel chatViewModel) {
         this.viewManagerModel = viewManagerModel;
-        this.groupChatViewModel = groupChatViewModel;
-        this.groupChatViewModel.addPropertyChangeListener(this);
+        this.chatViewModel = chatViewModel;
+        this.chatViewModel.addPropertyChangeListener(this);
 
         this.setLayout(new BorderLayout());
         this.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -202,7 +206,7 @@ public class ChatSettingView extends JPanel implements ActionListener, PropertyC
         }
 
         Object newValue = evt.getNewValue();
-        if (!(newValue instanceof GroupChatState)) {
+        if (!(newValue instanceof ChatState)) {
             return;
         }
 
@@ -211,7 +215,7 @@ public class ChatSettingView extends JPanel implements ActionListener, PropertyC
             return;
         }
 
-        GroupChatState state = (GroupChatState) newValue;
+        ChatState state = (ChatState) newValue;
 
         if (state.getError() != null) {
             JOptionPane.showMessageDialog(this,

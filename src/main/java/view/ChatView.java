@@ -2,9 +2,9 @@ package view;
 
 import interface_adapter.ViewManagerModel;
 import interface_adapter.logged_in.LoggedInViewModel;
-import interface_adapter.messaging.send_m.ChatViewModel;
+import interface_adapter.messaging.ChatViewModel;
 import interface_adapter.messaging.send_m.SendMessageController;
-import interface_adapter.messaging.send_m.ChatState;
+import interface_adapter.messaging.ChatState;
 import interface_adapter.messaging.view_history.ViewChatHistoryController;
 import interface_adapter.messaging.delete_m.DeleteMessageController;
 
@@ -200,7 +200,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
             state.chatViewStart();
 
             // Determine if it's a group chat based on number of participants
-            boolean isGroup = state.getParticipants().size() > 2;
+            boolean isGroup = state.getIsGroup();
 
             // Set the chat context
             setChatContext(
@@ -223,6 +223,8 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
             chatDisplayPanel.add(errorLabel);
         }
         else {
+
+            chatPartnerLabel.setText(state.getGroupName());
 
             // Array index order: [messageId, senderUserId, messageContent, messageTimestamp]
             List<String[]> messages = state.getMessages();
@@ -393,9 +395,19 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         this.currentChatId = chatId;
         this.currentUserId = currentUserId;
         this.isGroupChat = isGroupChat;
-        setChatPartner(groupName);
-        settingButton.setVisible(isGroupChat);
-        viewChatHistoryController.execute(chatId, userIds, messageIds);
+
+        String displayName = groupName; // Default for group chats or if set correctly
+
+        if (!isGroupChat && userIds.size() == 2) {
+            // For individual chat, find the participant who is NOT the current user
+            for (String userId : userIds) {
+                if (!userId.equals(currentUserId)) {
+                    displayName = userId; // The name of the other person
+                    break;
+                }
+            }
+        }
+        setChatPartner(displayName);
     }
 
     public void setChatId(String chatId) { this.currentChatId = chatId; }

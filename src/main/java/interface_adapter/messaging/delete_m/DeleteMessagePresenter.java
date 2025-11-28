@@ -1,8 +1,8 @@
 package interface_adapter.messaging.delete_m;
 
 import interface_adapter.ViewManagerModel;
-import interface_adapter.messaging.send_m.ChatState;
-import interface_adapter.messaging.send_m.ChatViewModel;
+import interface_adapter.messaging.ChatState;
+import interface_adapter.messaging.ChatViewModel;
 import use_case.messaging.delete_m.DeleteMessageOutputBoundary;
 import use_case.messaging.delete_m.DeleteMessageOutputData;
 

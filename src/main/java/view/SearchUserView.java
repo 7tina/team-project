@@ -234,7 +234,7 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        String currentUser = loggedInViewModel.getState().getUsername();
+        String currentUser = loggedInViewModel.getState().getUsername(); // <--- Get current user
 
         if ("state".equals(evt.getPropertyName())) {
             Object newValue = evt.getNewValue();
@@ -248,17 +248,24 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
                     userListModel.addElement("Error: " + state.getSearchError());
                 }
                 else if (state.getSearchResults() != null) {
+                    boolean usersAdded = false;
+
                     for (String username : state.getSearchResults()) {
-                        if (!username.equals(currentUser)) {
+                        String currentUser1 = loggedInViewModel.getState().getUsername(); // Get current user here for safety
+
+                        if (!username.equals(currentUser1)) {
                             userListModel.addElement(username);
+                            usersAdded = true; // Mark that at least one user was successfully added
                         }
                     }
-                    if (state.getSearchResults().isEmpty()) {
+
+                    // This condition now correctly checks the results from the data access layer
+                    // AND checks if anything was actually added to the displayed list.
+                    if (state.getSearchResults().isEmpty() || !usersAdded) {
                         userListModel.addElement("No users found.");
                     }
                 }
             }
-
             else if (newValue instanceof LoggedInState && !this.started) {
                 this.started = true;
                 findUsers(loggedInViewModel.getState().getUsername(), "");

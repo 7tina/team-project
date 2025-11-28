@@ -39,6 +39,8 @@ import interface_adapter.messaging.send_m.SendMessageController;
 import interface_adapter.messaging.send_m.SendMessagePresenter;
 import interface_adapter.messaging.view_history.ViewChatHistoryController;
 import interface_adapter.messaging.view_history.ViewChatHistoryPresenter;
+import interface_adapter.messaging.search_history.SearchChatHistoryController;
+import interface_adapter.messaging.search_history.SearchChatHistoryPresenter;
 import interface_adapter.search_user.SearchUserController;
 import interface_adapter.search_user.SearchUserPresenter;
 import interface_adapter.search_user.SearchUserViewModel;
@@ -75,6 +77,9 @@ import use_case.messaging.send_m.SendMessageOutputBoundary;
 import use_case.messaging.view_history.ViewChatHistoryInputBoundary;
 import use_case.messaging.view_history.ViewChatHistoryInteractor;
 import use_case.messaging.view_history.ViewChatHistoryOutputBoundary;
+import use_case.messaging.search_history.SearchChatHistoryInputBoundary;
+import use_case.messaging.search_history.SearchChatHistoryInteractor;
+import use_case.messaging.search_history.SearchChatHistoryOutputBoundary;
 import use_case.search_user.SearchUserInputBoundary;
 import use_case.search_user.SearchUserInteractor;
 import use_case.search_user.SearchUserOutputBoundary;
@@ -140,7 +145,7 @@ public class AppBuilder {
     private final SearchUserViewModel searchUserViewModel = new SearchUserViewModel();
     private SearchUserView searchUserView;
 
-    // Field for send message.
+    // Field for send message / chat.
     private final ChatViewModel chatViewModel = new ChatViewModel();
     private ChatSettingView chatSettingView;
 
@@ -425,6 +430,9 @@ public class AppBuilder {
         final ViewChatHistoryOutputBoundary viewHistoryPresenter =
                 new ViewChatHistoryPresenter(chatViewModel, viewManagerModel);
 
+        final SearchChatHistoryOutputBoundary searchHistoryPresenter =
+                new SearchChatHistoryPresenter(chatViewModel);
+
         // Interactors.
         final SendMessageInputBoundary sendMessageInteractor =
                 new SendMessageInteractor(
@@ -444,15 +452,27 @@ public class AppBuilder {
                         userDataAccessObject
                 );
 
+        final SearchChatHistoryInputBoundary searchHistoryInteractor =
+                new SearchChatHistoryInteractor(
+                        chatRepository,
+                        messageRepository,
+                        searchHistoryPresenter
+                );
+
         // Controllers.
         final ViewChatHistoryController viewChatHistoryController =
                 new ViewChatHistoryController(viewHistoryInteractor);
         final SendMessageController sendMessageController =
                 new SendMessageController(sendMessageInteractor);
 
+        // SearchChatHistoryController
+        final SearchChatHistoryController searchChatHistoryController =
+                new SearchChatHistoryController(searchHistoryInteractor);
+
         if (this.chatView != null) {
             this.chatView.setSendMessageController(sendMessageController);
             this.chatView.setViewChatHistoryController(viewChatHistoryController);
+            this.chatView.setSearchChatHistoryController(searchChatHistoryController);
         }
 
         return this;

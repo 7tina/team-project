@@ -11,8 +11,8 @@ public class RecentChatsController {
         this.recentChatsInputBoundary = recentChatsInputBoundary;
     }
 
-    public void execute() {
-        final RecentChatsInputData recentChatsInputData = new RecentChatsInputData();
+    public void execute(String userId) {
+        final RecentChatsInputData recentChatsInputData = new RecentChatsInputData(userId);
         recentChatsInputBoundary.execute(recentChatsInputData);
     }
 }

@@ -593,6 +593,26 @@ public class AppBuilder {
 
         return this;
     }
-}
 
-// CHECKSTYLE:ON
+    public AppBuilder addRecentChatsUseCase() {
+        RecentChatsOutputBoundary recentChatsPresenter =
+                new RecentChatsPresenter(viewManagerModel, loggedInViewModel, chatViewModel);
+
+        RecentChatsInputBoundary recentChatsInteractor =
+                new RecentChatsInteractor(recentChatsPresenter,
+                        userDataAccessObject,
+                        messageRepository,
+                        userRepository,
+                        chatRepository);
+
+        RecentChatsController recentChatsController =
+                new RecentChatsController(recentChatsInteractor);
+        if (this.chatView != null) {
+            this.chatView.setRecentChatsController(recentChatsController);
+        }
+        if (this.chatView != null) {
+            this.chatView.setRecentChatsController(recentChatsController);
+        }
+        return this;
+    }
+}

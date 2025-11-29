@@ -23,6 +23,7 @@ import use_case.logout.LogoutUserDataAccessInterface;
 import use_case.messaging.delete_m.DeleteMessageDataAccessInterface;
 import use_case.messaging.send_m.SendMessageDataAccessInterface;
 import use_case.messaging.view_history.ViewChatHistoryDataAccessInterface;
+import use_case.recent_chat.RecentChatsUserDataAccessInterface;
 import use_case.search_user.SearchUserDataAccessInterface;
 import use_case.signup.SignupUserDataAccessInterface;
 
@@ -49,7 +50,8 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
         DeleteMessageDataAccessInterface,
         AddUserDataAccessInterface,
         RemoveUserDataAccessInterface,
-        ChangeGroupNameDataAccessInterface {
+        ChangeGroupNameDataAccessInterface,
+        RecentChatsUserDataAccessInterface {
 
     // Inner class to represent the structure of a user document in Firestore
     // Note: The username is the document ID, so it is not stored in the document body.

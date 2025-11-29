@@ -8,6 +8,7 @@ import interface_adapter.messaging.send_m.SendMessageController;
 import interface_adapter.messaging.view_history.ViewChatHistoryController;
 import interface_adapter.messaging.delete_m.DeleteMessageController;
 import interface_adapter.messaging.search_history.SearchChatHistoryController;
+import interface_adapter.recent_chat.RecentChatsController;
 
 import java.util.List;
 import javax.swing.*;
@@ -28,6 +29,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
     private ViewChatHistoryController viewChatHistoryController;
     private DeleteMessageController deleteMessageController;
     private SearchChatHistoryController searchChatHistoryController;
+    private RecentChatsController recentChatsController;
     private ChatSettingView chatSettingView;
 
     private String currentChatId;
@@ -39,6 +41,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
     private final JLabel replyingToLabel;
     private final JTextArea messageInputField;
     private final JButton sendButton;
+    private final JButton backButton;
     private final JButton settingButton;
     private final JButton searchHistoryButton;
 
@@ -76,13 +79,15 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
 
         chatPartnerLabel = new JLabel(this.chatViewModel.getState().getGroupName());
         chatPartnerLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
-
-        final JButton backButton = new JButton("⬅");
+      
+        backButton = new JButton("⬅");
         backButton.setFont(new Font("SansSerif", Font.BOLD, 20));
-        backButton.addActionListener(e -> {
-            viewManagerModel.setState("logged in");
-            viewManagerModel.firePropertyChange();
-        });
+        backButton.addActionListener(this);
+
+//        backButton.addActionListener(e -> {
+//            viewManagerModel.setState("logged in");
+//            viewManagerModel.firePropertyChange();
+//        });
 
         partnerInfoPanel.add(backButton);
         partnerInfoPanel.add(partnerIcon);
@@ -252,6 +257,13 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
                 );
                 messageInputField.setText("");
                 clearReplyPreview();
+            }
+        }
+        else if (evt.getSource().equals(backButton)) {
+            System.out.println("back button pressed");
+            if (recentChatsController != null) {
+                System.out.println("recentChatsController pressed");
+                recentChatsController.execute(currentUserId);
             }
         }
     }
@@ -514,6 +526,15 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
     public void setSearchChatHistoryController(SearchChatHistoryController controller) {
         this.searchChatHistoryController = controller;
     }
+    public void setRecentChatsController(RecentChatsController controller) {
+        this.recentChatsController = controller;
+    }
+
+    // --------------------------------------------------------
+    // PERFECT WRAPPED BUBBLE (this is the fixed version)
+    // --------------------------------------------------------
+    private JPanel createWrappedBubble(String text, String time, String repliedPreview,
+                                       boolean fromCurrentUser, int maxWidth) {
 
     public void setChatSettingView(ChatSettingView chatSettingView) {
         this.chatSettingView = chatSettingView;

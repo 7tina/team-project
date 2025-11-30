@@ -24,10 +24,42 @@ public class CreateChatPresenter implements CreateChatOutputBoundary {
         ChatState state = new ChatState();
         state.setIsGroup(response.isGroupChat());
         state.setChatId(response.getChatId());
-        if (response.isGroupChat()) {state.setGroupName(response.getGroupName());}
-        else {state.setGroupName(response.getUsers().get(1));}
-        for (String userId : response.getUsers()) {state.addParticipant(userId);}
-        for (String messageId : response.getMessageIds()) {state.addMessageId(messageId);}
+
+        if (response.isGroupChat()) {
+            state.setGroupName(response.getGroupName());
+        } else {
+            // For individual chats, find the other user (not the current user)
+            String currentUserId = response.getCurrentUserId();
+            String otherUsername = null;
+
+//            System.out.println("DEBUG: Current user ID: " + currentUserId);
+//            System.out.println("DEBUG: All users in chat: " + response.getUsers());
+
+            for (String userId : response.getUsers()) {
+//                System.out.println("DEBUG: Checking user: " + userId);
+                if (!userId.equals(currentUserId)) {
+                    otherUsername = userId;
+//                    System.out.println("DEBUG: Found other user: " + otherUsername);
+                    break;
+                }
+            }
+
+            if (otherUsername == null) {
+//                System.out.println("DEBUG: ERROR - Could not find other user!");
+//                System.out.println("DEBUG: Users list: " + response.getUsers());
+//                System.out.println("DEBUG: Current user: " + currentUserId);
+            }
+
+            state.setGroupName(otherUsername != null ? otherUsername : "Unknown User");
+//            System.out.println("DEBUG: Set group name to: " + state.getGroupName());
+        }
+
+        for (String userId : response.getUsers()) {
+            state.addParticipant(userId);
+        }
+        for (String messageId : response.getMessageIds()) {
+            state.addMessageId(messageId);
+        }
         state.setSuccess(true);
         state.setError(null);
 

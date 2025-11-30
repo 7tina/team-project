@@ -22,24 +22,23 @@ public class SearchUserInteractor implements SearchUserInputBoundary {
 
     @Override
     public void execute(SearchUserInputData inputData) {
-        String currentUserID = inputData.getUser();
+        String currentUsername = inputData.getUser();
         String query = inputData.getQuery();
-        String currentUserId = inputData.getUser();
 
-        if (currentUserID != null) {
-            Optional<User> currentUserOpt = userRepository.findByUsername(currentUserID);
-            if (currentUserOpt.isEmpty()) {
-                userPresenter.prepareFailView("Session error. Please log in again.");
-                return;
-            }
-            currentUserId = currentUserOpt.get().getName();
+        // Validate current user
+        if (currentUsername == null || currentUsername.trim().isEmpty()) {
+            userPresenter.prepareFailView("Session error. Please log in again.");
+            return;
         }
 
+        // Treat null query as empty search
         if (query == null) {
-            query = ""; // Treat null query as empty search
+            query = "";
         }
 
-        List<String> results = userDataAccessObject.searchUsers(currentUserId, query);
+        // Search for users, passing the current username to filter them out
+        // No need to look up the user - we already have their username
+        List<String> results = userDataAccessObject.searchUsers(currentUsername, query);
 
         if (results.isEmpty()) {
             userPresenter.prepareFailView("No users found matching: " + query);

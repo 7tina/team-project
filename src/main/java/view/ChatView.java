@@ -37,10 +37,10 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
     private final JButton sendButton;
     private final JButton settingButton;
 
-    private final JPanel replyPreviewBox;         // NEW
-    private final JLabel replyPreviewText;        // NEW
-    private final JButton cancelReplyButton;      // NEW
-    private String replyingToMessageId = null;    // NEW
+    private final JPanel replyPreviewBox;
+    private final JLabel replyPreviewText;
+    private final JButton cancelReplyButton;
+    private String replyingToMessageId = null;
 
     // Use this to display the initial prompt or history
     private final JPanel chatDisplayPanel;

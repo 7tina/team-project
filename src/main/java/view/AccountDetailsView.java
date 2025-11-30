@@ -93,26 +93,51 @@ public class AccountDetailsView extends JPanel implements ActionListener, Proper
     public void actionPerformed(ActionEvent evt) {
         if (evt.getSource().equals(logoutButton) && logoutController != null) {
             logoutController.execute();
-        }
-        else if (evt.getSource().equals(changePasswordButton) && changePasswordController != null) {
-
-            // Get the current username
+        } else if (evt.getSource().equals(changePasswordButton) && changePasswordController != null) {
             final String currentUsername = loggedInViewModel.getState().getUsername();
 
-            // Prompt user for the new password
-            String newPassword = JOptionPane.showInputDialog(this,
-                    "Enter new password for " + currentUsername + ":",
-                    "Change Password",
-                    JOptionPane.PLAIN_MESSAGE
-            );
+            // Create a custom dialog
+            JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Change Password", Dialog.ModalityType.APPLICATION_MODAL);
+            dialog.setLayout(new BorderLayout());
+            dialog.setSize(400, 150);
+            dialog.setLocationRelativeTo(this);
 
-            // Execute the use case if a password was entered
-            if (newPassword != null) {
-                changePasswordController.execute(
-                        currentUsername,
-                        newPassword
-                );
-            }
+            // Message panel
+            JPanel messagePanel = new JPanel();
+            messagePanel.add(new JLabel("Enter new password for " + currentUsername + ":"));
+            dialog.add(messagePanel, BorderLayout.NORTH);
+
+            // Text field
+            JPasswordField passwordField = new JPasswordField(20);
+            JPanel fieldPanel = new JPanel();
+            fieldPanel.add(passwordField);
+            dialog.add(fieldPanel, BorderLayout.CENTER);
+
+            // Buttons
+            JButton okButton = new JButton("OK");
+            JButton cancelButton = new JButton("Cancel");
+            JPanel buttonPanel = new JPanel();
+            buttonPanel.add(okButton);
+            buttonPanel.add(cancelButton);
+            dialog.add(buttonPanel, BorderLayout.SOUTH);
+
+            // Make OK triggered by Enter
+            dialog.getRootPane().setDefaultButton(okButton);
+
+            // Action listeners
+            okButton.addActionListener(e -> {
+                String newPassword = new String(passwordField.getPassword());
+                if (!newPassword.isEmpty()) {
+                    changePasswordController.execute(currentUsername, newPassword);
+                    dialog.dispose();
+                } else {
+                    JOptionPane.showMessageDialog(dialog, "Password cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            });
+
+            cancelButton.addActionListener(e -> dialog.dispose());
+
+            dialog.setVisible(true);
         }
     }
 

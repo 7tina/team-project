@@ -1,5 +1,9 @@
 package interface_adapter.logged_in;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
 /**
  * The State information representing the logged-in user.
  */
@@ -11,6 +15,10 @@ public class LoggedInState {
 
     private String password = "";
     private String passwordError;
+
+    private List<String> chatNames = new ArrayList<>();
+    private HashMap<String, String> nameToChatIds = new HashMap<>();
+    private String recentChatsError = null;
 
     public LoggedInState(LoggedInState copy) {
         username = copy.username;
@@ -54,5 +62,24 @@ public class LoggedInState {
 
     public String getPasswordError() {
         return passwordError;
+    }
+
+    public void setChatNames(List<String> chatNames) {
+        this.chatNames = chatNames;
+    }
+    public List<String> getChatNames() {return chatNames;}
+
+    public String getNameToChatIds(String chatName) {
+        return nameToChatIds.get(chatName);
+    }
+
+    public void setNameToChatIds(HashMap<String, String> nameToChatIds) {this.nameToChatIds = nameToChatIds;}
+
+    public void setRecentChatsError(String recentChatsError) {
+        this.recentChatsError = recentChatsError;
+    }
+
+    public String getRecentChatsError() {
+        return recentChatsError;
     }
 }

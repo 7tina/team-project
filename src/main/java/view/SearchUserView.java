@@ -126,7 +126,12 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
         hintLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         // Create button BEFORE adding listener
-        startChatButton = new JButton("Start Chat");
+        startChatButton = new JButton("Start Chat (99)");
+        Dimension buttonSize = startChatButton.getPreferredSize();
+        startChatButton.setText("Start Chat"); // Reset to default text
+        startChatButton.setPreferredSize(buttonSize); // Lock the size
+        startChatButton.setMinimumSize(buttonSize);
+        startChatButton.setMaximumSize(buttonSize);
 
         // Add selection listener for visual feedback
         userList.addListSelectionListener(e -> {
@@ -257,6 +262,8 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
+        String currentUsername = loggedInViewModel.getState().getUsername();
+
         if ("state".equals(evt.getPropertyName())) {
             Object newValue = evt.getNewValue();
 
@@ -272,35 +279,28 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
                     userListModel.addElement("Error: " + state.getSearchError());
                 }
                 else if (state.getSearchResults() != null) {
-                    // Filter out current user from results
+                    boolean usersAdded = false;
+
                     for (String username : state.getSearchResults()) {
-                        if (!username.equals(currentUser)) {
+                        String currentUser1 = loggedInViewModel.getState().getUsername(); // Get current user
+
+                        // This check prevents the current user from being added to the list
+                        if (!username.equals(currentUser1)) {
                             userListModel.addElement(username);
+                            usersAdded = true;
                         }
                     }
-                    if (userListModel.isEmpty()) {
+
+                    // This condition now correctly checks the results from the data access layer
+                    // AND checks if anything was actually added to the displayed list.
+                    if (state.getSearchResults().isEmpty() || !usersAdded) {
                         userListModel.addElement("No users found.");
                     }
                 }
             }
-
-            else if (newValue instanceof LoggedInState) {
-                LoggedInState loggedInState = (LoggedInState) newValue;
-                String currentUsername = loggedInState.getUsername();
-
-                // Check if this is a new user (account switch)
-                if (currentUsername != null && !currentUsername.equals(lastLoggedInUser)) {
-                    // Clear the list immediately when switching accounts
-                    userListModel.clear();
-                    searchInputField.setText("");
-                    this.started = false;
-                    this.lastLoggedInUser = currentUsername;
-
-                    // If view is currently active, load users for new account
-                    if (viewIsActive) {
-                        findUsers(currentUsername, "");
-                    }
-                }
+            else if (newValue instanceof LoggedInState && !this.started) {
+                this.started = true;
+                findUsers(loggedInViewModel.getState().getUsername(), "");
             }
 
             // Check if it's ChatState

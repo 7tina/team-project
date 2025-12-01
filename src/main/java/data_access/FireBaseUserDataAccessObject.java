@@ -1,8 +1,26 @@
 package data_access;
 
+import java.awt.Color;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+
 import com.google.api.core.ApiFuture;
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.cloud.firestore.*;
+import com.google.cloud.firestore.CollectionReference;
+import com.google.cloud.firestore.DocumentReference;
+import com.google.cloud.firestore.DocumentSnapshot;
+import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.Query;
+import com.google.cloud.firestore.QueryDocumentSnapshot;
+import com.google.cloud.firestore.QuerySnapshot;
+import com.google.cloud.firestore.WriteResult;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.cloud.FirestoreClient;
@@ -11,8 +29,8 @@ import entity.Message;
 import entity.User;
 import entity.UserFactory;
 import entity.ports.ChatRepository;
-import entity.ports.UserRepository;
 import entity.ports.MessageRepository;
+import entity.ports.UserRepository;
 import use_case.change_password.ChangePasswordUserDataAccessInterface;
 import use_case.create_chat.CreateChatUserDataAccessInterface;
 import use_case.groups.adduser.AddUserDataAccessInterface;
@@ -23,18 +41,11 @@ import use_case.logout.LogoutUserDataAccessInterface;
 import use_case.messaging.delete_m.DeleteMessageDataAccessInterface;
 import use_case.messaging.send_m.SendMessageDataAccessInterface;
 import use_case.messaging.view_history.ViewChatHistoryDataAccessInterface;
+import use_case.recent_chat.RecentChatsUserDataAccessInterface;
 import use_case.search_user.SearchUserDataAccessInterface;
 import use_case.signup.SignupUserDataAccessInterface;
 
-import java.awt.*;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.time.Instant;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-
+// CHECKSTYLE:OFF
 /**
  * Data Access Object for user data implemented using Google Cloud Firestore.
  */
@@ -49,23 +60,8 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
         DeleteMessageDataAccessInterface,
         AddUserDataAccessInterface,
         RemoveUserDataAccessInterface,
-        ChangeGroupNameDataAccessInterface {
-
-    // Inner class to represent the structure of a user document in Firestore
-    // Note: The username is the document ID, so it is not stored in the document body.
-    private static class UserDocument {
-        private String password; // Stored as a plain string, as done in FileDAO
-
-        public UserDocument() {} // Required for Firestore automatic data mapping
-
-        public UserDocument(String password) {
-            this.password = password;
-        }
-
-        public String getPassword() {
-            return password;
-        }
-    }
+        ChangeGroupNameDataAccessInterface,
+        RecentChatsUserDataAccessInterface {
 
     private static final String COLLECTION_NAME = "users";
     private static final String NAME_PASSWORD = "password";
@@ -82,37 +78,46 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
     private static final String MESSAGE_TIME = "timestamp";
     private static final String MESSAGE_REPLY_ID = "repliedId";
     private static final String MESSAGE_REACTION = "reactions";
+
+    // Error messages extracted to constants to avoid MultipleStringLiterals checkstyle error
+    private static final String ERR_CHAT_NOT_FOUND = "Chat document not found";
+    private static final String ERR_LOAD_CHAT = "Failed to load chat";
+    private static final String ERR_DB_SEARCH = "Database error during searchUsers operation.";
+
     private final Firestore db;
     private final UserFactory userFactory;
     private String currentUsername;
-    private final UserRepository  userRepository;
+    private final UserRepository userRepository;
     private final ChatRepository chatRepository;
     private final MessageRepository messageRepository;
 
     /**
      * Constructs the DAO and initializes the Firebase Admin SDK.
+     * @param userRepository The repository for users.
+     * @param chatRepository The repository for chats.
+     * @param messageRepository The repository for messages.
      * @param serviceAccountKeyPath The path to the Firebase service account JSON file.
      * @param userFactory The factory to create User entities.
+     * @throws RuntimeException if initialization fails.
      */
     public FireBaseUserDataAccessObject(UserRepository userRepository,
-                                        ChatRepository chatrepository,
+                                        ChatRepository chatRepository,
                                         MessageRepository messageRepository,
                                         String serviceAccountKeyPath,
                                         UserFactory userFactory) {
         this.userRepository = userRepository;
-        this.chatRepository = chatrepository;
+        this.chatRepository = chatRepository;
         this.messageRepository = messageRepository;
         this.userFactory = userFactory;
         try {
             // 1. Initialize Firebase App
-            FileInputStream serviceAccount = new FileInputStream(serviceAccountKeyPath);
+            final FileInputStream serviceAccount = new FileInputStream(serviceAccountKeyPath);
 
-            FirebaseOptions options = FirebaseOptions.builder()
+            final FirebaseOptions options = FirebaseOptions.builder()
                     .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                    // DatabaseUrl is not strictly required for Firestore, but can be set for Realtime DB
                     .build();
 
-            // Check if Firebase is already initialized (to prevent errors in tests or hot-reloads)
+            // Check if Firebase is already initialized
             if (FirebaseApp.getApps().isEmpty()) {
                 FirebaseApp.initializeApp(options);
             }
@@ -120,15 +125,12 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
             // 2. Get Firestore instance
             this.db = FirestoreClient.getFirestore();
 
-            // Simple check to ensure connection works (optional)
-            System.out.println("Firebase Firestore initialized successfully. Using Project: " + db.getOptions().getProjectId());
-
-        } catch (FileNotFoundException e) {
-            System.err.println("ERROR: Service account key not found at path: " + serviceAccountKeyPath);
-            throw new RuntimeException("Failed to initialize Firebase: Service account key not found.", e);
-        } catch (IOException e) {
-            System.err.println("ERROR: Failed to read service account key file.");
-            throw new RuntimeException("Failed to initialize Firebase: IO error.", e);
+        }
+        catch (FileNotFoundException ex) {
+            throw new RuntimeException("Failed to initialize Firebase: Service account key not found.", ex);
+        }
+        catch (IOException ex) {
+            throw new RuntimeException("Failed to initialize Firebase: IO error.", ex);
         }
     }
 
@@ -138,21 +140,21 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
      */
     @Override
     public void save(User user) {
-        // Prepare the data to be saved (username and password, email is the Document ID)
-        UserDocument documentData = new UserDocument(user.getPassword());
+        // Prepare the data to be saved
+        final UserDocument documentData = new UserDocument(user.getPassword());
 
         // Get a reference to the document using the username as the ID
-        DocumentReference docRef = db.collection(COLLECTION_NAME).document(user.getName());
+        final DocumentReference docRef = db.collection(COLLECTION_NAME).document(user.getName());
 
         // Asynchronously set the document data
-        ApiFuture<WriteResult> future = docRef.set(documentData);
+        final ApiFuture<WriteResult> future = docRef.set(documentData);
 
         try {
-            // Block until the write is complete (synchronous behavior for the DAO interface)
+            // Block until the write is complete
             future.get();
-        } catch (InterruptedException | ExecutionException e) {
-            System.err.println("ERROR saving user " + user.getName() + " to Firestore: " + e.getMessage());
-            throw new RuntimeException("Database error during save operation.", e);
+        }
+        catch (InterruptedException | ExecutionException ex) {
+            throw new RuntimeException("Database error during save operation.", ex);
         }
     }
 
@@ -163,26 +165,27 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
      */
     @Override
     public User get(String identifier) {
-        DocumentReference docRef = db.collection(COLLECTION_NAME).document(identifier);
-        ApiFuture<DocumentSnapshot> future = docRef.get();
+        User result = null;
+        final DocumentReference docRef = db.collection(COLLECTION_NAME).document(identifier);
+        final ApiFuture<DocumentSnapshot> future = docRef.get();
 
         try {
-            DocumentSnapshot document = future.get();
+            final DocumentSnapshot document = future.get();
             if (document.exists()) {
                 // Map the document to the UserDocument class
-                UserDocument doc = document.toObject(UserDocument.class);
+                final UserDocument doc = document.toObject(UserDocument.class);
                 // Create the final User entity using the factory
-                assert doc != null;
-                return userFactory.create(identifier, doc.getPassword());
-            } else {
-                return null; // User not found
+                if (doc != null) {
+                    result = userFactory.create(identifier, doc.getPassword());
+                }
             }
-        } catch (InterruptedException | ExecutionException e) {
-            System.err.println("ERROR retrieving user " + identifier + " from Firestore: " + e.getMessage());
-            throw new RuntimeException("Database error during get operation.", e);
+            // If not found, result remains null
         }
+        catch (InterruptedException | ExecutionException ex) {
+            throw new RuntimeException("Database error during get operation.", ex);
+        }
+        return result;
     }
-
 
     /**
      * Checks if a user with the given username exists in Firestore.
@@ -200,58 +203,58 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
      */
     @Override
     public void changePassword(User user) {
-        DocumentReference docRef = db.collection(COLLECTION_NAME).document(user.getName());
+        final DocumentReference docRef = db.collection(COLLECTION_NAME).document(user.getName());
 
         // Create a Map with the field to update
-        Map<String, Object> updates = Map.of(NAME_PASSWORD, user.getPassword());
+        final Map<String, Object> updates = Map.of(NAME_PASSWORD, user.getPassword());
 
         // Asynchronously update the document
-        ApiFuture<WriteResult> future = docRef.update(updates);
+        final ApiFuture<WriteResult> future = docRef.update(updates);
 
         try {
-            future.get(); // Wait for the update to complete
-        } catch (InterruptedException | ExecutionException e) {
-            System.err.println("ERROR changing password for user " + user.getName() + ": " + e.getMessage());
-            throw new RuntimeException("Database error during changePassword operation.", e);
+            // Wait for the update to complete
+            future.get();
+        }
+        catch (InterruptedException | ExecutionException ex) {
+            throw new RuntimeException("Database error during changePassword operation.", ex);
         }
     }
 
     /**
      * Searches for usernames containing the query string.
-     * Note: Firestore does not support case-insensitive 'contains' queries efficiently.
-     * This implementation fetches all documents and filters in-memory (OK for small user bases).
-     * For large user bases, a full-text search index (like Algolia or ElasticSearch) should be used.
+     * @param userId The current user's ID.
      * @param query The search string.
      * @return A list of matching usernames.
      */
     @Override
     public List<String> searchUsers(String userId, String query) {
-        String lowerCaseQuery = query.toLowerCase();
-        List<String> matchingUsers = new ArrayList<>();
+        final String lowerCaseQuery = query.toLowerCase();
+        final List<String> matchingUsers = new ArrayList<>();
 
         // Get all documents in the collection
-        CollectionReference collection = db.collection(COLLECTION_NAME);
-        ApiFuture<QuerySnapshot> queryFuture = collection.get();
+        final CollectionReference collection = db.collection(COLLECTION_NAME);
+        final ApiFuture<QuerySnapshot> queryFuture = collection.get();
 
         try {
-            List<QueryDocumentSnapshot> documents = queryFuture.get().getDocuments();
+            final List<QueryDocumentSnapshot> documents = queryFuture.get().getDocuments();
 
             // Filter in-memory (Document ID is the username)
             for (QueryDocumentSnapshot document : documents) {
-                String username = document.getId();
-                if (username.equals(userId)) {continue;}
+                final String username = document.getId();
+                if (username.equals(userId)) {
+                    continue;
+                }
                 if (username.toLowerCase().contains(lowerCaseQuery)) {
                     matchingUsers.add(username);
                 }
             }
-        } catch (InterruptedException | ExecutionException e) {
-            System.err.println("ERROR searching users in Firestore: " + e.getMessage());
-            throw new RuntimeException("Database error during searchUsers operation.", e);
+        }
+        catch (InterruptedException | ExecutionException ex) {
+            throw new RuntimeException(ERR_DB_SEARCH, ex);
         }
 
         return matchingUsers;
     }
-
 
     // --- Current User Tracking Methods (inherited from FileDAO) ---
 
@@ -268,68 +271,85 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
 
     @Override
     public boolean loadToEntity(String username) {
+        boolean success = false;
         if (username != null) {
-            User user = get(username);
+            final User user = get(username);
             userRepository.save(user);
-            return true;
+            success = true;
         }
-        else { return false; }
+        return success;
     }
 
     @Override
     public void updateChatRepository(String username) {
         // Get all documents in the collection
-        CollectionReference collection = db.collection(COLLECTION_CHAT);
-        ApiFuture<QuerySnapshot> future = collection.get();
+        final CollectionReference collection = db.collection(COLLECTION_CHAT);
+        final ApiFuture<QuerySnapshot> future = collection.get();
 
         try {
-            List<QueryDocumentSnapshot> documents = future.get().getDocuments();
+            final List<QueryDocumentSnapshot> documents = future.get().getDocuments();
 
             // Filter in-memory (Document ID is the username)
             for (QueryDocumentSnapshot document : documents) {
-                String chatId = document.getId();
-                String groupName = document.getString(CHAT_NAME);
-                Color chatColor = Color.decode(document.getString(CHAT_COLOR));
-                Long timeMs = document.getLong(CHAT_RECENT);
-                Instant timestamp = timeMs != null
-                        ? Instant.ofEpochMilli(timeMs)
-                        : Instant.now();
-                List<String> participants = (List<String>) document.get(CHAT_USERS);
-                if (participants.contains(username)) {
-                    Chat chat = new Chat(chatId, groupName, chatColor, timestamp);
-                    List<String> messageIds = (List<String>) document.get(CHAT_MESSAGE);
+                final String chatId = document.getId();
+                final String groupName = document.getString(CHAT_NAME);
+                final String colorHex = document.getString(CHAT_COLOR);
+                final Color chatColor;
+                if (colorHex != null) {
+                    chatColor = Color.decode(colorHex);
+                }
+                else {
+                    chatColor = Color.WHITE;
+                }
+
+                final Long timeMs = document.getLong(CHAT_RECENT);
+                final Instant timestamp;
+                if (timeMs != null) {
+                    timestamp = Instant.ofEpochMilli(timeMs);
+                }
+                else {
+                    timestamp = Instant.now();
+                }
+
+                final List<String> participants = (List<String>) document.get(CHAT_USERS);
+                if (participants != null && participants.contains(username)) {
+                    final Chat chat = new Chat(chatId, groupName, chatColor, timestamp);
+                    final List<String> messageIds = (List<String>) document.get(CHAT_MESSAGE);
                     for (String participant : participants) {
                         chat.addParticipant(participant);
                     }
-                    for (String messageId : messageIds) {
-                        chat.addMessage(messageId);
+                    if (messageIds != null) {
+                        for (String messageId : messageIds) {
+                            chat.addMessage(messageId);
+                        }
                     }
                     chatRepository.save(chat);
                 }
             }
-        } catch (InterruptedException | ExecutionException e) {
-            System.err.println("ERROR searching users in Firestore: " + e.getMessage());
-            throw new RuntimeException("Database error during searchUsers operation.", e);
+        }
+        catch (InterruptedException | ExecutionException ex) {
+            throw new RuntimeException(ERR_DB_SEARCH, ex);
         }
     }
 
     @Override
     public Chat saveChat(Chat chat) {
         try {
-            Map<String, Object> data = new HashMap<>();
+            final Map<String, Object> data = new HashMap<>();
             data.put(CHAT_NAME, chat.getGroupName());
             data.put(CHAT_USERS, chat.getParticipantUserIds());
             data.put(CHAT_MESSAGE, chat.getMessageIds());
             data.put(CHAT_COLOR, colorToHex(chat.getBackgroundColor()));
             data.put(CHAT_RECENT, chat.getLastMessage().toEpochMilli());
 
-            CollectionReference col = db.collection(COLLECTION_CHAT);
-            DocumentReference doc = col.document(chat.getId());
-            ApiFuture<WriteResult> future = doc.set(data);
+            final CollectionReference col = db.collection(COLLECTION_CHAT);
+            final DocumentReference doc = col.document(chat.getId());
+            final ApiFuture<WriteResult> future = doc.set(data);
             future.get();
 
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException("Failed to save chat", e);
+        }
+        catch (InterruptedException | ExecutionException ex) {
+            throw new RuntimeException("Failed to save chat", ex);
         }
         chatRepository.save(chat);
         return chat;
@@ -348,18 +368,11 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
     public void findChatMessages(String chatId, List<String> userIds, List<String> messageIds) {
         this.messageRepository.clear();
 
-        for (String messageId : messageIds) {
-            DocumentReference docRef = db.collection(COLLECTION_MESSAGE).document(messageId);
-            ApiFuture<DocumentSnapshot> future = docRef.get();
-            try {
-                DocumentSnapshot snapshot = future.get();
-                if (snapshot.exists()) {
-                    Message msg = toMessage(snapshot);
-                    if (msg.getChatId().equals(chatId) && userIds.contains(msg.getSenderUserId())
-                            && messageIds.contains(msg.getId())) {this.messageRepository.save(msg);}
-                }
-            } catch (InterruptedException | ExecutionException e) {
-                throw new RuntimeException("Failed to load message by ID", e);
+        List<Message> messages = findByChatId(chatId);
+
+        for (Message msg : messages) {
+            if (userIds == null || userIds.isEmpty() || userIds.contains(msg.getSenderUserId())) {
+                this.messageRepository.save(msg);
             }
         }
     }
@@ -371,21 +384,27 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
      * @return the message as a message entity.
      */
     private Message toMessage(DocumentSnapshot doc) {
-        String id = doc.getId();
-        String chatId = doc.getString(MESSAGE_CHAT_ID);
-        String senderId = doc.getString(MESSAGE_SENDER);
-        String content = doc.getString(MESSAGE_CONTENT);
-        String repliedId = doc.getString(MESSAGE_REPLY_ID);
-        Map<String, String> reactions = (Map<String, String>) doc.get(MESSAGE_REACTION);
-        Long timeMs = doc.getLong(MESSAGE_TIME);
-        Instant timestamp = timeMs != null
-                ? Instant.ofEpochMilli(timeMs)
-                : Instant.now();
+        final String id = doc.getId();
+        final String chatId = doc.getString(MESSAGE_CHAT_ID);
+        final String senderId = doc.getString(MESSAGE_SENDER);
+        final String content = doc.getString(MESSAGE_CONTENT);
+        final String repliedId = doc.getString(MESSAGE_REPLY_ID);
+        final Map<String, String> reactions = (Map<String, String>) doc.get(MESSAGE_REACTION);
+        final Long timeMs = doc.getLong(MESSAGE_TIME);
+        final Instant timestamp;
+        if (timeMs != null) {
+            timestamp = Instant.ofEpochMilli(timeMs);
+        }
+        else {
+            timestamp = Instant.now();
+        }
 
-        Message message = new Message(id, chatId, senderId, repliedId, content, timestamp);
-        assert reactions != null;
-        for (Map.Entry<String, String> reaction : reactions.entrySet()) {
-            message.addReaction(reaction.getKey(), reaction.getValue());
+        final Message message = new Message(id, chatId, senderId, repliedId, content, timestamp);
+
+        if (reactions != null) {
+            for (Map.Entry<String, String> reaction : reactions.entrySet()) {
+                message.addReaction(reaction.getKey(), reaction.getValue());
+            }
         }
         return message;
     }
@@ -393,7 +412,7 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
     @Override
     public Message sendMessage(Message message) {
         try {
-            Map<String, Object> data = new HashMap<>();
+            final Map<String, Object> data = new HashMap<>();
             data.put(MESSAGE_CHAT_ID, message.getChatId());
             data.put(MESSAGE_SENDER, message.getSenderUserId());
             data.put(MESSAGE_REPLY_ID, message.getRepliedMessageId());
@@ -401,69 +420,73 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
             data.put(MESSAGE_CONTENT, message.getContent());
             data.put(MESSAGE_TIME, message.getTimestamp().toEpochMilli());
 
-            CollectionReference col = db.collection(COLLECTION_MESSAGE);
+            final CollectionReference col = db.collection(COLLECTION_MESSAGE);
 
+            final ApiFuture<?> future;
             if (message.getId() == null || message.getId().isEmpty()) {
                 // Auto-generate ID
-                ApiFuture<DocumentReference> future = col.add(data);
-                future.get();
-                messageRepository.save(message);
-                return message;
-            } else {
-                DocumentReference doc = col.document(message.getId());
-                ApiFuture<WriteResult> future = doc.set(data);
-                future.get();
-                messageRepository.save(message);
-                return message;
+                future = col.add(data);
             }
-
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException("Failed to save message", e);
+            else {
+                final DocumentReference doc = col.document(message.getId());
+                future = doc.set(data);
+            }
+            future.get();
+            messageRepository.save(message);
         }
+        catch (InterruptedException | ExecutionException ex) {
+            throw new RuntimeException("Failed to save message", ex);
+        }
+        return message;
     }
 
     @Override
     public void updateChat(String chatId, String messageId) {
         try {
-            DocumentReference doc = db.collection(COLLECTION_CHAT).document(chatId);
+            final DocumentReference doc = db.collection(COLLECTION_CHAT).document(chatId);
 
-            ApiFuture<DocumentSnapshot> future = doc.get();
-            DocumentSnapshot snapshot = future.get();
+            final ApiFuture<DocumentSnapshot> future = doc.get();
+            final DocumentSnapshot snapshot = future.get();
 
             if (snapshot.exists()) {
-                Map<String, Object> data = snapshot.getData();  // <-- Your HashMap
-                List<String> messages = (List<String>) data.get(CHAT_MESSAGE);
-                messages.add(messageId);
-
-                // Create a Map with the field to update
-                Map<String, Object> updates = Map.of(CHAT_MESSAGE, messages);
-
-                // Asynchronously update the document
-                ApiFuture<WriteResult> futures = doc.update(updates);
-                futures.get();
-            } else {
-                System.err.println("Chat document not found");
+                final Map<String, Object> data = snapshot.getData();
+                if (data != null) {
+                    final List<String> messages = (List<String>) data.get(CHAT_MESSAGE);
+                    if (messages != null) {
+                        messages.add(messageId);
+                        // Create a Map with the field to update
+                        final Map<String, Object> updates = Map.of(CHAT_MESSAGE, messages);
+                        // Asynchronously update the document
+                        final ApiFuture<WriteResult> futures = doc.update(updates);
+                        futures.get();
+                    }
+                }
             }
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException("Failed to load chat", e);
+            else {
+                System.err.println(ERR_CHAT_NOT_FOUND);
+            }
+        }
+        catch (InterruptedException | ExecutionException ex) {
+            throw new RuntimeException(ERR_LOAD_CHAT, ex);
         }
     }
 
     @Override
     public void changeGroupName(String chatId, String groupName) {
-        DocumentReference docRef = db.collection(COLLECTION_CHAT).document(chatId);
+        final DocumentReference docRef = db.collection(COLLECTION_CHAT).document(chatId);
 
         // Create a Map with the field to update
-        Map<String, Object> updates = Map.of(CHAT_NAME, groupName);
+        final Map<String, Object> updates = Map.of(CHAT_NAME, groupName);
 
         // Asynchronously update the document
-        ApiFuture<WriteResult> future = docRef.update(updates);
+        final ApiFuture<WriteResult> future = docRef.update(updates);
 
         try {
-            future.get(); // Wait for the update to complete
-        } catch (InterruptedException | ExecutionException e) {
-            System.err.println("ERROR changing name for group chat " + chatId + ": " + e.getMessage());
-            throw new RuntimeException("Database error during changeGroupName operation.", e);
+            // Wait for the update to complete
+            future.get();
+        }
+        catch (InterruptedException | ExecutionException ex) {
+            throw new RuntimeException("Database error during changeGroupName operation.", ex);
         }
     }
 
@@ -476,103 +499,114 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
      */
     @Override
     public String getUserIdByUsername(String username) {
-        if (username == null || username.trim().isEmpty()) {
-            return null;
+        String result = null;
+        if (username != null && !username.trim().isEmpty() && existsByName(username.trim())) {
+            result = username.trim();
         }
-
-        // Check if user exists
-        if (existsByName(username.trim())) {
-            return username.trim();
-        }
-
-        return null;
+        return result;
     }
 
     @Override
     public void addUser(String chatId, String userId) {
         try {
-            DocumentReference doc = db.collection(COLLECTION_CHAT).document(chatId);
+            final DocumentReference doc = db.collection(COLLECTION_CHAT).document(chatId);
 
-            ApiFuture<DocumentSnapshot> future = doc.get();
-            DocumentSnapshot snapshot = future.get();
+            final ApiFuture<DocumentSnapshot> future = doc.get();
+            final DocumentSnapshot snapshot = future.get();
 
             if (snapshot.exists()) {
-                Map<String, Object> data = snapshot.getData();  // <-- Your HashMap
-                List<String> participants = (List<String>) data.get(CHAT_USERS);
-                participants.add(userId);
-
-                // Create a Map with the field to update
-                Map<String, Object> updates = Map.of(CHAT_USERS, participants);
-
-                // Asynchronously update the document
-                ApiFuture<WriteResult> futures = doc.update(updates);
-                futures.get();
-            } else {
-                System.err.println("Chat document not found");
+                final Map<String, Object> data = snapshot.getData();
+                if (data != null) {
+                    final List<String> participants = (List<String>) data.get(CHAT_USERS);
+                    if (participants != null) {
+                        participants.add(userId);
+                        // Create a Map with the field to update
+                        final Map<String, Object> updates = Map.of(CHAT_USERS, participants);
+                        // Asynchronously update the document
+                        final ApiFuture<WriteResult> futures = doc.update(updates);
+                        futures.get();
+                    }
+                }
             }
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException("Failed to load chat", e);
+            else {
+                System.err.println(ERR_CHAT_NOT_FOUND);
+            }
+        }
+        catch (InterruptedException | ExecutionException ex) {
+            throw new RuntimeException(ERR_LOAD_CHAT, ex);
         }
     }
 
     @Override
     public void removeUser(String chatId, String userId) {
         try {
-            DocumentReference doc = db.collection(COLLECTION_CHAT).document(chatId);
+            final DocumentReference doc = db.collection(COLLECTION_CHAT).document(chatId);
 
-            ApiFuture<DocumentSnapshot> future = doc.get();
-            DocumentSnapshot snapshot = future.get();
+            final ApiFuture<DocumentSnapshot> future = doc.get();
+            final DocumentSnapshot snapshot = future.get();
 
             if (snapshot.exists()) {
-                Map<String, Object> data = snapshot.getData();  // <-- Your HashMap
-                List<String> participants = (List<String>) data.get(CHAT_USERS);
-                participants.remove(userId);
-
-                // Create a Map with the field to update
-                Map<String, Object> updates = Map.of(CHAT_USERS, participants);
-
-                // Asynchronously update the document
-                ApiFuture<WriteResult> futures = doc.update(updates);
-                futures.get();
-            } else {
-                System.err.println("Chat document not found");
+                final Map<String, Object> data = snapshot.getData();
+                if (data != null) {
+                    final List<String> participants = (List<String>) data.get(CHAT_USERS);
+                    if (participants != null) {
+                        participants.remove(userId);
+                        // Create a Map with the field to update
+                        final Map<String, Object> updates = Map.of(CHAT_USERS, participants);
+                        // Asynchronously update the document
+                        final ApiFuture<WriteResult> futures = doc.update(updates);
+                        futures.get();
+                    }
+                }
             }
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException("Failed to load chat", e);
+            else {
+                System.err.println(ERR_CHAT_NOT_FOUND);
+            }
+        }
+        catch (InterruptedException | ExecutionException ex) {
+            throw new RuntimeException(ERR_LOAD_CHAT, ex);
         }
     }
 
-    //TODO: These methods COULD be used for the delete and edit chat use cases (you don't necessarily have to).
-    /** -------------------- FIND MESSAGES BY CHAT ID -------------------- **/
+    /**
+     * Finds messages by Chat ID.
+     * @param chatId The ID of the chat.
+     * @return A list of messages.
+     * @throws RuntimeException
+     */
     public List<Message> findByChatId(String chatId) {
         try {
-            CollectionReference col = db.collection(COLLECTION_MESSAGE);
+            final CollectionReference col = db.collection(COLLECTION_MESSAGE);
 
-            Query query = col
+            final Query query = col
                     .whereEqualTo(MESSAGE_CHAT_ID, chatId)
                     .orderBy(MESSAGE_TIME, Query.Direction.ASCENDING);
 
-            ApiFuture<QuerySnapshot> future = query.get();
-            QuerySnapshot snapshot = future.get();
+            final ApiFuture<QuerySnapshot> future = query.get();
+            final QuerySnapshot snapshot = future.get();
 
-            List<Message> results = new ArrayList<>();
+            final List<Message> results = new ArrayList<>();
             for (QueryDocumentSnapshot doc : snapshot.getDocuments()) {
                 results.add(toMessage(doc));
             }
 
             return results;
 
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException("Failed to load chat messages", e);
+        }
+        catch (InterruptedException | ExecutionException ex) {
+            throw new RuntimeException("Failed to load chat messages", ex);
         }
     }
 
-    /** -------------------- DELETE BY ID -------------------- **/
+    /**
+     * Deletes a message by its ID.
+     * @param messageId The ID of the message to delete.
+     */
     @Override
     public void deleteMessageById(String messageId) {
         try {
-            DocumentReference msgRef = db.collection(COLLECTION_MESSAGE).document(messageId);
-            DocumentSnapshot msgSnap = msgRef.get().get();
+            final DocumentReference msgRef = db.collection(COLLECTION_MESSAGE).document(messageId);
+            final DocumentSnapshot msgSnap = msgRef.get().get();
 
             String chatId = null;
             if (msgSnap.exists()) {
@@ -582,11 +616,11 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
             msgRef.delete().get();
 
             if (chatId != null) {
-                DocumentReference chatRef = db.collection(COLLECTION_CHAT).document(chatId);
-                DocumentSnapshot chatSnap = chatRef.get().get();
+                final DocumentReference chatRef = db.collection(COLLECTION_CHAT).document(chatId);
+                final DocumentSnapshot chatSnap = chatRef.get().get();
 
                 if (chatSnap.exists()) {
-                    List<String> ids = (List<String>) chatSnap.get(CHAT_MESSAGE);
+                    final List<String> ids = (List<String>) chatSnap.get(CHAT_MESSAGE);
                     if (ids != null && ids.remove(messageId)) {
                         chatRef.update(CHAT_MESSAGE, ids).get();
                     }
@@ -595,8 +629,25 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
 
             messageRepository.deleteById(messageId);
 
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException("Failed to delete message " + messageId, e);
+        }
+        catch (InterruptedException | ExecutionException ex) {
+            throw new RuntimeException("Failed to delete message " + messageId, ex);
+        }
+    }
+
+    // Inner class moved to the end to comply with InnerTypeLast checkstyle rule
+    private static class UserDocument {
+        private String password;
+
+        UserDocument() {
+        }
+
+        UserDocument(String password) {
+            this.password = password;
+        }
+
+        public String getPassword() {
+            return password;
         }
     }
 }

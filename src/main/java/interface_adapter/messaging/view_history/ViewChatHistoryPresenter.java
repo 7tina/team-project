@@ -28,7 +28,6 @@ public class ViewChatHistoryPresenter implements ViewChatHistoryOutputBoundary {
         state.clearMessages();
         state.clearReactions();
         state.setError(null);
-        state.chatViewStart();
 
         List<String[]> messages = outputData.getMessages();
         for (String[] m : messages) {

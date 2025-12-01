@@ -13,6 +13,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The View for when the user is logged into the program, now displaying the chat list.
@@ -28,6 +32,7 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
 
     // Components for the New Design
     private final JLabel usernameLabel;
+    private final DefaultListModel<String> recentChatsModel;
     private final JList<String> recentChatsList;
     private final JPanel recentPanel;
     private final JButton profileButton;
@@ -86,7 +91,8 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
         separator.setBorder(BorderFactory.createDashedBorder(Color.BLACK));
         separator.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
 
-        recentChatsList = new JList<>(new DefaultListModel<String>());
+        recentChatsModel = new DefaultListModel<String>();
+        recentChatsList = new JList<>(recentChatsModel);
         JScrollPane scrollPane = new JScrollPane(recentChatsList);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
@@ -160,6 +166,14 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
             }
             else {
                 JOptionPane.showMessageDialog(this, state.getPasswordError());
+            }
+        }
+
+        else if (evt.getPropertyName().equals("recentChats")) {
+            final LoggedInState state = (LoggedInState) evt.getNewValue();
+            List<String> chatNames = state.getChatNames();
+            for (String name : chatNames) {
+                recentChatsModel.addElement(name);
             }
         }
     }

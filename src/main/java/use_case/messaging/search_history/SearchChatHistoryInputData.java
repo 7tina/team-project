@@ -9,6 +9,11 @@ public class SearchChatHistoryInputData {
         this.keyword = keyword;
     }
 
-    public String getChatId() { return chatId; }
-    public String getKeyword() { return keyword; }
+    public String getChatId() {
+        return chatId;
+    }
+
+    public String getKeyword() {
+        return keyword;
+    }
 }

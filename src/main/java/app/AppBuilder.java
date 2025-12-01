@@ -35,12 +35,14 @@ import interface_adapter.logout.LogoutPresenter;
 import interface_adapter.messaging.ChatViewModel;
 import interface_adapter.messaging.delete_m.DeleteMessageController;
 import interface_adapter.messaging.delete_m.DeleteMessagePresenter;
+import interface_adapter.messaging.search_history.SearchChatHistoryController;
+import interface_adapter.messaging.search_history.SearchChatHistoryPresenter;
 import interface_adapter.messaging.send_m.SendMessageController;
 import interface_adapter.messaging.send_m.SendMessagePresenter;
 import interface_adapter.messaging.view_history.ViewChatHistoryController;
 import interface_adapter.messaging.view_history.ViewChatHistoryPresenter;
-import interface_adapter.messaging.search_history.SearchChatHistoryController;
-import interface_adapter.messaging.search_history.SearchChatHistoryPresenter;
+import interface_adapter.recent_chat.RecentChatsController;
+import interface_adapter.recent_chat.RecentChatsPresenter;
 import interface_adapter.search_user.SearchUserController;
 import interface_adapter.search_user.SearchUserPresenter;
 import interface_adapter.search_user.SearchUserViewModel;
@@ -71,15 +73,18 @@ import use_case.logout.LogoutOutputBoundary;
 import use_case.messaging.delete_m.DeleteMessageInputBoundary;
 import use_case.messaging.delete_m.DeleteMessageInteractor;
 import use_case.messaging.delete_m.DeleteMessageOutputBoundary;
+import use_case.messaging.search_history.SearchChatHistoryInputBoundary;
+import use_case.messaging.search_history.SearchChatHistoryInteractor;
+import use_case.messaging.search_history.SearchChatHistoryOutputBoundary;
 import use_case.messaging.send_m.SendMessageInputBoundary;
 import use_case.messaging.send_m.SendMessageInteractor;
 import use_case.messaging.send_m.SendMessageOutputBoundary;
 import use_case.messaging.view_history.ViewChatHistoryInputBoundary;
 import use_case.messaging.view_history.ViewChatHistoryInteractor;
 import use_case.messaging.view_history.ViewChatHistoryOutputBoundary;
-import use_case.messaging.search_history.SearchChatHistoryInputBoundary;
-import use_case.messaging.search_history.SearchChatHistoryInteractor;
-import use_case.messaging.search_history.SearchChatHistoryOutputBoundary;
+import use_case.recent_chat.RecentChatsInputBoundary;
+import use_case.recent_chat.RecentChatsInteractor;
+import use_case.recent_chat.RecentChatsOutputBoundary;
 import use_case.search_user.SearchUserInputBoundary;
 import use_case.search_user.SearchUserInteractor;
 import use_case.search_user.SearchUserOutputBoundary;
@@ -594,25 +599,29 @@ public class AppBuilder {
         return this;
     }
 
+    /**
+     * Adds the recent-chats use case wiring to the application.
+     *
+     * @return this builder
+     */
     public AppBuilder addRecentChatsUseCase() {
-        RecentChatsOutputBoundary recentChatsPresenter =
+        final RecentChatsOutputBoundary recentChatsPresenter =
                 new RecentChatsPresenter(viewManagerModel, loggedInViewModel, chatViewModel);
 
-        RecentChatsInputBoundary recentChatsInteractor =
+        final RecentChatsInputBoundary recentChatsInteractor =
                 new RecentChatsInteractor(recentChatsPresenter,
                         userDataAccessObject,
                         messageRepository,
                         userRepository,
                         chatRepository);
 
-        RecentChatsController recentChatsController =
+        final RecentChatsController recentChatsController =
                 new RecentChatsController(recentChatsInteractor);
+
         if (this.chatView != null) {
             this.chatView.setRecentChatsController(recentChatsController);
         }
-        if (this.chatView != null) {
-            this.chatView.setRecentChatsController(recentChatsController);
-        }
+
         return this;
     }
 }

@@ -92,7 +92,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
 
         chatPartnerLabel = new JLabel(this.chatViewModel.getState().getGroupName());
         chatPartnerLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
-      
+
         backButton = new JButton("⬅");
         backButton.setFont(new Font("SansSerif", Font.BOLD, 20));
         backButton.addActionListener(e -> {
@@ -278,8 +278,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
                 messageInputField.setText("");
                 clearReplyPreview();
             }
-        }
-        else if (evt.getSource().equals(backButton)) {
+        } else if (evt.getSource().equals(backButton)) {
             System.out.println("back button pressed");
             if (recentChatsController != null) {
                 System.out.println("recentChatsController pressed");
@@ -500,7 +499,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         this.repaint();
     }
 
-    private void startAutoRefresh () {
+    private void startAutoRefresh() {
         if (refreshTimer != null) {
             refreshTimer.stop();
         }
@@ -569,9 +568,12 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
     public void setSearchChatHistoryController(SearchChatHistoryController controller) {
         this.searchChatHistoryController = controller;
     }
+
     public void setRecentChatsController(RecentChatsController controller) {
         this.recentChatsController = controller;
     }
+
+    public void setChatSettingView(ChatSettingView chatSettingView) { this.chatSettingView = chatSettingView; }
 
     // --------------------------------------------------------
     // PERFECT WRAPPED BUBBLE (this is the fixed version)
@@ -579,18 +581,6 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
     private JPanel createWrappedBubble(String text, String time, String repliedPreview,
                                        boolean fromCurrentUser, int maxWidth) {
 
-    public void setChatSettingView(ChatSettingView chatSettingView) {
-        this.chatSettingView = chatSettingView;
-    }
-
-    // ==========================
-    // Bubble builder
-    // ==========================
-    private JPanel createWrappedBubble(String text,
-                                       String time,
-                                       String repliedPreview,
-                                       boolean fromCurrentUser,
-                                       int maxWidth) {
 
         final JPanel bubble = new JPanel();
         bubble.setLayout(new BoxLayout(bubble, BoxLayout.Y_AXIS));
@@ -629,5 +619,5 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         bubble.add(timeLabel);
 
         return bubble;
+        }
     }
-}

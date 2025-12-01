@@ -126,7 +126,12 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
         hintLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         // Create button BEFORE adding listener
-        startChatButton = new JButton("Start Chat");
+        startChatButton = new JButton("Start Chat (99)");
+        Dimension buttonSize = startChatButton.getPreferredSize();
+        startChatButton.setText("Start Chat"); // Reset to default text
+        startChatButton.setPreferredSize(buttonSize); // Lock the size
+        startChatButton.setMinimumSize(buttonSize);
+        startChatButton.setMaximumSize(buttonSize);
 
         // Add selection listener for visual feedback
         userList.addListSelectionListener(e -> {

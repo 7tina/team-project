@@ -10,6 +10,7 @@ import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
@@ -82,6 +83,11 @@ public class SignupView extends JPanel implements ActionListener, PropertyChange
                 }
         );
 
+        // Add Enter key listeners to all input fields
+        addEnterKeyListener(usernameInputField);
+        addEnterKeyListener(passwordInputField);
+        addEnterKeyListener(repeatPasswordInputField);
+
         addUsernameListener();
         addPasswordListener();
         addRepeatPasswordListener();
@@ -93,6 +99,22 @@ public class SignupView extends JPanel implements ActionListener, PropertyChange
         this.add(passwordInfo);
         this.add(repeatPasswordInfo);
         this.add(buttons);
+    }
+
+    /**
+     * Adds an Enter key listener to trigger the sign up button.
+     */
+    private void addEnterKeyListener(JComponent component) {
+        InputMap inputMap = component.getInputMap(JComponent.WHEN_FOCUSED);
+        ActionMap actionMap = component.getActionMap();
+
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "triggerSignup");
+        actionMap.put("triggerSignup", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                signUp.doClick();
+            }
+        });
     }
 
     private void addUsernameListener() {

@@ -23,6 +23,7 @@ import use_case.logout.LogoutUserDataAccessInterface;
 import use_case.messaging.delete_m.DeleteMessageDataAccessInterface;
 import use_case.messaging.send_m.SendMessageDataAccessInterface;
 import use_case.messaging.view_history.ViewChatHistoryDataAccessInterface;
+import use_case.recent_chat.RecentChatsUserDataAccessInterface;
 import use_case.search_user.SearchUserDataAccessInterface;
 import use_case.signup.SignupUserDataAccessInterface;
 
@@ -49,7 +50,8 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
         DeleteMessageDataAccessInterface,
         AddUserDataAccessInterface,
         RemoveUserDataAccessInterface,
-        ChangeGroupNameDataAccessInterface {
+        ChangeGroupNameDataAccessInterface,
+        RecentChatsUserDataAccessInterface {
 
     // Inner class to represent the structure of a user document in Firestore
     // Note: The username is the document ID, so it is not stored in the document body.
@@ -348,18 +350,11 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
     public void findChatMessages(String chatId, List<String> userIds, List<String> messageIds) {
         this.messageRepository.clear();
 
-        for (String messageId : messageIds) {
-            DocumentReference docRef = db.collection(COLLECTION_MESSAGE).document(messageId);
-            ApiFuture<DocumentSnapshot> future = docRef.get();
-            try {
-                DocumentSnapshot snapshot = future.get();
-                if (snapshot.exists()) {
-                    Message msg = toMessage(snapshot);
-                    if (msg.getChatId().equals(chatId) && userIds.contains(msg.getSenderUserId())
-                            && messageIds.contains(msg.getId())) {this.messageRepository.save(msg);}
-                }
-            } catch (InterruptedException | ExecutionException e) {
-                throw new RuntimeException("Failed to load message by ID", e);
+        List<Message> messages = findByChatId(chatId);
+
+        for (Message msg : messages) {
+            if (userIds == null || userIds.isEmpty() || userIds.contains(msg.getSenderUserId())) {
+                this.messageRepository.save(msg);
             }
         }
     }

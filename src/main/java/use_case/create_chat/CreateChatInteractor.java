@@ -98,9 +98,20 @@ public class CreateChatInteractor implements CreateChatInputBoundary{
                 Collections.sort(participants);
                 Collections.sort(participantIds);
                 if (participants.size() == participantIds.size() && participants.equals(participantIds)) {
-                    returnChat = chat;
-                    chatName = chat.getGroupName();
-                    break;
+                    // For group chats, also check if the group name matches
+                    if (isGroupChat) {
+                        if (chat.getGroupName().equals(groupName)) {
+                            returnChat = chat;
+                            chatName = chat.getGroupName();
+                            break;
+                        }
+                        // If participants match but name is different, continue searching
+                    } else {
+                        // For individual chats, same participants = same chat
+                        returnChat = chat;
+                        chatName = chat.getGroupName();
+                        break;
+                    }
                 }
             }
             if (returnChat != null && isGroupChat) {

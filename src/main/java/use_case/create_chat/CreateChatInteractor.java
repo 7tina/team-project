@@ -73,8 +73,8 @@ public class CreateChatInteractor implements CreateChatInputBoundary{
             List<String> chatUsers = chat.getParticipantUserIds();
             List<String> chatMessages = chat.getMessageIds();
 
-            final CreateChatOutputData createChatOutputData = new CreateChatOutputData(isGroupChat, chatId, chatName,
-                    chatUsers, chatMessages, true, null);
+            final CreateChatOutputData createChatOutputData = new CreateChatOutputData(
+                    isGroupChat, chatId, chatName, chatUsers, chatMessages, true, null, currentUserId);
             this.userPresenter.prepareSuccessView(createChatOutputData);
         }
         catch (Exception e) {
@@ -98,9 +98,20 @@ public class CreateChatInteractor implements CreateChatInputBoundary{
                 Collections.sort(participants);
                 Collections.sort(participantIds);
                 if (participants.size() == participantIds.size() && participants.equals(participantIds)) {
-                    returnChat = chat;
-                    chatName = chat.getGroupName();
-                    break;
+                    // For group chats, also check if the group name matches
+                    if (isGroupChat) {
+                        if (chat.getGroupName().equals(groupName)) {
+                            returnChat = chat;
+                            chatName = chat.getGroupName();
+                            break;
+                        }
+                        // If participants match but name is different, continue searching
+                    } else {
+                        // For individual chats, same participants = same chat
+                        returnChat = chat;
+                        chatName = chat.getGroupName();
+                        break;
+                    }
                 }
             }
             if (returnChat != null && isGroupChat) {
@@ -166,8 +177,8 @@ public class CreateChatInteractor implements CreateChatInputBoundary{
     private boolean individualChatRequirements(String groupName, List<String> participantUsernames) {
         if ((!groupName.isEmpty()) || participantUsernames.size() != 1) {
             CreateChatOutputData outputData = new CreateChatOutputData(
-                false, null, null, null, null, false,
-                "An error has occurred when initializing your chat");
+                    false, null, null, null, null, false,
+                    "An error has occurred when initializing your chat");
             System.out.println(groupName + participantUsernames);
             this.userPresenter.prepareFailView(outputData);
             return false;

@@ -54,6 +54,19 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
     // Chat display
     private final JPanel chatDisplayPanel;
     private final JLabel initialPrompt;
+    private final JScrollPane chatScrollPane;
+
+    // Time refresher
+    private Timer refreshTimer;
+    private List<String> currentUserIds;
+    private List<String> currentMessageIds;
+
+    private void scrollToBottom() {
+        SwingUtilities.invokeLater(() -> {
+            JScrollBar bar = chatScrollPane.getVerticalScrollBar();
+            bar.setValue(bar.getMaximum());
+        });
+    }
 
     public ChatView(ViewManagerModel viewManagerModel,
                     ChatViewModel chatViewModel,
@@ -82,7 +95,14 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
 
         backButton = new JButton("⬅");
         backButton.setFont(new Font("SansSerif", Font.BOLD, 20));
-        backButton.addActionListener(this);
+        backButton.addActionListener(e -> {
+            if (refreshTimer != null) {
+                refreshTimer.stop();
+            }
+
+            viewManagerModel.setState("logged in");
+            viewManagerModel.firePropertyChange();
+        });
 
 //        backButton.addActionListener(e -> {
 //            viewManagerModel.setState("logged in");
@@ -137,7 +157,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         initialPrompt.setFont(new Font("SansSerif", Font.ITALIC, 16));
         chatDisplayPanel.add(initialPrompt);
 
-        final JScrollPane chatScrollPane = new JScrollPane(chatDisplayPanel);
+        chatScrollPane = new JScrollPane(chatDisplayPanel);
         chatScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         chatScrollPane.setBorder(BorderFactory.createEmptyBorder());
 
@@ -388,6 +408,8 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
 
         chatDisplayPanel.revalidate();
         chatDisplayPanel.repaint();
+
+        scrollToBottom();
     }
 
     // ==========================
@@ -477,6 +499,22 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         this.repaint();
     }
 
+    private void startAutoRefresh() {
+        if (refreshTimer != null) {
+            refreshTimer.stop();
+        }
+
+        if (currentChatId == null || viewChatHistoryController == null ||
+                currentUserIds == null || currentMessageIds == null) {
+            return;
+        }
+
+        refreshTimer = new Timer(1000, e -> {
+            viewChatHistoryController.execute(currentChatId, currentUserIds, currentMessageIds);
+        });
+        refreshTimer.start();
+    }
+
     public void setChatContext(String chatId,
                                List<String> userIds,
                                List<String> messageIds,
@@ -486,11 +524,16 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         this.currentChatId = chatId;
         this.currentUserId = currentUserId;
         this.isGroupChat = isGroupChat;
+        this.currentUserIds = userIds;
+        this.currentMessageIds = messageIds;
+
         setChatPartner(groupName);
         settingButton.setVisible(isGroupChat);
         if (viewChatHistoryController != null) {
             viewChatHistoryController.execute(chatId, userIds, messageIds);
         }
+        startAutoRefresh();
+
 
         String displayName = groupName; // Default for group chats or if set correctly
 
@@ -530,18 +573,14 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         this.recentChatsController = controller;
     }
 
-    public void setChatSettingView(ChatSettingView chatSettingView) {
-        this.chatSettingView = chatSettingView;
-    }
+    public void setChatSettingView(ChatSettingView chatSettingView) { this.chatSettingView = chatSettingView; }
 
-    // ==========================
-    // Bubble builder
-    // ==========================
-    private JPanel createWrappedBubble(String text,
-                                       String time,
-                                       String repliedPreview,
-                                       boolean fromCurrentUser,
-                                       int maxWidth) {
+    // --------------------------------------------------------
+    // PERFECT WRAPPED BUBBLE (this is the fixed version)
+    // --------------------------------------------------------
+    private JPanel createWrappedBubble(String text, String time, String repliedPreview,
+                                       boolean fromCurrentUser, int maxWidth) {
+
 
         final JPanel bubble = new JPanel();
         bubble.setLayout(new BoxLayout(bubble, BoxLayout.Y_AXIS));
@@ -580,5 +619,5 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         bubble.add(timeLabel);
 
         return bubble;
+        }
     }
-}

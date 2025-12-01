@@ -368,21 +368,11 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
     public void findChatMessages(String chatId, List<String> userIds, List<String> messageIds) {
         this.messageRepository.clear();
 
-        for (String messageId : messageIds) {
-            final DocumentReference docRef = db.collection(COLLECTION_MESSAGE).document(messageId);
-            final ApiFuture<DocumentSnapshot> future = docRef.get();
-            try {
-                final DocumentSnapshot snapshot = future.get();
-                if (snapshot.exists()) {
-                    final Message msg = toMessage(snapshot);
-                    if (msg.getChatId().equals(chatId) && userIds.contains(msg.getSenderUserId())
-                            && messageIds.contains(msg.getId())) {
-                        this.messageRepository.save(msg);
-                    }
-                }
-            }
-            catch (InterruptedException | ExecutionException ex) {
-                throw new RuntimeException("Failed to load message by ID", ex);
+        List<Message> messages = findByChatId(chatId);
+
+        for (Message msg : messages) {
+            if (userIds == null || userIds.isEmpty() || userIds.contains(msg.getSenderUserId())) {
+                this.messageRepository.save(msg);
             }
         }
     }

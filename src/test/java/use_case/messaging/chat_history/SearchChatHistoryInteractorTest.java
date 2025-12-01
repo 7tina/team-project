@@ -1,4 +1,4 @@
-package goc.chat.usecase.messaging;
+package use_case.messaging.chat_history;
 
 import entity.Chat;
 import entity.Message;

@@ -22,6 +22,7 @@ import interfaceadapter.messaging.view_history.ViewChatHistoryController;
 import interfaceadapter.recent_chat.RecentChatsController;
 import interfaceadapter.messaging.add_reaction.AddReactionController;
 import interfaceadapter.messaging.remove_reaction.RemoveReactionController;
+import view.components.ReactionPickerPanel;
 
 public class ChatView extends JPanel implements ActionListener, PropertyChangeListener {
 

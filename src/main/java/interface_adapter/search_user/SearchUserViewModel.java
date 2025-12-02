@@ -1,8 +1,9 @@
 package interface_adapter.search_user;
 
-import interface_adapter.ViewModel;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+
+import interface_adapter.ViewModel;
 
 public class SearchUserViewModel extends ViewModel<SearchUserState> {
     public static final String TITLE_LABEL = "User Search";
@@ -24,7 +25,10 @@ public class SearchUserViewModel extends ViewModel<SearchUserState> {
         this.state = state;
     }
 
-
+    /**
+     * Notifies all registered listeners that the ViewModel's state
+     * has changed by firing a property change event with the updated state.
+     */
     public void firePropertyChanged() {
         support.firePropertyChange("state", null, this.state);
     }

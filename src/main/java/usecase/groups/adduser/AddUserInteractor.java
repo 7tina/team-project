@@ -10,8 +10,6 @@ import entity.ports.ChatRepository;
  * Interactor (use case) for adding a user to a group chat.
  */
 public class AddUserInteractor implements AddUserInputBoundary {
-    private static final int MAX_PARTICIPANTS = 10;
-
     private final ChatRepository chatRepository;
     private final AddUserOutputBoundary outputBoundary;
     private final AddUserDataAccessInterface dataAccess;
@@ -55,9 +53,6 @@ public class AddUserInteractor implements AddUserInputBoundary {
 
                         if (currentParticipants.contains(userIdToAdd)) {
                             errorMessage = "User is already a member of this chat";
-                        }
-                        else if (currentParticipants.size() == MAX_PARTICIPANTS) {
-                            errorMessage = "Max number of participants reached";
                         }
                         else {
                             chat.addParticipant(userIdToAdd);

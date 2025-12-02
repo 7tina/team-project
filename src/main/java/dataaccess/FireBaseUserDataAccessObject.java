@@ -368,7 +368,7 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
     public void findChatMessages(String chatId, List<String> userIds, List<String> messageIds) {
         this.messageRepository.clear();
 
-        List<Message> messages = findByChatId(chatId);
+        final List<Message> messages = findByChatId(chatId);
 
         for (Message msg : messages) {
             if (userIds == null || userIds.isEmpty() || userIds.contains(msg.getSenderUserId())) {
@@ -572,7 +572,7 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
      * Finds messages by Chat ID.
      * @param chatId The ID of the chat.
      * @return A list of messages.
-     * @throws RuntimeException
+     * @throws RuntimeException if there is an error fetching messages from the database
      */
     public List<Message> findByChatId(String chatId) {
         try {

@@ -1,13 +1,13 @@
 package interfaceadapter.messaging.view_history;
 
+import java.util.List;
+import java.util.Map;
+
 import interfaceadapter.ViewManagerModel;
 import interfaceadapter.messaging.ChatState;
 import interfaceadapter.messaging.ChatViewModel;
 import usecase.messaging.view_history.ViewChatHistoryOutputBoundary;
 import usecase.messaging.view_history.ViewChatHistoryOutputData;
-
-import java.util.List;
-import java.util.Map;
 
 public class ViewChatHistoryPresenter implements ViewChatHistoryOutputBoundary {
 
@@ -22,21 +22,21 @@ public class ViewChatHistoryPresenter implements ViewChatHistoryOutputBoundary {
 
     @Override
     public void prepareSuccessView(ViewChatHistoryOutputData outputData) {
-        ChatState state = chatViewModel.getState();
+        final ChatState state = chatViewModel.getState();
 
         state.clearMessageIds();
         state.clearMessages();
         state.clearReactions();
         state.setError(null);
 
-        List<String[]> messages = outputData.getMessages();
+        final List<String[]> messages = outputData.getMessages();
         for (String[] m : messages) {
             state.addMessage(m);
         }
 
-        Map<String, Map<String, String>> msgToReaction = outputData.getReactions();
+        final Map<String, Map<String, String>> msgToReaction = outputData.getReactions();
         for (Map.Entry<String, Map<String, String>> entry : msgToReaction.entrySet()) {
-            String messageId = entry.getKey();
+            final String messageId = entry.getKey();
             for (Map.Entry<String, String> reaction : entry.getValue().entrySet()) {
                 state.addReaction(messageId, reaction.getKey(), reaction.getValue());
             }
@@ -47,7 +47,7 @@ public class ViewChatHistoryPresenter implements ViewChatHistoryOutputBoundary {
 
     @Override
     public void prepareNoMessagesView(String chatId) {
-        ChatState state = chatViewModel.getState();
+        final ChatState state = chatViewModel.getState();
         state.clearMessages();
         state.setError(null);
         chatViewModel.firePropertyChange();
@@ -55,7 +55,7 @@ public class ViewChatHistoryPresenter implements ViewChatHistoryOutputBoundary {
 
     @Override
     public void prepareFailView(String errorMessage) {
-        ChatState state = chatViewModel.getState();
+        final ChatState state = chatViewModel.getState();
         state.setError(errorMessage);
         chatViewModel.firePropertyChange();
     }

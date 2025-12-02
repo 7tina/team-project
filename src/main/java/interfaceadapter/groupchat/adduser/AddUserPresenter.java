@@ -14,19 +14,21 @@ public class AddUserPresenter implements AddUserOutputBoundary {
 
     @Override
     public void prepareSuccessView(AddUserOutputData outputData) {
-        ChatState state = viewModel.getState();
+        final ChatState state = viewModel.getState();
         state.setError(null);
         state.addParticipant(outputData.getAddedUsername());
         viewModel.setState(state);
         viewModel.firePropertyChange();
 
-        System.out.println("User " + outputData.getAddedUsername() +
-                " added successfully to chat " + outputData.getChatId());
+        System.out.println("User "
+                + outputData.getAddedUsername()
+                + " added successfully to chat "
+                + outputData.getChatId());
     }
 
     @Override
     public void prepareFailView(String error) {
-        ChatState state = viewModel.getState();
+        final ChatState state = viewModel.getState();
         state.setError(error);
         viewModel.setState(state);
         viewModel.firePropertyChange();

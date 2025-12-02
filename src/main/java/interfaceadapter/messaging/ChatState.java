@@ -22,17 +22,35 @@ public class ChatState {
     private boolean success;
     private String error;
 
-    public ChatState() {}
+    public ChatState() {
 
-    public boolean getFirst() {return first;}
+    }
 
-    public void chatViewStart() {first=true;}
+    public boolean getFirst() {
+        return first;
+    }
 
-    public void chatViewStop() {first=false;}
+    /**
+     * Marks that the chat view has started.
+     */
+    public void chatViewStart() {
+        first = true;
+    }
 
-    public boolean getIsGroup() {return isGroup;}
+    /**
+     * Marks that the chat view has stopped.
+     */
+    public void chatViewStop() {
+        first = false;
+    }
 
-    public void setIsGroup(boolean isGroup) {this.isGroup = isGroup;}
+    public boolean getIsGroup() {
+        return isGroup;
+    }
+
+    public void setIsGroup(boolean isGroup) {
+        this.isGroup = isGroup;
+    }
 
     public String getChatId() {
         return chatId;
@@ -42,45 +60,110 @@ public class ChatState {
         this.chatId = chatId;
     }
 
-    public List<String> getParticipants() {return participants;}
+    public List<String> getParticipants() {
+        return participants;
+    }
 
-    public void addParticipant(String participant) {this.participants.add(participant);}
+    /**
+     * Adds a participant to the chat.
+     * @param participant the username of the participant to add
+     */
+    public void addParticipant(String participant) {
+        this.participants.add(participant);
+    }
 
-    public void removeParticipant(String participant) {this.participants.remove(participant);}
+    /**
+     * Removes a participant from the chat.
+     * @param participant the username of the participant to remove
+     */
+    public void removeParticipant(String participant) {
+        this.participants.remove(participant);
+    }
 
-    public List<String> getMessageIds() {return messageIds;}
+    /**
+     * Returns the list of message IDs in the chat.
+     * @return a list of message IDs
+     */
+    public List<String> getMessageIds() {
+        return messageIds;
+    }
 
-    public void addMessageId(String messageId) {messageIds.add(messageId);}
+    /**
+     * Adds a message ID to the chat.
+     * @param messageId the ID of the message to add
+     */
+    public void addMessageId(String messageId) {
+        messageIds.add(messageId);
+    }
 
+    /**
+     * Clears all message IDs from the chat state.
+     */
     public void clearMessageIds() {
         messageIds.clear();
     }
 
-    public List<String[]> getMessages() {return messages;}
+    /**
+     * Returns the list of messages in the chat.
+     * @return a list of messages, where each message is represented as a String array
+     */
+    public List<String[]> getMessages() {
+        return messages;
+    }
 
-    public void addMessage(String[] message) {messages.add(message);}
+    /**
+     * Adds a message to the chat.
+     * @param message the message to add, represented as a String array
+     */
+    public void addMessage(String[] message) {
+        messages.add(message);
+    }
 
+    /**
+     * Clears all messages from the chat state.
+     */
     public void clearMessages() {
         messages.clear();
     }
 
-    public Map<String, Map<String, String>> getMessageToReaction() {return messageToReaction;}
+    public Map<String, Map<String, String>> getMessageToReaction() {
+        return messageToReaction;
+    }
 
+    /**
+     * Adds a reaction to a specific message from a specific user.
+     * @param messageId the ID of the message to react to
+     * @param userId the ID of the user adding the reaction
+     * @param reaction the reaction to add
+     */
     public void addReaction(String messageId, String userId, String reaction) {
-        Map<String, String> reactions = messageToReaction.get(messageId);
-        if (reactions != null) {reactions.put(userId, reaction);}
+        final Map<String, String> reactions = messageToReaction.get(messageId);
+        if (reactions != null) {
+            reactions.put(userId, reaction);
+        }
         messageToReaction.put(messageId, reactions);
     }
 
+    /**
+     * Removes a reaction from a specific message for a specific user.
+     * @param messageId the ID of the message
+     * @param userId the ID of the user
+     * @param reaction the reaction to remove
+     */
     public void removeReaction(String messageId, String userId, String reaction) {
-        Map<String, String> reactions = messageToReaction.get(messageId);
+        final Map<String, String> reactions = messageToReaction.get(messageId);
         if (reactions != null && reactions.containsKey(userId) && reactions.get(userId).equals(reaction)) {
             reactions.remove(userId, reaction);
         }
         messageToReaction.put(messageId, reactions);
     }
 
-    public void clearReactions() {messageToReaction.clear();}
+    /**
+     * Clears all reactions from all messages in the chat state.
+     */
+    public void clearReactions() {
+        messageToReaction.clear();
+    }
 
     public String getGroupName() {
         return groupName;
@@ -102,12 +185,27 @@ public class ChatState {
         return error;
     }
 
+    /**
+     * Sets the error message for the last operation.
+     * @param error the error message to set
+     */
     public void setError(String error) {
         this.error = error;
     }
 
-    public void setMessages(List<String[]> newMessages) { this.messages.clear(); this.messages.addAll(newMessages); }
+    /**
+     * Replaces all messages in the chat state with a new list of messages.
+     * @param newMessages the new list of messages
+     */
+    public void setMessages(List<String[]> newMessages) {
+        this.messages.clear();
+        this.messages.addAll(newMessages);
+    }
 
+    /**
+     * Replaces all message IDs in the chat state with a new list of IDs.
+     * @param newMessageIds the new list of message IDs
+     */
     public void setMessageIds(List<String> newMessageIds) {
         this.messageIds.clear();
         this.messageIds.addAll(newMessageIds);

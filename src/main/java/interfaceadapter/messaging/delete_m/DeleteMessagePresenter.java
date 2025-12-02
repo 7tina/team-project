@@ -1,13 +1,13 @@
 package interfaceadapter.messaging.delete_m;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import interfaceadapter.ViewManagerModel;
 import interfaceadapter.messaging.ChatState;
 import interfaceadapter.messaging.ChatViewModel;
 import usecase.messaging.delete_m.DeleteMessageOutputBoundary;
 import usecase.messaging.delete_m.DeleteMessageOutputData;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class DeleteMessagePresenter implements DeleteMessageOutputBoundary {
 
@@ -23,19 +23,20 @@ public class DeleteMessagePresenter implements DeleteMessageOutputBoundary {
     @Override
     public void prepareSuccessView(DeleteMessageOutputData outputData) {
 
-        String deletedId = outputData.getMessageId();
-        ChatState state = chatViewModel.getState();
+        final String deletedId = outputData.getMessageId();
+        final ChatState state = chatViewModel.getState();
 
         // ---- filter messages ----
-        List<String[]> filteredMessages = new ArrayList<>();
+        final List<String[]> filteredMessages = new ArrayList<>();
         for (String[] msg : state.getMessages()) {
-            if (!msg[0].equals(deletedId)) {   // msg[0] = messageId
+            // msg[0] = messageId
+            if (!msg[0].equals(deletedId)) {
                 filteredMessages.add(msg);
             }
         }
 
         // ---- filter messageIds ----
-        List<String> filteredIds = new ArrayList<>();
+        final List<String> filteredIds = new ArrayList<>();
         for (String id : state.getMessageIds()) {
             if (!id.equals(deletedId)) {
                 filteredIds.add(id);
@@ -54,7 +55,7 @@ public class DeleteMessagePresenter implements DeleteMessageOutputBoundary {
 
     @Override
     public void prepareFailView(DeleteMessageOutputData outputData) {
-        ChatState state = chatViewModel.getState();
+        final ChatState state = chatViewModel.getState();
         state.setError("Failed to delete: " + outputData.getFailReason());
         chatViewModel.setState(state);
         chatViewModel.firePropertyChange();

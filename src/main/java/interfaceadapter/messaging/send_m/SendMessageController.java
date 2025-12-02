@@ -10,8 +10,16 @@ public class SendMessageController {
         this.interactor = interactor;
     }
 
+    /**
+     * Sends a message in a specified chat by delegating the operation to the interactor.
+     * @param chatId the ID of the chat where the message will be sent
+     * @param senderUserId the ID of the user sending the message
+     * @param repliedMessageId the ID of the message being replied to, or null if not a reply
+     * @param content the content of the message to send
+     */
     public void execute(String chatId, String senderUserId, String repliedMessageId, String content) {
-        SendMessageInputData inputData = new SendMessageInputData(chatId, senderUserId, repliedMessageId, content);
+        final SendMessageInputData inputData =
+                new SendMessageInputData(chatId, senderUserId, repliedMessageId, content);
         interactor.execute(inputData);
     }
 }

@@ -19,8 +19,8 @@ public class SendMessagePresenter implements SendMessageOutputBoundary {
 
     @Override
     public void prepareSuccessView(SendMessageOutputData outputData) {
-        ChatState state = chatViewModel.getState();
-        String[] msg = outputData.getMessage();
+        final ChatState state = chatViewModel.getState();
+        final String[] msg = outputData.getMessage();
 
         state.addMessage(msg);
         state.addMessageId(msg[0]);
@@ -34,7 +34,7 @@ public class SendMessagePresenter implements SendMessageOutputBoundary {
 
     @Override
     public void prepareFailView(String errorMessage) {
-        ChatState state = chatViewModel.getState();
+        final ChatState state = chatViewModel.getState();
         state.setError(errorMessage);
         chatViewModel.firePropertyChange();
     }

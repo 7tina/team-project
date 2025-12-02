@@ -1,6 +1,5 @@
 package interfaceadapter.groupchat.changegroupname;
 
-
 import interfaceadapter.messaging.ChatState;
 import interfaceadapter.messaging.ChatViewModel;
 import usecase.groups.changegroupname.ChangeGroupNameOutputBoundary;
@@ -21,7 +20,7 @@ public class ChangeGroupNamePresenter implements ChangeGroupNameOutputBoundary {
     @Override
     public void prepareSuccessView(ChangeGroupNameOutputData outputData) {
         // Update the view model with success
-        ChatState state = viewModel.getState();
+        final ChatState state = viewModel.getState();
         state.setChatId(outputData.getChatId());
         state.setGroupName(outputData.getNewGroupName());
         state.setSuccess(true);
@@ -34,7 +33,7 @@ public class ChangeGroupNamePresenter implements ChangeGroupNameOutputBoundary {
     @Override
     public void prepareFailView(ChangeGroupNameOutputData outputData) {
         // Update the view model with error
-        ChatState state = viewModel.getState();
+        final ChatState state = viewModel.getState();
         state.setChatId(outputData.getChatId());
         state.setSuccess(false);
         state.setError(outputData.getErrorMessage());

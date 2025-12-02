@@ -1,13 +1,13 @@
 package dataaccess;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import entity.User;
 import usecase.change_password.ChangePasswordUserDataAccessInterface;
 import usecase.login.LoginUserDataAccessInterface;
 import usecase.logout.LogoutUserDataAccessInterface;
 import usecase.signup.SignupUserDataAccessInterface;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * In-memory implementation of the DAO for storing user data. This implementation does

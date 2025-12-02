@@ -1,9 +1,9 @@
 package interfaceadapter.messaging;
 
-import interfaceadapter.ViewModel;
-
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+
+import interfaceadapter.ViewModel;
 
 /**
  * ViewModel for the ChatView.
@@ -28,7 +28,11 @@ public class ChatViewModel extends ViewModel<ChatState> {
         this.state = state;
     }
 
-
+    /**
+     * Notifies registered listeners that the chat state has changed.
+     * This triggers any observers to update their views or perform actions
+     * based on the latest state.
+     */
     public void firePropertyChange() {
         support.firePropertyChange("state", null, this.state);
     }

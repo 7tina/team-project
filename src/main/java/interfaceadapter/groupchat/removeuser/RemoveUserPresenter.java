@@ -14,20 +14,21 @@ public class RemoveUserPresenter implements RemoveUserOutputBoundary {
 
     @Override
     public void prepareSuccessView(RemoveUserOutputData outputData) {
-        ChatState state = viewModel.getState();
+        final ChatState state = viewModel.getState();
         state.setError(null);
         state.removeParticipant(outputData.getRemovedUsername());
         viewModel.setState(state);
         viewModel.firePropertyChange();
 
         // Show success message
-        System.out.println("User " + outputData.getRemovedUsername() +
-                " removed successfully from chat " + outputData.getChatId());
+        System.out.println("User "
+                + outputData.getRemovedUsername()
+                + " removed successfully from chat " + outputData.getChatId());
     }
 
     @Override
     public void prepareFailView(String error) {
-        ChatState state = viewModel.getState();
+        final ChatState state = viewModel.getState();
         state.setError(error);
         viewModel.setState(state);
         viewModel.firePropertyChange();

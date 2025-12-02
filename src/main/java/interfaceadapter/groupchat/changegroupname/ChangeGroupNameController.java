@@ -20,7 +20,7 @@ public class ChangeGroupNameController {
      * @param newGroupName The new name for the group
      */
     public void execute(String chatId, String newGroupName) {
-        ChangeGroupNameInputData inputData = new ChangeGroupNameInputData(chatId, newGroupName);
+        final ChangeGroupNameInputData inputData = new ChangeGroupNameInputData(chatId, newGroupName);
         interactor.execute(inputData);
     }
 }

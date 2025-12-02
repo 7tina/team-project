@@ -11,8 +11,13 @@ public class DeleteMessageController {
         this.interactor = interactor;
     }
 
+    /**
+     * Deletes a message by delegating the operation to the interactor.
+     * @param messageId the ID of the message to be deleted
+     * @param currentUserId the ID of the user requesting the deletion
+     */
     public void execute(String messageId, String currentUserId) {
-        DeleteMessageInputData input =
+        final DeleteMessageInputData input =
                 new DeleteMessageInputData(messageId, currentUserId);
         interactor.execute(input);
     }

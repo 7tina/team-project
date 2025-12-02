@@ -10,8 +10,13 @@ public class RemoveUserController {
         this.removeUserInteractor = removeUserInteractor;
     }
 
+    /**
+     * Removes a user from a specified chat by delegating the operation to the interactor.
+     * @param chatId the ID of the chat from which the user should be removed
+     * @param usernameToRemove the username of the user to remove from the chat
+     */
     public void execute(String chatId, String usernameToRemove) {
-        RemoveUserInputData inputData = new RemoveUserInputData(chatId, usernameToRemove);
+        final RemoveUserInputData inputData = new RemoveUserInputData(chatId, usernameToRemove);
         removeUserInteractor.execute(inputData);
     }
 }

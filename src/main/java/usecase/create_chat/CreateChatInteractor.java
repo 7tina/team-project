@@ -1,22 +1,43 @@
 package usecase.create_chat;
 
-import entity.Chat;
-import entity.User;
-import entity.ports.UserRepository;
-import entity.ports.ChatRepository;
+import java.awt.Color;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
 import org.jetbrains.annotations.Nullable;
 
-import java.awt.*;
-import java.time.Instant;
-import java.util.*;
-import java.util.List;
+import entity.Chat;
+import entity.User;
+import entity.ports.ChatRepository;
+import entity.ports.UserRepository;
 
-public class CreateChatInteractor implements CreateChatInputBoundary{
+/**
+ * Interactor for creating chat use case.
+ */
+public class CreateChatInteractor implements CreateChatInputBoundary {
+    private static final int DEFAULT_BACKGROUND_RED = 230;
+    private static final int DEFAULT_BACKGROUND_GREEN = 230;
+    private static final int DEFAULT_BACKGROUND_BLUE = 230;
+    private static final int MIN_GROUP_CHAT_PARTICIPANTS = 3;
+    private static final int INDIVIDUAL_CHAT_PARTICIPANTS = 1;
+
     private final CreateChatUserDataAccessInterface userDataAccessObject;
     private final CreateChatOutputBoundary userPresenter;
     private final ChatRepository chatRepository;
     private final UserRepository userRepository;
 
+    /**
+     * Constructor for CreateChatInteractor.
+     *
+     * @param boundary the output boundary
+     * @param dao the data access object
+     * @param chatRepository the chat repository
+     * @param userRepository the user repository
+     */
     public CreateChatInteractor(CreateChatOutputBoundary boundary,
                                 CreateChatUserDataAccessInterface dao,
                                 ChatRepository chatRepository,
@@ -27,200 +48,182 @@ public class CreateChatInteractor implements CreateChatInputBoundary{
         this.userRepository = userRepository;
     }
 
-    public void execute(CreateChatInputData createChatInputData){
+    /**
+     * Executes the create chat use case.
+     *
+     * @param createChatInputData the input data for creating a chat
+     */
+    public void execute(CreateChatInputData createChatInputData) {
         final String currentUserID = createChatInputData.getCurrentUserId();
         final List<String> participantUsernames = createChatInputData.getParticipantUsernames();
         final String groupName = createChatInputData.getGroupName();
         final boolean isGroupChat = createChatInputData.isGroupChat();
 
-        try {
-            Optional<User> currentUserOpt = userRepository.findByUsername(currentUserID);
+        final Optional<User> currentUserOpt = userRepository.findByUsername(currentUserID);
 
-            if (currentUserOpt.isEmpty()) {
-                CreateChatOutputData createChatOutputData = new CreateChatOutputData(
-                        isGroupChat, null, null, null, null, false,
-                        "Session error. Please log in again."
-                );
-                userPresenter.prepareFailView(createChatOutputData);
-                return;
-            }
-
-            String currentUserId = currentUserOpt.get().getName();
-
-            // Validate input
-            if (!validParticipantInput(participantUsernames, isGroupChat)) return;
-
-            // Validate groupchat requirements
-            if (isGroupChat) {
-                if (!groupChatRequirements(groupName, participantUsernames)) return;
-            }
-            else {
-                if (!individualChatRequirements(groupName, participantUsernames)) return;
-            }
-
-            // Load target user into userRepository
-            List<String> participantIds = validateUsers(currentUserId, participantUsernames, isGroupChat);
-            if (participantIds == null) return;
-
-            // Find existing chat with all participants
-            Chat chat = null;
-            this.userDataAccessObject.updateChatRepository(currentUserId);
-            List<Chat> allChats = chatRepository.findAll();
-            chat = findOrMakeChat(allChats, participantIds, groupName, isGroupChat);
-            if (chat == null) return;
-            String chatId = chat.getId();
-            String chatName = chat.getGroupName();
-            List<String> chatUsers = chat.getParticipantUserIds();
-            List<String> chatMessages = chat.getMessageIds();
-
-            final CreateChatOutputData createChatOutputData = new CreateChatOutputData(
-                    isGroupChat, chatId, chatName, chatUsers, chatMessages, true, null, currentUserId);
-            this.userPresenter.prepareSuccessView(createChatOutputData);
+        if (currentUserOpt.isEmpty()) {
+            handleFailure(isGroupChat, "Session error. Please log in again.");
         }
-        catch (Exception e) {
-            // Handle any unexpected errors
-            CreateChatOutputData createChatOutputData = new CreateChatOutputData(
-                    isGroupChat, null, null, null, null, false,
-                    "Failed to create chat: " + e.getMessage()
-            );
-            userPresenter.prepareFailView(createChatOutputData);
+        else {
+            final String currentUserId = currentUserOpt.get().getName();
+            processChat(currentUserId, participantUsernames, groupName, isGroupChat);
+        }
+    }
+
+    private void processChat(String currentUserId, List<String> participantUsernames,
+                             String groupName, boolean isGroupChat) {
+        if (!validParticipantInput(participantUsernames, isGroupChat)) {
+            return;
+        }
+
+        final boolean requirementsMet = isGroupChat
+                ? groupChatRequirements(groupName, participantUsernames)
+                : individualChatRequirements(groupName, participantUsernames);
+
+        if (!requirementsMet) {
+            return;
+        }
+
+        final List<String> participantIds = validateUsers(currentUserId,
+                participantUsernames, isGroupChat);
+        if (participantIds != null) {
+            createOrFindChat(currentUserId, participantIds, groupName, isGroupChat);
+        }
+    }
+
+    private void createOrFindChat(String currentUserId, List<String> participantIds,
+                                  String groupName, boolean isGroupChat) {
+        this.userDataAccessObject.updateChatRepository(currentUserId);
+        final List<Chat> allChats = chatRepository.findAll();
+        final Chat chat = findOrMakeChat(allChats, participantIds, groupName, isGroupChat);
+
+        if (chat != null) {
+            final CreateChatOutputData outputData = new CreateChatOutputData(
+                    isGroupChat, chat.getId(), chat.getGroupName(),
+                    chat.getParticipantUserIds(), chat.getMessageIds(),
+                    true, null, currentUserId);
+            this.userPresenter.prepareSuccessView(outputData);
         }
     }
 
     @Nullable
     private Chat findOrMakeChat(List<Chat> allChats, List<String> participantIds,
                                 String groupName, boolean isGroupChat) {
-        Chat returnChat = null;
-        String chatName = null;
-        if (!allChats.isEmpty()) {
-            for (Chat chat : allChats) {
-                java.util.List<String> participants = chat.getParticipantUserIds();
-                Collections.sort(participants);
-                Collections.sort(participantIds);
-                if (participants.size() == participantIds.size() && participants.equals(participantIds)) {
-                    // For group chats, also check if the group name matches
-                    if (isGroupChat) {
-                        if (chat.getGroupName().equals(groupName)) {
-                            returnChat = chat;
-                            chatName = chat.getGroupName();
-                            break;
-                        }
-                        // If participants match but name is different, continue searching
-                    } else {
-                        // For individual chats, same participants = same chat
-                        returnChat = chat;
-                        chatName = chat.getGroupName();
-                        break;
-                    }
-                }
-            }
-            if (returnChat != null && isGroupChat) {
-                CreateChatOutputData outputData = new CreateChatOutputData(
-                        true, null, null, null, null,
-                        false, "Group chat already exists by the name of: " + chatName);
-                userPresenter.prepareFailView(outputData);
-                return null;
-            }
-        }
+        Chat returnChat = findExistingChat(allChats, participantIds, groupName, isGroupChat);
+
         if (returnChat == null) {
-            // No existing chat found, create new one
-            String chatId = UUID.randomUUID().toString();
-            Color backgroundColor = new Color(230, 230, 230);
-            Instant timeNow = Instant.now();
-            Chat newChat = new Chat(chatId, groupName, backgroundColor, timeNow);
-            // Add all participants
-            for (String userId : participantIds) {newChat.addParticipant(userId);}
-            userDataAccessObject.saveChat(newChat);
-            returnChat = newChat;
+            returnChat = createNewChat(participantIds, groupName);
         }
+
         return returnChat;
     }
 
     @Nullable
-    private List<String> validateUsers(String currentUserId, List<String> participantUsernames, boolean isGroupChat) {
-        List<String> participantIds = new ArrayList<>();
-        participantIds.add(currentUserId); // Add creator
+    private Chat findExistingChat(List<Chat> allChats, List<String> participantIds,
+                                  String groupName, boolean isGroupChat) {
+        for (Chat chat : allChats) {
+            if (chatMatchesParticipants(chat, participantIds)) {
+                if (isGroupChat && chat.getGroupName().equals(groupName)) {
+                    return chat;
+                }
+                else if (!isGroupChat) {
+                    return chat;
+                }
+            }
+        }
+        return null;
+    }
+
+    private boolean chatMatchesParticipants(Chat chat, List<String> participantIds) {
+        final List<String> participants = new ArrayList<>(chat.getParticipantUserIds());
+        final List<String> sortedParticipantIds = new ArrayList<>(participantIds);
+        Collections.sort(participants);
+        Collections.sort(sortedParticipantIds);
+        return participants.size() == sortedParticipantIds.size()
+                && participants.equals(sortedParticipantIds);
+    }
+
+    private Chat createNewChat(List<String> participantIds, String groupName) {
+        final String chatId = UUID.randomUUID().toString();
+        final Color backgroundColor = new Color(DEFAULT_BACKGROUND_RED,
+                DEFAULT_BACKGROUND_GREEN, DEFAULT_BACKGROUND_BLUE);
+        final Instant timeNow = Instant.now();
+        final Chat newChat = new Chat(chatId, groupName, backgroundColor, timeNow);
+        for (String userId : participantIds) {
+            newChat.addParticipant(userId);
+        }
+        userDataAccessObject.saveChat(newChat);
+        return newChat;
+    }
+
+    @Nullable
+    private List<String> validateUsers(String currentUserId,
+                                       List<String> participantUsernames,
+                                       boolean isGroupChat) {
+        final List<String> participantIds = new ArrayList<>();
+        participantIds.add(currentUserId);
 
         for (String username : participantUsernames) {
-            Optional<User> userOpt = userRepository.findByUsername(username);
-            if (userOpt.isEmpty()) {
-                boolean load = this.userDataAccessObject.loadToEntity(username);
-                if (!load) {
-                    CreateChatOutputData createChatOutputData = new CreateChatOutputData(
-                            isGroupChat, null, null, null, null, false,
-                            "Null user not found."
-                    );
-                    userPresenter.prepareFailView(createChatOutputData);
-                    return null;
-                }
-                userOpt = userRepository.findByUsername(username);
+            final String userId = loadAndGetUserId(username, isGroupChat);
+            if (userId == null) {
+                return null;
             }
-            if (userOpt.isPresent()) {
-                String userId = userOpt.get().getName();
-                if (!participantIds.contains(userId)) {
-                    participantIds.add(userId);
-                }
+            if (!participantIds.contains(userId)) {
+                participantIds.add(userId);
             }
         }
         return participantIds;
     }
 
-    private boolean validParticipantInput(List<String> participantUsernames, boolean isGroupChat) {
-        if (participantUsernames == null || participantUsernames.isEmpty()) {
-            CreateChatOutputData outputData = new CreateChatOutputData(
-                    isGroupChat, null, null, null, null, false,
-                    "No participants provided"
-            );
-            userPresenter.prepareFailView(outputData);
+    @Nullable
+    private String loadAndGetUserId(String username, boolean isGroupChat) {
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isEmpty()) {
+            final boolean load = this.userDataAccessObject.loadToEntity(username);
+            if (!load) {
+                handleFailure(isGroupChat, "User not found: " + username);
+                return null;
+            }
+            userOpt = userRepository.findByUsername(username);
+        }
+        return userOpt.isPresent() ? userOpt.get().getName() : null;
+    }
+
+    private boolean validParticipantInput(List<String> participantUsernames,
+                                          boolean isGroupChat) {
+        final boolean isValid = participantUsernames != null && !participantUsernames.isEmpty();
+        if (!isValid) {
+            handleFailure(isGroupChat, "No participants provided");
+        }
+        return isValid;
+    }
+
+    private boolean individualChatRequirements(String groupName,
+                                               List<String> participantUsernames) {
+        final boolean isValid = groupName.isEmpty()
+                && participantUsernames.size() == INDIVIDUAL_CHAT_PARTICIPANTS;
+        if (!isValid) {
+            handleFailure(false, "An error has occurred when initializing your chat");
+        }
+        return isValid;
+    }
+
+    private boolean groupChatRequirements(String groupName,
+                                          List<String> participantUsernames) {
+        if (groupName == null || groupName.trim().isEmpty()) {
+            handleFailure(true, "Group name cannot be empty");
+            return false;
+        }
+        if (participantUsernames.size() < MIN_GROUP_CHAT_PARTICIPANTS) {
+            handleFailure(true, "Group chat requires at least 3 participants");
             return false;
         }
         return true;
     }
 
-    private boolean individualChatRequirements(String groupName, List<String> participantUsernames) {
-        if ((!groupName.isEmpty()) || participantUsernames.size() != 1) {
-            CreateChatOutputData outputData = new CreateChatOutputData(
-                    false, null, null, null, null, false,
-                    "An error has occurred when initializing your chat");
-            System.out.println(groupName + participantUsernames);
-            this.userPresenter.prepareFailView(outputData);
-            return false;
-        }
-        return true;
-    }
-
-    private boolean groupChatRequirements(String groupName, List<String> participantUsernames) {
-        if (groupName == null || groupName.trim().isEmpty()){
-            CreateChatOutputData outputData = new CreateChatOutputData(
-                    true, null, null, null, null, false,
-                    "Group name cannot be empty");
-            this.userPresenter.prepareFailView(outputData);
-            return false;
-        }
-        else if (groupName.length() > 100) {
-            CreateChatOutputData outputData = new CreateChatOutputData(
-                    true, null, null, null, null,false,
-                    "Group name is too long (max 100 characters)"
-            );
-            userPresenter.prepareFailView(outputData);
-            return false;
-        }
-        if (participantUsernames.size() < 2) {
-            CreateChatOutputData outputData = new CreateChatOutputData(
-                    true, null, null, null, null,false,
-                    "Group chat requires at least 2 participants"
-            );
-            userPresenter.prepareFailView(outputData);
-            return false;
-        }
-        else if (participantUsernames.size() > 10) {
-            CreateChatOutputData outputData = new CreateChatOutputData(
-                    true, null, null, null, null,false,
-                    "Group chat handles no more than 10 participants"
-            );
-            userPresenter.prepareFailView(outputData);
-            return false;
-        }
-        return true;
+    private void handleFailure(boolean isGroupChat, String errorMessage) {
+        final CreateChatOutputData outputData = new CreateChatOutputData(
+                isGroupChat, null, null, null, null, false, errorMessage);
+        userPresenter.prepareFailView(outputData);
     }
 }

@@ -35,30 +35,7 @@ public class AddUserInteractor implements AddUserInputBoundary {
             final String usernameToAdd = inputData.getUsernameToAdd();
 
             if (usernameToAdd == null || usernameToAdd.trim().isEmpty()) {
-                outputBoundary.prepareFailView("Username cannot be empty");
-                return;
-            }
-
-            Optional<Chat> chatOpt = chatRepository.findById(chatId);
-
-            if (chatOpt.isEmpty()) {
-                outputBoundary.prepareFailView("Chat not found");
-                return;
-            }
-
-            Chat chat = chatOpt.get();
-
-            String userIdToAdd = dataAccess.getUserIdByUsername(usernameToAdd.trim());
-            if (userIdToAdd == null) {
-                outputBoundary.prepareFailView("User not found: " + usernameToAdd);
-                return;
-            }
-
-            List<String> currentParticipants = chat.getParticipantUserIds();
-
-            if (currentParticipants.contains(userIdToAdd)) {
-                outputBoundary.prepareFailView("User is already a member of this chat");
-                return;
+                errorMessage = "Username cannot be empty";
             }
             else {
                 final Optional<Chat> chatOpt = chatRepository.findById(chatId);
@@ -96,14 +73,12 @@ public class AddUserInteractor implements AddUserInputBoundary {
             errorMessage = "Failed to add user: " + ex.getMessage();
         }
 
-            chat.addParticipant(userIdToAdd);
-            dataAccess.addUser(chatId, userIdToAdd);
-            Chat saved = dataAccess.saveChat(chat);
-            AddUserOutputData outputData = new AddUserOutputData(saved.getId(), usernameToAdd.trim());
+        if (errorMessage != null) {
+            outputBoundary.prepareFailView(errorMessage);
+        }
+        else {
             outputBoundary.prepareSuccessView(outputData);
-
-        } catch (Exception e) {
-            outputBoundary.prepareFailView("Failed to add user: " + e.getMessage());
         }
     }
 }
+

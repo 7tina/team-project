@@ -37,6 +37,9 @@ public class AccessChatPresenter implements AccessChatOutputBoundary {
     @Override
     public void prepareSuccessView(AccessChatOutputData response) {
         final ChatState state = new ChatState();
+
+        state.chatViewStop();
+
         state.setIsGroup(response.isGroupChat());
         state.setChatId(response.getChatId());
 
@@ -55,7 +58,12 @@ public class AccessChatPresenter implements AccessChatOutputBoundary {
                 }
             }
 
-            state.setGroupName(otherUsername != null ? otherUsername : "Unknown User");
+            if (otherUsername != null) {
+                state.setGroupName(otherUsername);
+            }
+            else {
+                state.setGroupName("Unknown User");
+            }
         }
 
         for (String userId : response.getUsers()) {

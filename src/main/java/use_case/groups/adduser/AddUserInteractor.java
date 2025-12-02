@@ -30,6 +30,7 @@ public class AddUserInteractor implements AddUserInputBoundary {
                 outputBoundary.prepareFailView("Username cannot be empty");
                 return;
             }
+
             Optional<Chat> chatOpt = chatRepository.findById(chatId);
 
             if (chatOpt.isEmpty()) {

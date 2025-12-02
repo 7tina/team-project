@@ -1,5 +1,8 @@
 package usecase.groups.removeuser;
 
+/**
+ * Input data transfer object for the Remove User use case.
+ */
 public class RemoveUserInputData {
     private final String chatId;
     private final String usernameToRemove;

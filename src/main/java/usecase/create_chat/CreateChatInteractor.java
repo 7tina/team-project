@@ -18,6 +18,14 @@ public class CreateChatInteractor implements CreateChatInputBoundary {
     protected final ChatRepository chatRepository;
     protected final UserRepository userRepository;
 
+    /**
+     * Constructor for CreateChatInteractor.
+     *
+     * @param boundary the output boundary
+     * @param dao the data access object
+     * @param chatRepository the chat repository
+     * @param userRepository the user repository
+     */
     public CreateChatInteractor(CreateChatOutputBoundary boundary,
                                 CreateChatUserDataAccessInterface dao,
                                 ChatRepository chatRepository,
@@ -118,7 +126,8 @@ public class CreateChatInteractor implements CreateChatInputBoundary {
             userDataAccessObject.saveChat(newChat);
             returnChat = newChat;
         }
-        return returnChat;
+        userDataAccessObject.saveChat(newChat);
+        return newChat;
     }
 
     @Nullable
@@ -160,7 +169,7 @@ public class CreateChatInteractor implements CreateChatInputBoundary {
             userPresenter.prepareFailView(outputData);
             return false;
         }
-        return true;
+        return userOpt.isPresent() ? userOpt.get().getName() : null;
     }
 
     protected boolean individualChatRequirements(String groupName, List<String> participantUsernames) {
@@ -172,7 +181,7 @@ public class CreateChatInteractor implements CreateChatInputBoundary {
             this.userPresenter.prepareFailView(outputData);
             return false;
         }
-        return true;
+        return isValid;
     }
 
     @Nullable
@@ -188,5 +197,11 @@ public class CreateChatInteractor implements CreateChatInputBoundary {
             return null;
         }
         return currentUserOpt;
+    }
+
+    private void handleFailure(boolean isGroupChat, String errorMessage) {
+        final CreateChatOutputData outputData = new CreateChatOutputData(
+                isGroupChat, null, null, null, null, false, errorMessage);
+        userPresenter.prepareFailView(outputData);
     }
 }

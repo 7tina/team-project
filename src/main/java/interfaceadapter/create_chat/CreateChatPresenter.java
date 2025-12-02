@@ -38,6 +38,7 @@ public class CreateChatPresenter implements CreateChatOutputBoundary {
         final ChatState state = new ChatState();
         state.setIsGroup(response.isGroupChat());
         state.setChatId(response.getChatId());
+        state.setCurrentUserId(response.getCurrentUserId());
 
         if (response.isGroupChat()) {
             state.setGroupName(response.getGroupName());

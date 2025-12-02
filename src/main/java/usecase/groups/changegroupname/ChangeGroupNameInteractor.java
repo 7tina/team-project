@@ -1,15 +1,15 @@
 package usecase.groups.changegroupname;
 
-import java.util.Optional;
 
-import entity.Chat;
 import entity.ports.ChatRepository;
 
+import java.util.Optional;
+
 /**
- * Interactor (use case) for renaming a group chat.
+ * Interactor for renaming a group chat.
+ * Implements the business logic for changing a chat group's name.
  */
 public class ChangeGroupNameInteractor implements ChangeGroupNameInputBoundary {
-    private static final int MAX_GROUP_NAME_LENGTH = 100;
 
     private final ChatRepository chatRepository;
     private final ChangeGroupNameOutputBoundary outputBoundary;
@@ -17,8 +17,7 @@ public class ChangeGroupNameInteractor implements ChangeGroupNameInputBoundary {
 
     public ChangeGroupNameInteractor(
             ChatRepository chatRepository,
-            ChangeGroupNameOutputBoundary outputBoundary,
-            ChangeGroupNameDataAccessInterface dataAccess) {
+            ChangeGroupNameOutputBoundary outputBoundary, ChangeGroupNameDataAccessInterface dataAccess) {
         this.chatRepository = chatRepository;
         this.outputBoundary = outputBoundary;
         this.dataAccess = dataAccess;
@@ -26,63 +25,74 @@ public class ChangeGroupNameInteractor implements ChangeGroupNameInputBoundary {
 
     @Override
     public void execute(ChangeGroupNameInputData inputData) {
-        String errorMessage = null;
-        ChangeGroupNameOutputData outputData = null;
-
         try {
-            final String chatId = inputData.getChatId();
-            final String newGroupName = inputData.getNewGroupName();
-
-            // Validate group name is not empty
-            if (newGroupName == null || newGroupName.trim().isEmpty()) {
-                errorMessage = "Group name cannot be empty";
+            // Validate input
+            if (inputData.getNewGroupName() == null || inputData.getNewGroupName().trim().isEmpty()) {
+                ChangeGroupNameOutputData outputData = new ChangeGroupNameOutputData(
+                        inputData.getChatId(),
+                        null,
+                        false,
+                        "Group name cannot be empty"
+                );
+                outputBoundary.prepareFailView(outputData);
+                return;
             }
+
             // Validate group name length
-            else if (newGroupName.length() > MAX_GROUP_NAME_LENGTH) {
-                errorMessage = "Group name is too long (max 100 characters)";
+            if (inputData.getNewGroupName().length() > 100) {
+                ChangeGroupNameOutputData outputData = new ChangeGroupNameOutputData(
+                        inputData.getChatId(),
+                        null,
+                        false,
+                        "Group name is too long (max 100 characters)"
+                );
+                outputBoundary.prepareFailView(outputData);
+                return;
             }
-            else {
-                // Retrieve the chat from repository
-                final Optional<Chat> chatOpt = chatRepository.findById(chatId);
 
-                if (chatOpt.isEmpty()) {
-                    errorMessage = "Chat not found";
-                }
-                else {
-                    final Chat chat = chatOpt.get();
-                    final String trimmedName = newGroupName.trim();
+            // Retrieve the chat from repository
+            Optional<entity.Chat> chatOpt = chatRepository.findById(inputData.getChatId());
 
-                    // Update the group name
-                    chat.setGroupName(trimmedName);
-                    dataAccess.changeGroupName(chat.getId(), trimmedName);
-                    dataAccess.saveChat(chat);
-
-                    // Prepare success output
-                    outputData = new ChangeGroupNameOutputData(
-                            chat.getId(),
-                            chat.getGroupName(),
-                            true,
-                            null
-                    );
-                }
+            if (chatOpt.isEmpty()) {
+                ChangeGroupNameOutputData outputData = new ChangeGroupNameOutputData(
+                        inputData.getChatId(),
+                        null,
+                        false,
+                        "Chat not found"
+                );
+                outputBoundary.prepareFailView(outputData);
+                return;
             }
-        }
-        catch (IllegalArgumentException | IllegalStateException ex) {
-            errorMessage = "Failed to rename group: " + ex.getMessage();
-        }
 
-        // Single exit point
-        if (errorMessage != null) {
-            final ChangeGroupNameOutputData failureData = new ChangeGroupNameOutputData(
+            entity.Chat chat = chatOpt.get();
+
+            // Update the group name
+            String trimmedName = inputData.getNewGroupName().trim();
+            chat.setGroupName(trimmedName);
+
+            // Save the updated chat
+            dataAccess.changeGroupName(chat.getId(), trimmedName);
+            dataAccess.saveChat(chat);
+
+            // Prepare success output
+            ChangeGroupNameOutputData outputData = new ChangeGroupNameOutputData(
+                    chat.getId(),
+                    chat.getGroupName(),
+                    true,
+                    null
+            );
+
+            outputBoundary.prepareSuccessView(outputData);
+
+        } catch (Exception e) {
+            // Handle any unexpected errors
+            ChangeGroupNameOutputData outputData = new ChangeGroupNameOutputData(
                     inputData.getChatId(),
                     null,
                     false,
-                    errorMessage
+                    "Failed to rename group: " + e.getMessage()
             );
-            outputBoundary.prepareFailView(failureData);
-        }
-        else {
-            outputBoundary.prepareSuccessView(outputData);
+            outputBoundary.prepareFailView(outputData);
         }
     }
 }

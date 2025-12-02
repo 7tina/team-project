@@ -1,5 +1,8 @@
 package usecase.groups.changegroupname;
 
+/**
+ * Output data transfer object for the Change Group Name use case.
+ */
 public class ChangeGroupNameOutputData {
     private final String chatId;
     private final String newGroupName;

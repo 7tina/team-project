@@ -1,5 +1,8 @@
 package usecase.groups.adduser;
 
+/**
+ * Output data transfer object for the Add User use case.
+ */
 public class AddUserOutputData {
     private final String chatId;
     private final String addedUsername;

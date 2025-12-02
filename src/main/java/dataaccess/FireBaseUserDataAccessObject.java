@@ -333,7 +333,7 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
     }
 
     @Override
-    public Chat saveChat(Chat chat) {
+    public void saveChat(Chat chat) {
         try {
             final Map<String, Object> data = new HashMap<>();
             data.put(CHAT_NAME, chat.getGroupName());
@@ -352,7 +352,6 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
             throw new RuntimeException("Failed to save chat", ex);
         }
         chatRepository.save(chat);
-        return chat;
     }
 
     /**

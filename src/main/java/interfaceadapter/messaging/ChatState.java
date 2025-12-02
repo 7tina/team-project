@@ -21,6 +21,7 @@ public class ChatState {
     private String groupName;
     private boolean success;
     private String error;
+    private String currentUserId;
     private Map<String, Map<String, String>> messageReactions = new HashMap<>();
 
     public ChatState() {}
@@ -156,4 +157,8 @@ public class ChatState {
         this.messageIds.clear();
         this.messageIds.addAll(newMessageIds);
     }
+
+    public String getCurrentUserId() { return currentUserId; }
+
+    public void setCurrentUserId(String currentUserId) { this.currentUserId = currentUserId;}
 }

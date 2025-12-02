@@ -10,8 +10,9 @@ public class RemoveUserController {
         this.removeUserInteractor = removeUserInteractor;
     }
 
-    public void execute(String chatId, String usernameToRemove) {
-        RemoveUserInputData inputData = new RemoveUserInputData(chatId, usernameToRemove);
+    public void execute(String chatId, String usernameToRemove, String currentUserId) {
+        final RemoveUserInputData inputData = new RemoveUserInputData(
+                chatId, usernameToRemove, currentUserId);
         removeUserInteractor.execute(inputData);
     }
 }

@@ -2,6 +2,9 @@ package usecase.create_chat;
 
 import java.util.List;
 
+/**
+ * Input data for creating a chat.
+ */
 public class CreateChatInputData {
     private final String currentUserId;
     private final List<String> participantUsernames;

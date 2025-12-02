@@ -9,8 +9,6 @@ import entity.ports.ChatRepository;
  * Interactor (use case) for renaming a group chat.
  */
 public class ChangeGroupNameInteractor implements ChangeGroupNameInputBoundary {
-    private static final int MAX_GROUP_NAME_LENGTH = 100;
-
     private final ChatRepository chatRepository;
     private final ChangeGroupNameOutputBoundary outputBoundary;
     private final ChangeGroupNameDataAccessInterface dataAccess;
@@ -33,16 +31,10 @@ public class ChangeGroupNameInteractor implements ChangeGroupNameInputBoundary {
             final String chatId = inputData.getChatId();
             final String newGroupName = inputData.getNewGroupName();
 
-            // Validate group name is not empty
             if (newGroupName == null || newGroupName.trim().isEmpty()) {
                 errorMessage = "Group name cannot be empty";
             }
-            // Validate group name length
-            else if (newGroupName.length() > MAX_GROUP_NAME_LENGTH) {
-                errorMessage = "Group name is too long (max 100 characters)";
-            }
             else {
-                // Retrieve the chat from repository
                 final Optional<Chat> chatOpt = chatRepository.findById(chatId);
 
                 if (chatOpt.isEmpty()) {
@@ -52,12 +44,10 @@ public class ChangeGroupNameInteractor implements ChangeGroupNameInputBoundary {
                     final Chat chat = chatOpt.get();
                     final String trimmedName = newGroupName.trim();
 
-                    // Update the group name
                     chat.setGroupName(trimmedName);
                     dataAccess.changeGroupName(chat.getId(), trimmedName);
                     dataAccess.saveChat(chat);
 
-                    // Prepare success output
                     outputData = new ChangeGroupNameOutputData(
                             chat.getId(),
                             chat.getGroupName(),
@@ -71,7 +61,6 @@ public class ChangeGroupNameInteractor implements ChangeGroupNameInputBoundary {
             errorMessage = "Failed to rename group: " + ex.getMessage();
         }
 
-        // Single exit point
         if (errorMessage != null) {
             final ChangeGroupNameOutputData failureData = new ChangeGroupNameOutputData(
                     inputData.getChatId(),

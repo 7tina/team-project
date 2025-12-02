@@ -1,14 +1,15 @@
 package usecase.groups.removeuser;
 
-import entity.Chat;
-import entity.ports.ChatRepository;
 import java.util.Optional;
 
+import entity.Chat;
+import entity.ports.ChatRepository;
+
 /**
- * Interactor for removing a user from a group chat.
- * Implements the business logic for removing a participant from a chat.
+ * Interactor (use case) for removing a user from a group chat.
  */
 public class RemoveUserInteractor implements RemoveUserInputBoundary {
+    private static final int MIN_PARTICIPANTS = 3;
 
     private final ChatRepository chatRepository;
     private final RemoveUserOutputBoundary outputBoundary;
@@ -25,59 +26,58 @@ public class RemoveUserInteractor implements RemoveUserInputBoundary {
 
     @Override
     public void execute(RemoveUserInputData inputData) {
+        String errorMessage = null;
+        RemoveUserOutputData outputData = null;
+
         try {
-            String chatId = inputData.getChatId();
-            String usernameToRemove = inputData.getUsernameToRemove();
+            final String chatId = inputData.getChatId();
+            final String usernameToRemove = inputData.getUsernameToRemove();
+            final String currentUserId = inputData.getCurrentUserId();
 
-            // Validate input
             if (usernameToRemove == null || usernameToRemove.trim().isEmpty()) {
-                outputBoundary.prepareFailView("Username cannot be empty");
-                return;
+                errorMessage = "Username cannot be empty";
             }
+            else {
+                final Optional<Chat> chatOpt = chatRepository.findById(chatId);
 
-            // Retrieve the chat from repository
-            Optional<Chat> chatOpt = chatRepository.findById(chatId);
+                if (chatOpt.isEmpty()) {
+                    errorMessage = "Chat not found";
+                }
+                else {
+                    final Chat chat = chatOpt.get();
+                    final String userIdToRemove = dataAccess.getUserIdByUsername(usernameToRemove.trim());
 
-            if (chatOpt.isEmpty()) {
-                outputBoundary.prepareFailView("Chat not found");
-                return;
+                    if (userIdToRemove == null) {
+                        errorMessage = "User not found: " + usernameToRemove;
+                    }
+                    else if (userIdToRemove.equals(currentUserId)) {
+                        errorMessage = "You cannot remove yourself from the group chat";
+                    }
+                    else if (!chat.getParticipantUserIds().contains(userIdToRemove)) {
+                        errorMessage = "User is not a member of this chat";
+                    }
+                    else if (chat.getParticipantUserIds().size() <= MIN_PARTICIPANTS) {
+                        errorMessage = "Minimum number of participants is 3";
+                    }
+                    else {
+                        chat.removeParticipant(userIdToRemove);
+                        dataAccess.removeUser(chatId, userIdToRemove);
+                        dataAccess.saveChat(chat);
+
+                        outputData = new RemoveUserOutputData(chatId, usernameToRemove.trim());
+                    }
+                }
             }
+        }
+        catch (IllegalArgumentException | IllegalStateException ex) {
+            errorMessage = "Failed to remove user: " + ex.getMessage();
+        }
 
-            Chat chat = chatOpt.get();
-
-            // Get the user ID for the username
-            String userIdToRemove = dataAccess.getUserIdByUsername(usernameToRemove.trim());
-            if (userIdToRemove == null) {
-                outputBoundary.prepareFailView("User not found: " + usernameToRemove);
-                return;
-            }
-
-            // Check if user is in the chat
-            if (!chat.getParticipantUserIds().contains(userIdToRemove)) {
-                outputBoundary.prepareFailView("User is not a member of this chat");
-                return;
-            }
-
-            // Check if this is the last participant
-            if (chat.getParticipantUserIds().size() <= 3) {
-                outputBoundary.prepareFailView("Minimum number of participants is 3");
-                return;
-            }
-
-            // Remove the user from the chat
-            chat.removeParticipant(userIdToRemove);
-
-            // Save the updated chat
-            dataAccess.removeUser(chatId, userIdToRemove);
-            dataAccess.saveChat(chat);
-
-            // Prepare success output
-            RemoveUserOutputData outputData = new RemoveUserOutputData(chatId, usernameToRemove.trim());
+        if (errorMessage != null) {
+            outputBoundary.prepareFailView(errorMessage);
+        }
+        else {
             outputBoundary.prepareSuccessView(outputData);
-
-        } catch (Exception e) {
-            // Handle any unexpected errors
-            outputBoundary.prepareFailView("Failed to remove user: " + e.getMessage());
         }
     }
 }

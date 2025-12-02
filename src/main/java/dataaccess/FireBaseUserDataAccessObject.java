@@ -328,7 +328,7 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
     }
 
     @Override
-    public Chat saveChat(Chat chat) {
+    public void saveChat(Chat chat) {
         try {
             final Map<String, Object> data = new HashMap<>();
             data.put(CHAT_NAME, chat.getGroupName());
@@ -342,12 +342,13 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
             final ApiFuture<WriteResult> future = doc.set(data);
             future.get();
 
+            // Only save to repository AFTER successful Firebase write
+            chatRepository.save(chat);
+
         }
         catch (InterruptedException | ExecutionException ex) {
             throw new RuntimeException("Failed to save chat", ex);
         }
-        chatRepository.save(chat);
-        return chat;
     }
 
     /**

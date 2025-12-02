@@ -25,8 +25,11 @@ public class ChatViewModel extends ViewModel<ChatState> {
 
     @Override
     public void setState(ChatState state) {
+        ChatState oldState = this.state;
         this.state = state;
+        support.firePropertyChange("state", oldState, this.state);
     }
+
 
 
     public void firePropertyChange() {

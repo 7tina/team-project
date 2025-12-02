@@ -25,10 +25,13 @@ public class AddUserInteractor implements AddUserInputBoundary {
 
     @Override
     public void execute(AddUserInputData inputData) {
+        String errorMessage = null;
+        AddUserOutputData outputData = null;
+        final int maxGroupMembers = 10;
+
         try {
             final String chatId = inputData.getChatId();
             final String usernameToAdd = inputData.getUsernameToAdd();
-            String errorMessage = "";
 
             if (usernameToAdd == null || usernameToAdd.trim().isEmpty()) {
                 errorMessage = "Username cannot be empty";
@@ -41,34 +44,40 @@ public class AddUserInteractor implements AddUserInputBoundary {
                 }
                 else {
                     final Chat chat = chatOpt.get();
-                    final String userIdToAdd = dataAccess.getUserIdByUsername(usernameToAdd.trim());
+                    final List<String> currentParticipants = chat.getParticipantUserIds();
 
-                    if (userIdToAdd == null) {
-                        errorMessage = "User not found: " + usernameToAdd;
+                    if (currentParticipants.size() >= maxGroupMembers) {
+                        errorMessage = "This group chat already has the maximum of 10 members.";
                     }
                     else {
-                        final List<String> currentParticipants = chat.getParticipantUserIds();
+                        final String userIdToAdd =
+                                dataAccess.getUserIdByUsername(usernameToAdd.trim());
 
-                        if (currentParticipants.contains(userIdToAdd)) {
+                        if (userIdToAdd == null) {
+                            errorMessage = "User not found: " + usernameToAdd;
+                        }
+                        else if (currentParticipants.contains(userIdToAdd)) {
                             errorMessage = "User is already a member of this chat";
                         }
                         else {
                             chat.addParticipant(userIdToAdd);
                             dataAccess.addUser(chatId, userIdToAdd);
                             dataAccess.saveChat(chat);
-                            final AddUserOutputData outputData = new AddUserOutputData(chat.getId(), usernameToAdd.trim());
-                            outputBoundary.prepareSuccessView(outputData);
+                            outputData = new AddUserOutputData(chat.getId(), usernameToAdd.trim());
                         }
                     }
                 }
             }
 
-            if (!errorMessage.isEmpty()) {
+            if (errorMessage != null) {
                 outputBoundary.prepareFailView(errorMessage);
             }
+            else {
+                outputBoundary.prepareSuccessView(outputData);
+            }
         }
-        catch (Exception e) {
-            outputBoundary.prepareFailView("Encountered Error: " + e.getMessage());
+        catch (IllegalArgumentException | IllegalStateException ex) {
+            outputBoundary.prepareFailView("Unexpected error: " + ex.getMessage());
         }
     }
 }

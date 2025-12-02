@@ -26,6 +26,9 @@ public class ChatSettingView extends JPanel implements ActionListener, PropertyC
     private final JButton addUserButton;
     private final JButton removeUserButton;
 
+    // Member display
+    private final JLabel membersLabel;
+
     private ChangeGroupNameController changeGroupNameController;
     private RemoveUserController removeUserController;
     private AddUserController addUserController;
@@ -48,11 +51,25 @@ public class ChatSettingView extends JPanel implements ActionListener, PropertyC
             viewManagerModel.setState("chat");
             viewManagerModel.firePropertyChange();
         });
-        topBar.add(backButton, BorderLayout.WEST);
 
         final JLabel title = new JLabel("Chat Settings", SwingConstants.CENTER);
         title.setFont(new Font("SansSerif", Font.BOLD, 24));
+
+        // Create a wrapper for the back button
+        JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+        leftPanel.add(backButton);
+
+        // Create an empty spacer panel on the right for symmetry
+        // Make it the same width as the left panel
+        JPanel rightPanel = new JPanel();
+        rightPanel.setPreferredSize(new Dimension(
+                leftPanel.getPreferredSize().width,
+                backButton.getPreferredSize().height
+        ));
+
+        topBar.add(leftPanel, BorderLayout.WEST);
         topBar.add(title, BorderLayout.CENTER);
+        topBar.add(rightPanel, BorderLayout.EAST);
 
         this.add(topBar, BorderLayout.NORTH);
 
@@ -61,9 +78,23 @@ public class ChatSettingView extends JPanel implements ActionListener, PropertyC
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.setBorder(BorderFactory.createEmptyBorder(40, 20, 40, 20));
 
+        // Add members label
+        membersLabel = new JLabel("Members: Loading...");
+        membersLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        membersLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        membersLabel.setForeground(new Color(100, 100, 100));
+        contentPanel.add(membersLabel);
+        contentPanel.add(Box.createVerticalStrut(20));
+
         changeGroupNameButton = new JButton("Change Group Name");
         addUserButton = new JButton("Add User");
         removeUserButton = new JButton("Remove User");
+
+        // Set all buttons to the same width (based on the longest button)
+        Dimension buttonSize = changeGroupNameButton.getPreferredSize();
+        changeGroupNameButton.setMaximumSize(buttonSize);
+        addUserButton.setMaximumSize(buttonSize);
+        removeUserButton.setMaximumSize(buttonSize);
 
         changeGroupNameButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         addUserButton.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -217,6 +248,12 @@ public class ChatSettingView extends JPanel implements ActionListener, PropertyC
         }
 
         final ChatState state = (ChatState) newValue;
+
+        // Update members display
+        if (state.getParticipants() != null && !state.getParticipants().isEmpty()) {
+            String membersList = String.join(", ", state.getParticipants());
+            membersLabel.setText("Members: " + membersList);
+        }
 
         if (state.getError() != null) {
             JOptionPane.showMessageDialog(this,

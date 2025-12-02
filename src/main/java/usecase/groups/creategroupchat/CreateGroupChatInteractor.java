@@ -1,6 +1,6 @@
 package usecase.groups.creategroupchat;
 
-import java.awt.*;
+import java.awt.Color;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
@@ -13,7 +13,11 @@ import entity.Chat;
 import entity.User;
 import entity.ports.ChatRepository;
 import entity.ports.UserRepository;
-import usecase.create_chat.*;
+import usecase.create_chat.CreateChatInputData;
+import usecase.create_chat.CreateChatInteractor;
+import usecase.create_chat.CreateChatOutputBoundary;
+import usecase.create_chat.CreateChatOutputData;
+import usecase.create_chat.CreateChatUserDataAccessInterface;
 
 public class CreateGroupChatInteractor extends CreateChatInteractor {
     private final Integer maxUsers;
@@ -90,17 +94,20 @@ public class CreateGroupChatInteractor extends CreateChatInteractor {
                     isGroup, chatId, chatName, chatUsers, chatMessages, true, null, currentUserId);
             this.userPresenter.prepareSuccessView(createChatOutputData);
         }
-        catch (Exception e) {
+        catch (IllegalArgumentException | IllegalStateException ex) {
             // Handle any unexpected errors
             final CreateChatOutputData createChatOutputData = new CreateChatOutputData(
                     false, null, null, null, null, false,
-                    "Failed to create chat: " + e.getMessage()
+                    "Failed to create chat: " + ex.getMessage()
             );
             userPresenter.prepareFailView(createChatOutputData);
         }
     }
 
     private boolean groupChatRequirements(String groupName, List<String> participantUsernames) {
+        final int minGroupNum = 3;
+        final int maxGroupName = 100;
+
         if (groupName == null || groupName.trim().isEmpty()) {
             final CreateChatOutputData outputData = new CreateChatOutputData(
                     true, null, null, null, null, false,
@@ -108,7 +115,7 @@ public class CreateGroupChatInteractor extends CreateChatInteractor {
             this.userPresenter.prepareFailView(outputData);
             return false;
         }
-        else if (groupName.length() > 100) {
+        else if (groupName.length() > maxGroupName) {
             final CreateChatOutputData outputData = new CreateChatOutputData(
                     true, null, null, null, null, false,
                     "Group name is too long (max 100 characters)"
@@ -116,10 +123,10 @@ public class CreateGroupChatInteractor extends CreateChatInteractor {
             userPresenter.prepareFailView(outputData);
             return false;
         }
-        if (participantUsernames.size() < 2) {
+        if (participantUsernames.size() < minGroupNum) {
             final CreateChatOutputData outputData = new CreateChatOutputData(
                     true, null, null, null, null, false,
-                    "Group chat requires at least 2 participants"
+                    "Group chat requires at least 3 participants"
             );
             userPresenter.prepareFailView(outputData);
             return false;

@@ -327,7 +327,8 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
 
         if (!state.getFirst() && state.getChatId() != null && state.getGroupName() != null) {
             // Only set context if it's actually changing
-            if (!state.getChatId().equals(currentChatId)) {
+            if (!state.getChatId().equals(currentChatId)
+                    || !loggedInViewModel.getState().getUsername().equals(currentUserId)) {
                 state.chatViewStart();
 
                 final boolean isGroup = state.getIsGroup();
@@ -350,7 +351,8 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
             final JLabel errorLabel = new JLabel(state.getError());
             errorLabel.setForeground(Color.RED);
             chatDisplayPanel.add(errorLabel);
-        } else {
+        }
+        else {
 
             // DON'T update the label if we're just updating messages/reactions
             // Only update it when first opening the chat
@@ -360,7 +362,8 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
 
             if (messages.isEmpty()) {
                 chatDisplayPanel.add(initialPrompt);
-            } else {
+            }
+            else {
                 for (String[] msg : messages) {
                     final String messageId = msg[0];
                     final String senderId = msg[1];
@@ -449,7 +452,8 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
                         row.add(Box.createHorizontalStrut(4));
                         row.add(actionButton);
 
-                    } else {
+                    }
+                    else {
                         // THEIR MESSAGE: [button] [space] [bubble] [reactions] [glue]
                         row.add(actionButton);
                         row.add(Box.createHorizontalStrut(4));
@@ -534,7 +538,8 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
                 replyPreviewBox.setVisible(true);
             });
             menu.add(replyItem);
-        } else {
+        }
+        else {
             final JMenuItem replyItem = new JMenuItem("Reply");
             replyItem.addActionListener(evnt -> {
                 replyingToMessageId = messageId;
@@ -547,7 +552,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
             menu.add(replyItem);
 
             final JMenuItem reactItem = new JMenuItem("React");
-            reactItem.addActionListener(e -> {
+            reactItem.addActionListener(evnt -> {
                 // Show reaction picker
                 showReactionPicker(messageId, reactItem);
             });
@@ -654,11 +659,12 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
     public void setChatContext(String chatId,
                                List<String> userIds,
                                List<String> messageIds,
-                               String currentUserId,
+                               String currentUser,
                                String groupName,
                                boolean isGroupChat) {
+        System.out.println(currentUser);
         this.currentChatId = chatId;
-        this.currentUserId = currentUserId;
+        this.currentUserId = currentUser;
         this.isGroupChat = isGroupChat;
         this.currentUserIds = userIds;
         this.currentMessageIds = messageIds;

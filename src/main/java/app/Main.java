@@ -33,6 +33,7 @@ public class Main {
                 .addAddUserUseCase()
                 .addDeleteMessageUseCase()
                 .addRecentChatsUseCase()
+                .addAccessChatsUseCase()
                 .build();
 
         application.pack();

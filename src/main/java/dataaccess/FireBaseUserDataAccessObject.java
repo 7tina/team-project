@@ -24,6 +24,7 @@ import entity.UserFactory;
 import entity.ports.ChatRepository;
 import entity.ports.MessageRepository;
 import entity.ports.UserRepository;
+import usecase.accesschat.AccessChatDataAccessInterface;
 import usecase.change_password.ChangePasswordUserDataAccessInterface;
 import usecase.create_chat.CreateChatUserDataAccessInterface;
 import usecase.groups.adduser.AddUserDataAccessInterface;
@@ -54,7 +55,8 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
         AddUserDataAccessInterface,
         RemoveUserDataAccessInterface,
         ChangeGroupNameDataAccessInterface,
-        RecentChatsUserDataAccessInterface {
+        RecentChatsUserDataAccessInterface,
+        AccessChatDataAccessInterface {
 
     private static final String COLLECTION_NAME = "users";
     private static final String NAME_PASSWORD = "password";
@@ -573,15 +575,14 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
      * Finds messages by Chat ID.
      * @param chatId The ID of the chat.
      * @return A list of messages.
-     * @throws RuntimeException
+     * @throws RuntimeException .
      */
     public List<Message> findByChatId(String chatId) {
         try {
             final CollectionReference col = db.collection(COLLECTION_MESSAGE);
 
             final Query query = col
-                    .whereEqualTo(MESSAGE_CHAT_ID, chatId)
-                    .orderBy(MESSAGE_TIME, Query.Direction.ASCENDING);
+                    .whereEqualTo(MESSAGE_CHAT_ID, chatId);
 
             final ApiFuture<QuerySnapshot> future = query.get();
             final QuerySnapshot snapshot = future.get();

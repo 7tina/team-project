@@ -321,7 +321,7 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
                     // Show error message if group chat creation failed
                     JOptionPane.showMessageDialog(this,
                             chatState.getError(),
-                            "Error Creating Group Chat",
+                            "Error Creating Chat",
                             JOptionPane.ERROR_MESSAGE);
                 }
             }

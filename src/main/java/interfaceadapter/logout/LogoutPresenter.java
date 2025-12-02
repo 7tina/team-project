@@ -35,6 +35,9 @@ public class LogoutPresenter implements LogoutOutputBoundary {
         // the empty string.
         LoggedInState loggedInState = loggedInViewModel.getState();
         loggedInState.setUsername("");
+        loggedInState.clearChatNames();
+        loggedInState.clearNameToChatIds();
+        loggedInState.setLoggedIn(false);
         loggedInViewModel.setState(loggedInState);
         loggedInViewModel.firePropertyChange();
 

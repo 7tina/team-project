@@ -1,18 +1,19 @@
 package view;
 
-import interface_adapter.ViewManagerModel;
-import interface_adapter.login.LoginController;
-import interface_adapter.login.LoginState;
-import interface_adapter.login.LoginViewModel;
-
-import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+
+import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+
+import interfaceadapter.ViewManagerModel;
+import interfaceadapter.login.LoginController;
+import interfaceadapter.login.LoginState;
+import interfaceadapter.login.LoginViewModel;
 
 /**
  * The View for when the user is logging into the program.
@@ -71,7 +72,6 @@ public class LoginView extends JPanel implements ActionListener, PropertyChangeL
                     }
                 }
         );
-
 
         usernameInputField.getDocument().addDocumentListener(new DocumentListener() {
 

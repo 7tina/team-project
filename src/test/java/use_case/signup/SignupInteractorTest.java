@@ -1,9 +1,10 @@
 package use_case.signup;
 
-import data_access.InMemoryUserDataAccessObject;
+import dataaccess.InMemoryUserDataAccessObject;
 import entity.UserFactory;
 import entity.User;
 import org.junit.jupiter.api.Test;
+import usecase.signup.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -97,5 +98,89 @@ class SignupInteractorTest {
 
         SignupInputBoundary interactor = new SignupInteractor(userRepository, failurePresenter, new UserFactory());
         interactor.execute(inputData);
+    }
+
+    @Test
+    void failureEmptyPasswordTest() {
+        SignupInputData inputData = new SignupInputData("Paul", "", "");
+        SignupUserDataAccessInterface userRepository = new InMemoryUserDataAccessObject();
+
+        SignupOutputBoundary failurePresenter = new SignupOutputBoundary() {
+            @Override
+            public void prepareSuccessView(SignupOutputData user) {
+                fail("Use case success is unexpected.");
+            }
+
+            @Override
+            public void prepareFailView(String error) {
+                assertEquals("New password cannot be empty", error);
+            }
+
+            @Override
+            public void switchToLoginView() {
+                // This is expected
+            }
+        };
+
+        SignupInputBoundary interactor = new SignupInteractor(userRepository, failurePresenter, new UserFactory());
+        interactor.execute(inputData);
+    }
+
+    @Test
+    void failureEmptyUsernameTest() {
+        // Use a non-empty, matching password to ensure this check is reached
+        SignupInputData inputData = new SignupInputData("", "password", "password");
+        SignupUserDataAccessInterface userRepository = new InMemoryUserDataAccessObject();
+
+        SignupOutputBoundary failurePresenter = new SignupOutputBoundary() {
+            @Override
+            public void prepareSuccessView(SignupOutputData user) {
+                fail("Use case success is unexpected.");
+            }
+
+            @Override
+            public void prepareFailView(String error) {
+                assertEquals("Username cannot be empty", error);
+            }
+
+            @Override
+            public void switchToLoginView() {
+                // This is expected
+            }
+        };
+
+        SignupInputBoundary interactor = new SignupInteractor(userRepository, failurePresenter, new UserFactory());
+        interactor.execute(inputData);
+    }
+
+    @Test
+    void switchToLoginTest() {
+        // Set up a flag to check if the presenter method was called
+        final boolean[] switchToLoginCalled = {false};
+
+        SignupUserDataAccessInterface userRepository = new InMemoryUserDataAccessObject();
+        SignupOutputBoundary presenter = new SignupOutputBoundary() {
+            @Override
+            public void prepareSuccessView(SignupOutputData user) {
+                fail("Should not call success view.");
+            }
+
+            @Override
+            public void prepareFailView(String error) {
+                fail("Should not call fail view.");
+            }
+
+            @Override
+            public void switchToLoginView() {
+                // Assert this method is called
+                switchToLoginCalled[0] = true;
+            }
+        };
+
+        SignupInputBoundary interactor = new SignupInteractor(userRepository, presenter, new UserFactory());
+        interactor.switchToLoginView();
+
+        // Final assertion to ensure the presenter method was called
+        assertTrue(switchToLoginCalled[0], "switchToLoginView should have been called.");
     }
 }

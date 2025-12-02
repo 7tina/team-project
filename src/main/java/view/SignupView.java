@@ -1,8 +1,8 @@
 package view;
 
-import interface_adapter.signup.SignupController;
-import interface_adapter.signup.SignupState;
-import interface_adapter.signup.SignupViewModel;
+import interfaceadapter.signup.SignupController;
+import interfaceadapter.signup.SignupState;
+import interfaceadapter.signup.SignupViewModel;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -103,6 +103,7 @@ public class SignupView extends JPanel implements ActionListener, PropertyChange
 
     /**
      * Adds an Enter key listener to trigger the sign up button.
+     * @param component has the input map.
      */
     private void addEnterKeyListener(JComponent component) {
         InputMap inputMap = component.getInputMap(JComponent.WHEN_FOCUSED);

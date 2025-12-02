@@ -1,17 +1,18 @@
 package view;
 
-import interface_adapter.ViewManagerModel;
-import interface_adapter.logged_in.ChangePasswordController;
-import interface_adapter.logged_in.LoggedInViewModel;
-import interface_adapter.logout.LogoutController;
-import interface_adapter.logged_in.LoggedInState;
-
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+
+import javax.swing.*;
+
+import interfaceadapter.ViewManagerModel;
+import interfaceadapter.logged_in.ChangePasswordController;
+import interfaceadapter.logged_in.LoggedInState;
+import interfaceadapter.logged_in.LoggedInViewModel;
+import interfaceadapter.logout.LogoutController;
 
 /**
  * The View for displaying Account Details, allowing
@@ -26,8 +27,7 @@ public class AccountDetailsView extends JPanel implements
     /** The model responsible for managing view transitions and state. */
     private final ViewManagerModel viewManagerModel;
 
-    /** The view model containing data and state for
-     * the logged-in user interface. */
+    /** The view model containing data and state for the logged-in user interface. */
     private final LoggedInViewModel loggedInViewModel;
 
     /** The controller responsible for handling user logout operations. */
@@ -57,8 +57,7 @@ public class AccountDetailsView extends JPanel implements
      *                         view transitions and navigation state
      * @param newLoggedInViewModel the model containing the current user's
      *                          state and data
-     * @throws NullPointerException if either viewManagerModel or
-     * loggedInViewModel is null
+     * @throws NullPointerException if either viewManagerModel or loggedInViewModel is null
      */
     public AccountDetailsView(final ViewManagerModel newViewManagerModel,
                               final LoggedInViewModel newLoggedInViewModel) {
@@ -72,27 +71,25 @@ public class AccountDetailsView extends JPanel implements
         // Top Bar (Title and Back Button)
         topBar = new JPanel(new BorderLayout());
 
-        JButton backButton = new JButton("⬅");
+        final JButton backButton = new JButton("⬅");
         backButton.setFont(new Font("SansSerif", Font.BOLD, 20));
-
-
-        backButton.addActionListener(e -> {
+        backButton.addActionListener(evnt -> {
             newViewManagerModel.setState("logged in");
             newViewManagerModel.firePropertyChange();
         });
 
         topBar.add(backButton, BorderLayout.WEST);
 
-        JLabel title = new JLabel("Account Details", SwingConstants.CENTER);
+        final JLabel title = new JLabel("Account Details", SwingConstants.CENTER);
         title.setFont(new Font("SansSerif", Font.BOLD, 24));
         topBar.add(title, BorderLayout.CENTER);
 
         // Main Content Area
-        JPanel contentPanel = new JPanel();
+        final JPanel contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.setBorder(BorderFactory.createEmptyBorder(50, 20, 50, 20));
 
-        String currentUsername = newLoggedInViewModel.getState().getUsername();
+        final String currentUsername = newLoggedInViewModel.getState().getUsername();
         usernameLabel = new JLabel("Username: " + (currentUsername
                 != null ? currentUsername : "User"));
         usernameLabel.setFont(new Font("SansSerif", Font.PLAIN, 20));
@@ -109,7 +106,7 @@ public class AccountDetailsView extends JPanel implements
         contentPanel.add(Box.createVerticalGlue());
 
         // Logout Button Panel (Bottom)
-        JPanel southPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        final JPanel southPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         logoutButton = new JButton("Logout");
         logoutButton.addActionListener(this);
 
@@ -130,8 +127,7 @@ public class AccountDetailsView extends JPanel implements
      * dialog for password change.
      * @param evt the action event triggered by user interaction with
      *            UI components
-     * @throws IllegalStateException if a controller is required but
-     * not set (null)
+     * @throws IllegalStateException if a controller is required but not set (null)
      */
     @Override
     public void actionPerformed(final ActionEvent evt) {
@@ -143,7 +139,7 @@ public class AccountDetailsView extends JPanel implements
                     loggedInViewModel.getState().getUsername();
 
             // Create a custom dialog
-            JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(
+            final JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(
                     this), "Change Password",
                     Dialog.ModalityType.APPLICATION_MODAL);
             dialog.setLayout(new BorderLayout());
@@ -151,21 +147,21 @@ public class AccountDetailsView extends JPanel implements
             dialog.setLocationRelativeTo(this);
 
             // Message panel
-            JPanel messagePanel = new JPanel();
+            final JPanel messagePanel = new JPanel();
             messagePanel.add(new JLabel(
                     "Enter new password for " + currentUsername + ":"));
             dialog.add(messagePanel, BorderLayout.NORTH);
 
             // Text field
-            JPasswordField passwordField = new JPasswordField(20);
-            JPanel fieldPanel = new JPanel();
+            final JPasswordField passwordField = new JPasswordField(20);
+            final JPanel fieldPanel = new JPanel();
             fieldPanel.add(passwordField);
             dialog.add(fieldPanel, BorderLayout.CENTER);
 
             // Buttons
-            JButton okButton = new JButton("OK");
-            JButton cancelButton = new JButton("Cancel");
-            JPanel buttonPanel = new JPanel();
+            final JButton okButton = new JButton("OK");
+            final JButton cancelButton = new JButton("Cancel");
+            final JPanel buttonPanel = new JPanel();
             buttonPanel.add(okButton);
             buttonPanel.add(cancelButton);
             dialog.add(buttonPanel, BorderLayout.SOUTH);
@@ -174,20 +170,21 @@ public class AccountDetailsView extends JPanel implements
             dialog.getRootPane().setDefaultButton(okButton);
 
             // Action listeners
-            okButton.addActionListener(e -> {
-                String newPassword = new String(passwordField.getPassword());
+            okButton.addActionListener(evnt -> {
+                final String newPassword = new String(passwordField.getPassword());
                 if (!newPassword.isEmpty()) {
                     changePasswordController.execute(
                             currentUsername, newPassword);
                     dialog.dispose();
-                } else {
+                }
+                else {
                     JOptionPane.showMessageDialog(dialog,
                             "Password cannot be empty.",
                             "Error", JOptionPane.ERROR_MESSAGE);
                 }
             });
 
-            cancelButton.addActionListener(e -> dialog.dispose());
+            cancelButton.addActionListener(evnt -> dialog.dispose());
 
             dialog.setVisible(true);
         }
@@ -202,8 +199,7 @@ public class AccountDetailsView extends JPanel implements
      *
      * @param evt the property change event containing the
      *            updated state information
-     * @throws ClassCastException if the new value of the
-     * event is not a LoggedInState object
+     * @throws ClassCastException if the new value of the event is not a LoggedInState object
      */
     @Override
     public void propertyChange(final PropertyChangeEvent evt) {
@@ -212,7 +208,7 @@ public class AccountDetailsView extends JPanel implements
         if (evt.getPropertyName().equals("state")
                 || evt.getPropertyName().equals("username")) {
             final LoggedInState state = (LoggedInState) evt.getNewValue();
-            String newUsername = state.getUsername();
+            final String newUsername = state.getUsername();
 
             // Update the label text
             usernameLabel.setText("Username: "

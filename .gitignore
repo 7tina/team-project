@@ -40,3 +40,6 @@ build/
 
 ### Firebase
 src/main/resources/serviceAccountKey.json
+
+### Checkstyle
+mystyle.sml

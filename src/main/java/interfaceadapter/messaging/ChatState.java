@@ -84,8 +84,6 @@ public class ChatState {
             this.messageReactions.put(messageId, new HashMap<>());
         }
         this.messageReactions.get(messageId).put(userId, reaction);
-
-        System.out.println("ChatState: Added reaction for message " + messageId + ": " + userId + " -> " + reaction);
     }
 
     public void removeReaction(String messageId, String userId, String reaction) {

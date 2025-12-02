@@ -66,7 +66,6 @@ public class ViewChatHistoryInteractor implements ViewChatHistoryInputBoundary {
                 // Collect reactions
                 if (msg.getReactions() != null && !msg.getReactions().isEmpty()) {
                     reactions.put(msg.getId(), new HashMap<>(msg.getReactions()));
-                    System.out.println("Interactor: Message " + msg.getId() + " has reactions: " + msg.getReactions());
                 }
             }
 

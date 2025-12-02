@@ -1,7 +1,7 @@
 package interfaceadapter.messaging.add_reaction;
 
-import interface_adapter.ViewManagerModel;
-import interface_adapter.messaging.ChatViewModel;
+import interfaceadapter.ViewManagerModel;
+import interfaceadapter.messaging.ChatViewModel;
 import usecase.messaging.add_reaction.AddReactionOutputBoundary;
 import usecase.messaging.add_reaction.AddReactionOutputData;
 

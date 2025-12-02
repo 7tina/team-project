@@ -1,7 +1,7 @@
 package interfaceadapter.messaging.remove_reaction;
 
-import interface_adapter.ViewManagerModel;
-import interface_adapter.messaging.ChatViewModel;
+import interfaceadapter.ViewManagerModel;
+import interfaceadapter.messaging.ChatViewModel;
 import usecase.messaging.remove_reaction.RemoveReactionOutputBoundary;
 import usecase.messaging.remove_reaction.RemoveReactionOutputData;
 

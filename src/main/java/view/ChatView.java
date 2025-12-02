@@ -74,13 +74,11 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
 
     public ChatView(ViewManagerModel viewManagerModel,
                     ChatViewModel chatViewModel,
-                    LoggedInViewModel loggedInViewModel, JButton clearSearchButton, JScrollPane chatScrollPane) {
+                    LoggedInViewModel loggedInViewModel) {
 
         this.viewManagerModel = viewManagerModel;
         this.chatViewModel = chatViewModel;
         this.loggedInViewModel = loggedInViewModel;
-        this.clearSearchButton = clearSearchButton;
-        this.chatScrollPane = chatScrollPane;
 
         this.chatViewModel.addPropertyChangeListener(this);
         this.setLayout(new BorderLayout());

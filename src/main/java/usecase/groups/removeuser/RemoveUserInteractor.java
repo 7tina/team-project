@@ -32,7 +32,6 @@ public class RemoveUserInteractor implements RemoveUserInputBoundary {
         try {
             final String chatId = inputData.getChatId();
             final String usernameToRemove = inputData.getUsernameToRemove();
-            final String currentUserId = inputData.getCurrentUserId();
 
             if (usernameToRemove == null || usernameToRemove.trim().isEmpty()) {
                 errorMessage = "Username cannot be empty";

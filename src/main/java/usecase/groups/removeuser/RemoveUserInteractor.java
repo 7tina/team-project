@@ -32,7 +32,6 @@ public class RemoveUserInteractor implements RemoveUserInputBoundary {
         try {
             final String chatId = inputData.getChatId();
             final String usernameToRemove = inputData.getUsernameToRemove();
-            final String currentUserId = inputData.getCurrentUserId();
 
             if (usernameToRemove == null || usernameToRemove.trim().isEmpty()) {
                 errorMessage = "Username cannot be empty";
@@ -49,9 +48,6 @@ public class RemoveUserInteractor implements RemoveUserInputBoundary {
 
                     if (userIdToRemove == null) {
                         errorMessage = "User not found: " + usernameToRemove;
-                    }
-                    else if (userIdToRemove.equals(currentUserId)) {
-                        errorMessage = "You cannot remove yourself from the group chat";
                     }
                     else if (!chat.getParticipantUserIds().contains(userIdToRemove)) {
                         errorMessage = "User is not a member of this chat";

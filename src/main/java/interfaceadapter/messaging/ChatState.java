@@ -21,6 +21,7 @@ public class ChatState {
     private String groupName;
     private boolean success;
     private String error;
+    private String currentUserId;
 
     public ChatState() {}
 
@@ -112,4 +113,8 @@ public class ChatState {
         this.messageIds.clear();
         this.messageIds.addAll(newMessageIds);
     }
+
+    public String getCurrentUserId() { return currentUserId; }
+
+    public void setCurrentUserId(String currentUserId) { this.currentUserId = currentUserId;}
 }

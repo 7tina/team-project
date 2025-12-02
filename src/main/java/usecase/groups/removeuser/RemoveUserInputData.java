@@ -6,10 +6,12 @@ package usecase.groups.removeuser;
 public class RemoveUserInputData {
     private final String chatId;
     private final String usernameToRemove;
+    private final String currentUserId;
 
-    public RemoveUserInputData(String chatId, String usernameToRemove) {
+    public RemoveUserInputData(String chatId, String usernameToRemove, String currentUserId) {
         this.chatId = chatId;
         this.usernameToRemove = usernameToRemove;
+        this.currentUserId = currentUserId;
     }
 
     public String getChatId() {
@@ -18,5 +20,9 @@ public class RemoveUserInputData {
 
     public String getUsernameToRemove() {
         return usernameToRemove;
+    }
+
+    public String getCurrentUserId() {
+        return currentUserId;
     }
 }

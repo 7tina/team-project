@@ -33,6 +33,7 @@ public class ChatSettingView extends JPanel implements ActionListener, PropertyC
     private RemoveUserController removeUserController;
     private AddUserController addUserController;
     private String currentChatId;
+    private String currentUserId;
 
     public ChatSettingView(ViewManagerModel viewManagerModel, ChatViewModel chatViewModel) {
         this.viewManagerModel = viewManagerModel;
@@ -227,7 +228,7 @@ public class ChatSettingView extends JPanel implements ActionListener, PropertyC
                 return;
             }
 
-            removeUserController.execute(currentChatId, user.trim());
+            removeUserController.execute(currentChatId, user.trim(), currentUserId);
         }
     }
 
@@ -248,6 +249,7 @@ public class ChatSettingView extends JPanel implements ActionListener, PropertyC
         }
 
         final ChatState state = (ChatState) newValue;
+        this.currentUserId = state.getCurrentUserId();
 
         // Update members display
         if (state.getParticipants() != null && !state.getParticipants().isEmpty()) {
@@ -284,4 +286,6 @@ public class ChatSettingView extends JPanel implements ActionListener, PropertyC
     public void setAddUserController(AddUserController controller) {
         this.addUserController = controller;
     }
+
+    public void setCurrentUserId(String userId) { this.currentUserId = userId; }
 }

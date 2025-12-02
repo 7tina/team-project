@@ -13,5 +13,7 @@ public class SearchUserInputData {
         return query;
     }
 
-    public String getUser() { return user; }
+    public String getUser() {
+        return user;
+    }
 }

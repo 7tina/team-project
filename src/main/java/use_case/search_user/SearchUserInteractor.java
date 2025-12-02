@@ -1,7 +1,8 @@
 package use_case.search_user;
 
-import entity.ports.UserRepository;
 import java.util.List;
+
+import entity.ports.UserRepository;
 
 public class SearchUserInteractor implements SearchUserInputBoundary {
     /**
@@ -46,14 +47,13 @@ public class SearchUserInteractor implements SearchUserInputBoundary {
      */
     @Override
     public void execute(final SearchUserInputData inputData) {
-        String currentUsername = inputData.getUser();
+        final String currentUsername = inputData.getUser();
         String query = inputData.getQuery();
 
         // Validate current user
         if (currentUsername == null || currentUsername.trim().isEmpty()) {
             userPresenter.prepareFailView("Session error. "
                     + "Please log in again.");
-            return;
         }
 
         // Treat null query as empty search
@@ -63,13 +63,14 @@ public class SearchUserInteractor implements SearchUserInputBoundary {
 
         // Search for users, passing the current username to filter them out
         // No need to look up the user - we already have their username
-        List<String> results =
+        final List<String> results =
                 userDataAccessObject.searchUsers(currentUsername, query);
 
         if (results.isEmpty()) {
             userPresenter.prepareFailView("No users found matching: " + query);
-        } else {
-            SearchUserOutputData outputData = new SearchUserOutputData(results);
+        }
+        else {
+            final SearchUserOutputData outputData = new SearchUserOutputData(results);
             userPresenter.prepareSuccessView(outputData);
         }
     }

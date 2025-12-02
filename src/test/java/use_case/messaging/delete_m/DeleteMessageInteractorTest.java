@@ -1,7 +1,7 @@
 package use_case.messaging.delete_m;
 
 import org.junit.jupiter.api.Test;
-import usecase.messaging.delete_m.*;
+import usecase.messaging.deletemessage.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 

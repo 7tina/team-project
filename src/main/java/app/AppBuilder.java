@@ -24,6 +24,8 @@ import interfaceadapter.groupchat.adduser.AddUserController;
 import interfaceadapter.groupchat.adduser.AddUserPresenter;
 import interfaceadapter.groupchat.changegroupname.ChangeGroupNameController;
 import interfaceadapter.groupchat.changegroupname.ChangeGroupNamePresenter;
+import interfaceadapter.groupchat.creategroupchat.CreateGroupChatController;
+import interfaceadapter.groupchat.creategroupchat.CreateGroupChatPresenter;
 import interfaceadapter.groupchat.removeuser.RemoveUserController;
 import interfaceadapter.groupchat.removeuser.RemoveUserPresenter;
 import interfaceadapter.logged_in.ChangePasswordController;
@@ -66,6 +68,7 @@ import usecase.groups.adduser.AddUserOutputBoundary;
 import usecase.groups.changegroupname.ChangeGroupNameInputBoundary;
 import usecase.groups.changegroupname.ChangeGroupNameInteractor;
 import usecase.groups.changegroupname.ChangeGroupNameOutputBoundary;
+import usecase.groups.creategroupchat.CreateGroupChatInteractor;
 import usecase.groups.removeuser.RemoveUserInputBoundary;
 import usecase.groups.removeuser.RemoveUserInteractor;
 import usecase.groups.removeuser.RemoveUserOutputBoundary;
@@ -423,6 +426,36 @@ public class AppBuilder {
 
         if (this.searchUserView != null) {
             this.searchUserView.setCreateChatController(createChatController);
+        }
+
+        return this;
+    }
+
+    /**
+     * Adds the create-chat use case wiring to the application.
+     *
+     * @return this builder
+     */
+    public AppBuilder addCreateGroupChatUseCase() {
+        final Integer maxUsers = 10;
+
+        final CreateChatOutputBoundary createChatOutputBoundary =
+                new CreateGroupChatPresenter(viewManagerModel, chatViewModel);
+
+        final CreateChatInputBoundary createGroupChatInteractor =
+                new CreateGroupChatInteractor(
+                        createChatOutputBoundary,
+                        userDataAccessObject,
+                        chatRepository,
+                        userRepository,
+                        maxUsers
+                );
+
+        final CreateGroupChatController createGroupChatController =
+                new CreateGroupChatController(createGroupChatInteractor);
+
+        if (this.searchUserView != null) {
+            this.searchUserView.setCreateGroupChatController(createGroupChatController);
         }
 
         return this;

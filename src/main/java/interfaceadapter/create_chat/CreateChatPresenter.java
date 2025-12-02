@@ -41,31 +41,32 @@ public class CreateChatPresenter implements CreateChatOutputBoundary {
 
         if (response.isGroupChat()) {
             state.setGroupName(response.getGroupName());
-        } else {
+        }
+        else {
             // For individual chats, find the other user (not the current user)
-            String currentUserId = response.getCurrentUserId();
+            final String currentUserId = response.getCurrentUserId();
             String otherUsername = null;
 
-//            System.out.println("DEBUG: Current user ID: " + currentUserId);
-//            System.out.println("DEBUG: All users in chat: " + response.getUsers());
+            // System.out.println("DEBUG: Current user ID: " + currentUserId);
+            // System.out.println("DEBUG: All users in chat: " + response.getUsers());
 
             for (String userId : response.getUsers()) {
-//                System.out.println("DEBUG: Checking user: " + userId);
+                // System.out.println("DEBUG: Checking user: " + userId);
                 if (!userId.equals(currentUserId)) {
                     otherUsername = userId;
-//                    System.out.println("DEBUG: Found other user: " + otherUsername);
+                    // System.out.println("DEBUG: Found other user: " + otherUsername);
                     break;
                 }
             }
 
             if (otherUsername == null) {
-//                System.out.println("DEBUG: ERROR - Could not find other user!");
-//                System.out.println("DEBUG: Users list: " + response.getUsers());
-//                System.out.println("DEBUG: Current user: " + currentUserId);
+                // System.out.println("DEBUG: ERROR - Could not find other user!");
+                // System.out.println("DEBUG: Users list: " + response.getUsers());
+                // System.out.println("DEBUG: Current user: " + currentUserId);
             }
 
             state.setGroupName(otherUsername != null ? otherUsername : "Unknown User");
-//            System.out.println("DEBUG: Set group name to: " + state.getGroupName());
+            // System.out.println("DEBUG: Set group name to: " + state.getGroupName());
         }
 
         for (String userId : response.getUsers()) {

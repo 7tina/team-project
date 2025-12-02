@@ -55,7 +55,6 @@ public class AddUserInteractor implements AddUserInputBoundary {
 
             if (currentParticipants.contains(userIdToAdd)) {
                 outputBoundary.prepareFailView("User is already a member of this chat");
-                return;
             }
 
             if (currentParticipants.size() >= MAX_PARTICIPANTS) {

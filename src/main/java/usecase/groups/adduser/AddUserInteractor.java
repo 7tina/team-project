@@ -8,7 +8,6 @@ import entity.ports.ChatRepository;
 
 /**
  * Interactor (use case) for adding a user to a group chat.
- * Implements the business logic for validating and executing the add user operation.
  */
 public class AddUserInteractor implements AddUserInputBoundary {
     private static final int MAX_PARTICIPANTS = 10;
@@ -17,13 +16,6 @@ public class AddUserInteractor implements AddUserInputBoundary {
     private final AddUserOutputBoundary outputBoundary;
     private final AddUserDataAccessInterface dataAccess;
 
-    /**
-     * Constructs an AddUserInteractor with required dependencies.
-     *
-     * @param chatRepository the repository for accessing chat entities
-     * @param outputBoundary the output boundary for presenting results
-     * @param dataAccess the data access interface for user and chat operations
-     */
     public AddUserInteractor(
             ChatRepository chatRepository,
             AddUserOutputBoundary outputBoundary,
@@ -33,11 +25,6 @@ public class AddUserInteractor implements AddUserInputBoundary {
         this.dataAccess = dataAccess;
     }
 
-    /**
-     * Executes the add user use case.
-     *
-     * @param inputData the input data containing chat ID and username to add
-     */
     @Override
     public void execute(AddUserInputData inputData) {
         String errorMessage = null;

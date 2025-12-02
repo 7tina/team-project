@@ -3,6 +3,8 @@ package interfaceadapter.create_chat;
 import interfaceadapter.ViewManagerModel;
 import interfaceadapter.messaging.ChatState;
 import interfaceadapter.messaging.ChatViewModel;
+import interfaceadapter.search_user.SearchUserState;
+import interfaceadapter.search_user.SearchUserViewModel;
 import usecase.create_chat.CreateChatOutputBoundary;
 import usecase.create_chat.CreateChatOutputData;
 
@@ -15,17 +17,21 @@ public class CreateChatPresenter implements CreateChatOutputBoundary {
 
     private final ChatViewModel chatViewModel;
     private final ViewManagerModel viewManagerModel;
+    private final SearchUserViewModel searchUserViewModel;
 
     /**
      * Constructs a CreateChatPresenter.
      *
      * @param viewManagerModel the view manager model
      * @param chatViewModel    the chat view model
+     * @param searchUserViewModel the search user view model
      */
     public CreateChatPresenter(ViewManagerModel viewManagerModel,
-                               ChatViewModel chatViewModel) {
+                               ChatViewModel chatViewModel,
+                               SearchUserViewModel searchUserViewModel) {
         this.viewManagerModel = viewManagerModel;
         this.chatViewModel = chatViewModel;
+        this.searchUserViewModel = searchUserViewModel;
     }
 
     /**
@@ -93,11 +99,11 @@ public class CreateChatPresenter implements CreateChatOutputBoundary {
      */
     @Override
     public void prepareFailView(CreateChatOutputData response) {
-        final ChatState state = new ChatState();
-        state.setSuccess(false);
-        state.setError(response.getMessage());
+        final SearchUserState state = searchUserViewModel.getState();
+        state.setCreateError(null);
+        state.setCreateError(response.getMessage());
 
-        chatViewModel.setState(state);
-        chatViewModel.firePropertyChange();
+        searchUserViewModel.setState(state);
+        searchUserViewModel.firePropertyChanged();
     }
 }

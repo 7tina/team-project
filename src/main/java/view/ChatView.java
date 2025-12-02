@@ -143,7 +143,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
             viewManagerModel.firePropertyChange();
         });
 
-        clearSearchButton = new JButton("Clear");
+        clearSearchButton = new JButton("Done");
         clearSearchButton.setFont(new Font("SansSerif", Font.PLAIN, 14));
         clearSearchButton.setFocusable(false);
         clearSearchButton.setVisible(false); // Hidden by default

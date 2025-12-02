@@ -12,9 +12,8 @@ public interface RemoveUserDataAccessInterface {
      * Saves the chat entity to persistent storage.
      *
      * @param chat the chat entity to save
-     * @return the saved chat entity
      */
-    Chat saveChat(Chat chat);
+    void saveChat(Chat chat);
 
     /**
      * Retrieves the user ID associated with the given username.

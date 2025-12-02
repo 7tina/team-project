@@ -347,11 +347,13 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
             final ApiFuture<WriteResult> future = doc.set(data);
             future.get();
 
+            // Only save to repository AFTER successful Firebase write
+            chatRepository.save(chat);
+
         }
         catch (InterruptedException | ExecutionException ex) {
             throw new RuntimeException("Failed to save chat", ex);
         }
-        chatRepository.save(chat);
     }
 
     /**

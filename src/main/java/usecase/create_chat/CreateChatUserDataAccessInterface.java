@@ -7,5 +7,5 @@ public interface CreateChatUserDataAccessInterface {
 
     void updateChatRepository(String username);
 
-    Chat saveChat(Chat chat);
+    void saveChat(Chat chat);
 }

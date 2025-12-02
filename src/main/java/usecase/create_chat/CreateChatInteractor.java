@@ -130,7 +130,8 @@ public class CreateChatInteractor implements CreateChatInputBoundary{
             Chat newChat = new Chat(chatId, groupName, backgroundColor, timeNow);
             // Add all participants
             for (String userId : participantIds) {newChat.addParticipant(userId);}
-            returnChat = userDataAccessObject.saveChat(newChat);
+            userDataAccessObject.saveChat(newChat);
+            returnChat = newChat;
         }
         return returnChat;
     }
@@ -143,16 +144,18 @@ public class CreateChatInteractor implements CreateChatInputBoundary{
         for (String username : participantUsernames) {
             Optional<User> userOpt = userRepository.findByUsername(username);
             if (userOpt.isEmpty()) {
-                boolean load = this.userDataAccessObject.loadToEntity(username);
-                if (!load) {
+                boolean loaded = this.userDataAccessObject.loadToEntity(username);
+                if (!loaded) {
                     CreateChatOutputData createChatOutputData = new CreateChatOutputData(
                             isGroupChat, null, null, null, null, false,
-                            "Null user not found."
+                            "User not found: " + username
                     );
                     userPresenter.prepareFailView(createChatOutputData);
                     return null;
                 }
-            } else {
+                userOpt = userRepository.findByUsername(username);
+            }
+            if (userOpt.isPresent()) {
                 String userId = userOpt.get().getName();
                 if (!participantIds.contains(userId)) {
                     participantIds.add(userId);

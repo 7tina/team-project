@@ -62,8 +62,8 @@ public class AddUserInteractor implements AddUserInputBoundary {
                         else {
                             chat.addParticipant(userIdToAdd);
                             dataAccess.addUser(chatId, userIdToAdd);
-                            final Chat saved = dataAccess.saveChat(chat);
-                            outputData = new AddUserOutputData(saved.getId(), usernameToAdd.trim());
+                            dataAccess.saveChat(chat);
+                            outputData = new AddUserOutputData(chat.getId(), usernameToAdd.trim());
                         }
                     }
                 }

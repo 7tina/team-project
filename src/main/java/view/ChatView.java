@@ -401,6 +401,24 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
                     final JPanel bubble = createWrappedBubble(content, timestamp, repliedPreview,
                             fromCurrentUser, maxBubbleWidth, messageId);
 
+                    JPanel messageContent = bubble;
+                    if (isGroupChat && !fromCurrentUser) {
+                        final JPanel nameAndBubble = new JPanel();
+                        nameAndBubble.setLayout(new BoxLayout(nameAndBubble, BoxLayout.Y_AXIS));
+                        nameAndBubble.setOpaque(false);
+
+                        final JLabel senderLabel = new JLabel(senderId);
+                        senderLabel.setFont(new Font("SansSerif", Font.PLAIN, 11));
+                        senderLabel.setForeground(new Color(120, 120, 120));
+                        senderLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+                        nameAndBubble.add(senderLabel);
+                        nameAndBubble.add(Box.createVerticalStrut(2));
+                        nameAndBubble.add(bubble);
+
+                        messageContent = nameAndBubble;
+                    }
+
                     final JButton actionButton = new JButton("⋯");
                     actionButton.setFocusable(false);
                     actionButton.setPreferredSize(new Dimension(28, 28));
@@ -448,7 +466,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
                             row.add(Box.createHorizontalStrut(5));
                         }
 
-                        row.add(bubble);
+                        row.add(messageContent);
                         row.add(Box.createHorizontalStrut(4));
                         row.add(actionButton);
 
@@ -457,7 +475,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
                         // THEIR MESSAGE: [button] [space] [bubble] [reactions] [glue]
                         row.add(actionButton);
                         row.add(Box.createHorizontalStrut(4));
-                        row.add(bubble);
+                        row.add(messageContent);
 
                         if (reactions != null && !reactions.isEmpty()) {
                             row.add(Box.createHorizontalStrut(5));

@@ -39,49 +39,47 @@ public class ViewChatHistoryInteractor implements ViewChatHistoryInputBoundary {
      * Load all messages for the given chat and send them to the presenter,
      * sorted from oldest to newest.
      */
+    @Override
     public void execute(ViewChatHistoryInputData inputData) {
-        String chatId = inputData.getChatId();
-        List<String> userIds = inputData.getUserIds();
-        List<String> messageIds = inputData.getMessageIds();
+        try {
+            String chatId = inputData.getChatId();
+            List<String> userIds = inputData.getUserIds();
+            List<String> messageIds = inputData.getMessageIds();
 
-        // 1. confirm the existence of chat
-        Optional<Chat> chatOpt = chatRepository.findById(chatId);
-        if (chatOpt.isEmpty()) {
-            presenter.prepareFailView("Chat not found: " + chatId);
-            return;
+            dataAccess.findChatMessages(chatId, userIds, messageIds);
+
+            List<Message> messageList = messageRepository.findByChatId(chatId);
+
+            List<String[]> messagesData = new ArrayList<>();
+            Map<String, Map<String, String>> reactions = new HashMap<>();
+
+            for (Message msg : messageList) {
+                String[] data = new String[5];
+                data[0] = msg.getId();
+                data[1] = msg.getSenderUserId();
+                data[2] = msg.getContent();
+                data[3] = msg.getTimestamp().toString();
+                data[4] = msg.getRepliedMessageId() != null ? msg.getRepliedMessageId() : "";
+
+                messagesData.add(data);
+
+                // Collect reactions
+                if (msg.getReactions() != null && !msg.getReactions().isEmpty()) {
+                    reactions.put(msg.getId(), new HashMap<>(msg.getReactions()));
+                    System.out.println("Interactor: Message " + msg.getId() + " has reactions: " + msg.getReactions());
+                }
+            }
+
+            ViewChatHistoryOutputData outputData = new ViewChatHistoryOutputData(
+                    messagesData,
+                    reactions
+            );
+
+            presenter.prepareSuccessView(outputData);
+
+        } catch (Exception e) {
+            presenter.prepareFailView("Failed to load chat history: " + e.getMessage());
         }
-
-        // 2. extract all the message
-        dataAccess.findChatMessages(chatId, userIds, messageIds);
-        List<Message> messages = messageRepository.findByChatId(chatId);
-
-        // 3. time sort
-        messages.sort(Comparator.comparing(Message::getTimestamp));
-
-        if (messages.isEmpty()) {
-            presenter.prepareNoMessagesView(chatId);
-            return;
-        }
-
-        // 4. change into list
-        // Array index order: [messageId, senderUserId, messageContent, messageTimestamp, repliedId]
-        List<String[]> msgs = new ArrayList<>();
-        Map<String, Map<String, String>> msgToReactions = new HashMap<>();
-        for (Message m : messages) {
-            String[] msg = {m.getId(), m.getSenderUserId(), m.getContent(),
-                    makeString(m.getTimestamp()), m.getRepliedMessageId()};
-            msgs.add(msg);
-        }
-        for (Message m : messages) {
-            String msgId = m.getId();
-            Map<String, String> reactions = m.getReactions();
-            msgToReactions.put(msgId, reactions);
-        }
-
-        ViewChatHistoryOutputData outputData =
-                new ViewChatHistoryOutputData(chatId, msgs, msgToReactions);
-
-        presenter.prepareSuccessView(outputData);
     }
 
     /**

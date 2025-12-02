@@ -95,6 +95,21 @@ import view.SearchUserView;
 import view.SignupView;
 import view.ViewManager;
 import view.WelcomeView;
+import interface_adapter.recent_chat.RecentChatsController;
+import interface_adapter.recent_chat.RecentChatsPresenter;
+import use_case.recent_chat.RecentChatsInputBoundary;
+import use_case.recent_chat.RecentChatsInteractor;
+import use_case.recent_chat.RecentChatsOutputBoundary;
+import interface_adapter.messaging.add_reaction.AddReactionController;
+import interface_adapter.messaging.add_reaction.AddReactionPresenter;
+import interface_adapter.messaging.remove_reaction.RemoveReactionController;
+import interface_adapter.messaging.remove_reaction.RemoveReactionPresenter;
+import use_case.messaging.add_reaction.AddReactionInputBoundary;
+import use_case.messaging.add_reaction.AddReactionInteractor;
+import use_case.messaging.add_reaction.AddReactionOutputBoundary;
+import use_case.messaging.remove_reaction.RemoveReactionInputBoundary;
+import use_case.messaging.remove_reaction.RemoveReactionInteractor;
+import use_case.messaging.remove_reaction.RemoveReactionOutputBoundary;
 
 // CHECKSTYLE:OFF
 
@@ -613,6 +628,49 @@ public class AppBuilder {
         if (this.chatView != null) {
             this.chatView.setRecentChatsController(recentChatsController);
         }
+        return this;
+    }
+
+    /**
+     * Adds the reaction use cases (add and remove) to the application.
+     *
+     * @return this builder
+     */
+    public AppBuilder addReactionUseCases() {
+        // Add Reaction
+        final AddReactionOutputBoundary addReactionPresenter =
+                new AddReactionPresenter(chatViewModel, viewManagerModel);
+
+        final AddReactionInputBoundary addReactionInteractor =
+                new AddReactionInteractor(
+                        messageRepository,
+                        userDataAccessObject,
+                        addReactionPresenter
+                );
+
+        final AddReactionController addReactionController =
+                new AddReactionController(addReactionInteractor);
+
+        // Remove Reaction
+        final RemoveReactionOutputBoundary removeReactionPresenter =
+                new RemoveReactionPresenter(chatViewModel, viewManagerModel);
+
+        final RemoveReactionInputBoundary removeReactionInteractor =
+                new RemoveReactionInteractor(
+                        messageRepository,
+                        userDataAccessObject,
+                        removeReactionPresenter
+                );
+
+        final RemoveReactionController removeReactionController =
+                new RemoveReactionController(removeReactionInteractor);
+
+        // Set controllers in chat view
+        if (this.chatView != null) {
+            this.chatView.setAddReactionController(addReactionController);
+            this.chatView.setRemoveReactionController(removeReactionController);
+        }
+
         return this;
     }
 }

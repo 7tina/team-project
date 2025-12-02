@@ -378,17 +378,31 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
         String senderId = doc.getString(MESSAGE_SENDER);
         String content = doc.getString(MESSAGE_CONTENT);
         String repliedId = doc.getString(MESSAGE_REPLY_ID);
-        Map<String, String> reactions = (Map<String, String>) doc.get(MESSAGE_REACTION);
+
+        // CRITICAL: Load reactions from Firebase
+        Map<String, Object> reactionsRaw = (Map<String, Object>) doc.get(MESSAGE_REACTION);
+        Map<String, String> reactions = new HashMap<>();
+
+        if (reactionsRaw != null) {
+            for (Map.Entry<String, Object> entry : reactionsRaw.entrySet()) {
+                reactions.put(entry.getKey(), entry.getValue().toString());
+            }
+        }
+
         Long timeMs = doc.getLong(MESSAGE_TIME);
         Instant timestamp = timeMs != null
                 ? Instant.ofEpochMilli(timeMs)
                 : Instant.now();
 
         Message message = new Message(id, chatId, senderId, repliedId, content, timestamp);
-        assert reactions != null;
+
+        // Add reactions to the message
         for (Map.Entry<String, String> reaction : reactions.entrySet()) {
             message.addReaction(reaction.getKey(), reaction.getValue());
         }
+
+        System.out.println("Loaded message " + id + " with " + reactions.size() + " reactions: " + reactions);
+
         return message;
     }
 
@@ -599,6 +613,47 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
 
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException("Failed to delete message " + messageId, e);
+        }
+    }
+
+    /**
+     * Adds a reaction to a message in Firebase.
+     *
+     * @param messageId the message ID
+     * @param userId the user ID who is reacting
+     * @param emoji the emoji reaction
+     */
+    public void addReactionToMessage(String messageId, String userId, String emoji) {
+        try {
+            final DocumentReference messageRef = db
+                    .collection("messages")
+                    .document(messageId);
+
+            // Update the reactions map in Firebase
+            messageRef.update("reactions." + userId, emoji).get();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to add reaction to Firebase: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Removes a reaction from a message in Firebase.
+     *
+     * @param messageId the message ID
+     * @param userId the user ID whose reaction to remove
+     */
+    public void removeReactionFromMessage(String messageId, String userId) {
+        try {
+            final DocumentReference messageRef = db
+                    .collection("messages")
+                    .document(messageId);
+
+            // Remove the user's reaction from Firebase
+            messageRef.update("reactions." + userId, FieldValue.delete()).get();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to remove reaction from Firebase: " + e.getMessage(), e);
         }
     }
 }

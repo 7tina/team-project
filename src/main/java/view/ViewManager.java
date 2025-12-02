@@ -1,11 +1,12 @@
 package view;
 
-import interface_adapter.ViewManagerModel;
-
-import javax.swing.*;
 import java.awt.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+
+import javax.swing.*;
+
+import interfaceadapter.ViewManagerModel;
 
 /**
  * The View Manager for the program. It listens for property change events

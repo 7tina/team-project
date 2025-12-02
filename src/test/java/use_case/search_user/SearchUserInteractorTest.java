@@ -1,9 +1,9 @@
 package use_case.search_user;
 
 import entity.User;
-import entity.UserFactory;
 import entity.ports.UserRepository;
 import org.junit.jupiter.api.Test;
+import usecase.search_user.*;
 
 import java.util.ArrayList;
 import java.util.List;

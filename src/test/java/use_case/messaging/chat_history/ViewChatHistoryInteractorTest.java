@@ -12,12 +12,12 @@ import entity.repo.InMemoryMessageRepository;
 import entity.repo.InMemoryUserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import use_case.messaging.view_history.ViewChatHistoryDataAccessInterface;
-import use_case.messaging.view_history.ViewChatHistoryInputBoundary;
-import use_case.messaging.view_history.ViewChatHistoryInputData;
-import use_case.messaging.view_history.ViewChatHistoryInteractor;
-import use_case.messaging.view_history.ViewChatHistoryOutputBoundary;
-import use_case.messaging.view_history.ViewChatHistoryOutputData;
+import usecase.messaging.view_history.ViewChatHistoryDataAccessInterface;
+import usecase.messaging.view_history.ViewChatHistoryInputBoundary;
+import usecase.messaging.view_history.ViewChatHistoryInputData;
+import usecase.messaging.view_history.ViewChatHistoryInteractor;
+import usecase.messaging.view_history.ViewChatHistoryOutputBoundary;
+import usecase.messaging.view_history.ViewChatHistoryOutputData;
 
 import java.awt.Color;
 import java.time.Instant;

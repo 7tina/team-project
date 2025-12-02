@@ -13,14 +13,7 @@ import java.util.concurrent.ExecutionException;
 
 import com.google.api.core.ApiFuture;
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.cloud.firestore.CollectionReference;
-import com.google.cloud.firestore.DocumentReference;
-import com.google.cloud.firestore.DocumentSnapshot;
-import com.google.cloud.firestore.Firestore;
-import com.google.cloud.firestore.Query;
-import com.google.cloud.firestore.QueryDocumentSnapshot;
-import com.google.cloud.firestore.QuerySnapshot;
-import com.google.cloud.firestore.WriteResult;
+import com.google.cloud.firestore.*;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.cloud.FirestoreClient;
@@ -38,8 +31,8 @@ import usecase.groups.changegroupname.ChangeGroupNameDataAccessInterface;
 import usecase.groups.removeuser.RemoveUserDataAccessInterface;
 import usecase.login.LoginUserDataAccessInterface;
 import usecase.logout.LogoutUserDataAccessInterface;
-import usecase.messaging.delete_m.DeleteMessageDataAccessInterface;
-import usecase.messaging.send_m.SendMessageDataAccessInterface;
+import usecase.messaging.deletemessage.DeleteMessageDataAccessInterface;
+import usecase.messaging.sendmessage.SendMessageDataAccessInterface;
 import usecase.messaging.view_history.ViewChatHistoryDataAccessInterface;
 import usecase.recent_chat.RecentChatsUserDataAccessInterface;
 import usecase.search_user.SearchUserDataAccessInterface;
@@ -84,7 +77,7 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
     private static final String ERR_LOAD_CHAT = "Failed to load chat";
     private static final String ERR_DB_SEARCH = "Database error during searchUsers operation.";
 
-    private final Firestore db;
+    private static Firestore db;
     private final UserFactory userFactory;
     private String currentUsername;
     private final UserRepository userRepository;
@@ -333,7 +326,7 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
     }
 
     @Override
-    public void saveChat(Chat chat) {
+    public Chat saveChat(Chat chat) {
         try {
             final Map<String, Object> data = new HashMap<>();
             data.put(CHAT_NAME, chat.getGroupName());
@@ -352,6 +345,7 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
             throw new RuntimeException("Failed to save chat", ex);
         }
         chatRepository.save(chat);
+        return chat;
     }
 
     /**
@@ -388,8 +382,17 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
         final String senderId = doc.getString(MESSAGE_SENDER);
         final String content = doc.getString(MESSAGE_CONTENT);
         final String repliedId = doc.getString(MESSAGE_REPLY_ID);
-        final Map<String, String> reactions = (Map<String, String>) doc.get(MESSAGE_REACTION);
         final Long timeMs = doc.getLong(MESSAGE_TIME);
+
+        Map<String, Object> reactionsRaw = (Map<String, Object>) doc.get(MESSAGE_REACTION);
+        Map<String, String> reactions = new HashMap<>();
+
+        if (reactionsRaw != null) {
+            for (Map.Entry<String, Object> entry : reactionsRaw.entrySet()) {
+                reactions.put(entry.getKey(), entry.getValue().toString());
+            }
+        }
+
         final Instant timestamp;
         if (timeMs != null) {
             timestamp = Instant.ofEpochMilli(timeMs);
@@ -400,10 +403,9 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
 
         final Message message = new Message(id, chatId, senderId, repliedId, content, timestamp);
 
-        if (reactions != null) {
-            for (Map.Entry<String, String> reaction : reactions.entrySet()) {
-                message.addReaction(reaction.getKey(), reaction.getValue());
-            }
+        // Add reactions to the message
+        for (Map.Entry<String, String> reaction : reactions.entrySet()) {
+            message.addReaction(reaction.getKey(), reaction.getValue());
         }
         return message;
     }
@@ -647,6 +649,47 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
 
         public String getPassword() {
             return password;
+        }
+    }
+
+    /**
+     * Adds a reaction to a message in Firebase.
+     *
+     * @param messageId the message ID
+     * @param userId the user ID who is reacting
+     * @param emoji the emoji reaction
+     */
+    public void addReactionToMessage(String messageId, String userId, String emoji) {
+        try {
+            final DocumentReference messageRef = db
+                    .collection("messages")
+                    .document(messageId);
+
+            // Update the reactions map in Firebase
+            messageRef.update("reactions." + userId, emoji).get();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to add reaction to Firebase: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Removes a reaction from a message in Firebase.
+     *
+     * @param messageId the message ID
+     * @param userId the user ID whose reaction to remove
+     */
+    public void removeReactionFromMessage(String messageId, String userId) {
+        try {
+            final DocumentReference messageRef = db
+                    .collection("messages")
+                    .document(messageId);
+
+            // Remove the user's reaction from Firebase
+            messageRef.update("reactions." + userId, FieldValue.delete()).get();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to remove reaction from Firebase: " + e.getMessage(), e);
         }
     }
 }

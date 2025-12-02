@@ -35,12 +35,12 @@ import interfaceadapter.login.LoginViewModel;
 import interfaceadapter.logout.LogoutController;
 import interfaceadapter.logout.LogoutPresenter;
 import interfaceadapter.messaging.ChatViewModel;
-import interfaceadapter.messaging.delete_m.DeleteMessageController;
-import interfaceadapter.messaging.delete_m.DeleteMessagePresenter;
+import interfaceadapter.messaging.deletemessage.DeleteMessageController;
+import interfaceadapter.messaging.deletemessage.DeleteMessagePresenter;
 import interfaceadapter.messaging.search_history.SearchChatHistoryController;
 import interfaceadapter.messaging.search_history.SearchChatHistoryPresenter;
-import interfaceadapter.messaging.send_m.SendMessageController;
-import interfaceadapter.messaging.send_m.SendMessagePresenter;
+import interfaceadapter.messaging.sendmessage.SendMessageController;
+import interfaceadapter.messaging.sendmessage.SendMessagePresenter;
 import interfaceadapter.messaging.view_history.ViewChatHistoryController;
 import interfaceadapter.messaging.view_history.ViewChatHistoryPresenter;
 import interfaceadapter.recent_chat.RecentChatsController;
@@ -73,15 +73,15 @@ import usecase.login.LoginOutputBoundary;
 import usecase.logout.LogoutInputBoundary;
 import usecase.logout.LogoutInteractor;
 import usecase.logout.LogoutOutputBoundary;
-import usecase.messaging.delete_m.DeleteMessageInputBoundary;
-import usecase.messaging.delete_m.DeleteMessageInteractor;
-import usecase.messaging.delete_m.DeleteMessageOutputBoundary;
+import usecase.messaging.deletemessage.DeleteMessageInputBoundary;
+import usecase.messaging.deletemessage.DeleteMessageInteractor;
+import usecase.messaging.deletemessage.DeleteMessageOutputBoundary;
 import usecase.messaging.search_history.SearchChatHistoryInputBoundary;
 import usecase.messaging.search_history.SearchChatHistoryInteractor;
 import usecase.messaging.search_history.SearchChatHistoryOutputBoundary;
-import usecase.messaging.send_m.SendMessageInputBoundary;
-import usecase.messaging.send_m.SendMessageInteractor;
-import usecase.messaging.send_m.SendMessageOutputBoundary;
+import usecase.messaging.sendmessage.SendMessageInputBoundary;
+import usecase.messaging.sendmessage.SendMessageInteractor;
+import usecase.messaging.sendmessage.SendMessageOutputBoundary;
 import usecase.messaging.view_history.ViewChatHistoryInputBoundary;
 import usecase.messaging.view_history.ViewChatHistoryInteractor;
 import usecase.messaging.view_history.ViewChatHistoryOutputBoundary;
@@ -103,6 +103,21 @@ import view.SearchUserView;
 import view.SignupView;
 import view.ViewManager;
 import view.WelcomeView;
+import interfaceadapter.recent_chat.RecentChatsController;
+import interfaceadapter.recent_chat.RecentChatsPresenter;
+import usecase.recent_chat.RecentChatsInputBoundary;
+import usecase.recent_chat.RecentChatsInteractor;
+import usecase.recent_chat.RecentChatsOutputBoundary;
+import interfaceadapter.messaging.add_reaction.AddReactionController;
+import interfaceadapter.messaging.add_reaction.AddReactionPresenter;
+import interfaceadapter.messaging.remove_reaction.RemoveReactionController;
+import interfaceadapter.messaging.remove_reaction.RemoveReactionPresenter;
+import usecase.messaging.add_reaction.AddReactionInputBoundary;
+import usecase.messaging.add_reaction.AddReactionInteractor;
+import usecase.messaging.add_reaction.AddReactionOutputBoundary;
+import usecase.messaging.remove_reaction.RemoveReactionInputBoundary;
+import usecase.messaging.remove_reaction.RemoveReactionInteractor;
+import usecase.messaging.remove_reaction.RemoveReactionOutputBoundary;
 
 // CHECKSTYLE:OFF
 
@@ -653,6 +668,49 @@ public class AppBuilder {
 
         if (this.chatView != null) {
             this.chatView.setRecentChatsController(recentChatsController);
+        }
+
+        return this;
+    }
+
+    /**
+     * Adds the reaction use cases (add and remove) to the application.
+     *
+     * @return this builder
+     */
+    public AppBuilder addReactionUseCases() {
+        // Add Reaction
+        final AddReactionOutputBoundary addReactionPresenter =
+                new AddReactionPresenter(chatViewModel, viewManagerModel);
+
+        final AddReactionInputBoundary addReactionInteractor =
+                new AddReactionInteractor(
+                        messageRepository,
+                        userDataAccessObject,
+                        addReactionPresenter
+                );
+
+        final AddReactionController addReactionController =
+                new AddReactionController(addReactionInteractor);
+
+        // Remove Reaction
+        final RemoveReactionOutputBoundary removeReactionPresenter =
+                new RemoveReactionPresenter(chatViewModel, viewManagerModel);
+
+        final RemoveReactionInputBoundary removeReactionInteractor =
+                new RemoveReactionInteractor(
+                        messageRepository,
+                        userDataAccessObject,
+                        removeReactionPresenter
+                );
+
+        final RemoveReactionController removeReactionController =
+                new RemoveReactionController(removeReactionInteractor);
+
+        // Set controllers in chat view
+        if (this.chatView != null) {
+            this.chatView.setAddReactionController(addReactionController);
+            this.chatView.setRemoveReactionController(removeReactionController);
         }
 
         return this;

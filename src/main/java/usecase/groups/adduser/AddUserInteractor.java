@@ -27,9 +27,6 @@ public class AddUserInteractor implements AddUserInputBoundary {
 
     @Override
     public void execute(AddUserInputData inputData) {
-        String errorMessage = null;
-        AddUserOutputData outputData = null;
-
         try {
             final String chatId = inputData.getChatId();
             final String usernameToAdd = inputData.getUsernameToAdd();
@@ -59,22 +56,24 @@ public class AddUserInteractor implements AddUserInputBoundary {
             if (currentParticipants.contains(userIdToAdd)) {
                 outputBoundary.prepareFailView("User is already a member of this chat");
             }
-            else {
-                if (currentParticipants.contains(userIdToAdd)) {
-                    errorMessage = "User is already a member of this chat";
-                }
-                else if (currentParticipants.size() == MAX_PARTICIPANTS) {
-                    errorMessage = "Max number of participants reached";
-                }
-                else {
-                    chat.addParticipant(userIdToAdd);
-                    dataAccess.addUser(chatId, userIdToAdd);
-                    dataAccess.saveChat(chat);
-                    outputData = new AddUserOutputData(chat.getId(), usernameToAdd.trim());
-                    outputBoundary.prepareSuccessView(outputData);
 
-                }
+            if (currentParticipants.size() >= MAX_PARTICIPANTS) {
+                outputBoundary.prepareFailView("Max number of participants reached");
+                return;
             }
+
+            // Add user to chat
+            chat.addParticipant(userIdToAdd);
+            dataAccess.addUser(chatId, userIdToAdd);
+            final Chat saved = dataAccess.saveChat(chat);
+
+            final AddUserOutputData outputData = new AddUserOutputData(
+                    saved.getId(),
+                    usernameToAdd.trim()
+            );
+
+            outputBoundary.prepareSuccessView(outputData);
+
         } catch (Exception e) {
             outputBoundary.prepareFailView("Failed to add user: " + e.getMessage());
         }

@@ -27,6 +27,7 @@ public class Main {
                 .addCreateChatUseCase()
                 .addCreateGroupChatUseCase()
                 .addChatUseCase()
+                .addReactionUseCases()
                 .addChangeGroupNameUseCase()
                 .addRemoveUserUseCase()
                 .addAddUserUseCase()

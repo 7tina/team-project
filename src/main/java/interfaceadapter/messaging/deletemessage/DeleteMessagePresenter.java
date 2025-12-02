@@ -1,25 +1,44 @@
-package interfaceadapter.messaging.delete_m;
-
-import interfaceadapter.ViewManagerModel;
-import interfaceadapter.messaging.ChatState;
-import interfaceadapter.messaging.ChatViewModel;
-import usecase.messaging.delete_m.DeleteMessageOutputBoundary;
-import usecase.messaging.delete_m.DeleteMessageOutputData;
+package interfaceadapter.messaging.deletemessage;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import interfaceadapter.ViewManagerModel;
+import interfaceadapter.messaging.ChatState;
+import interfaceadapter.messaging.ChatViewModel;
+import usecase.messaging.deletemessage.DeleteMessageOutputBoundary;
+import usecase.messaging.deletemessage.DeleteMessageOutputData;
+
+/**
+ * Presenter for the delete message use case.
+ * <p>
+ * It removes the deleted message from the {@link ChatState} and notifies
+ * the {@link ChatViewModel} so that the View can update.
+ */
 public class DeleteMessagePresenter implements DeleteMessageOutputBoundary {
 
     private final ChatViewModel chatViewModel;
-    private final ViewManagerModel viewManagerModel;
 
+    /**
+     * Constructs a {@code DeleteMessagePresenter}.
+     *
+     * @param chatViewModel    view model for the chat screen
+     * @param viewManagerModel manager controlling which view is active
+     */
     public DeleteMessagePresenter(ChatViewModel chatViewModel,
                                   ViewManagerModel viewManagerModel) {
         this.chatViewModel = chatViewModel;
-        this.viewManagerModel = viewManagerModel;
     }
 
+    /**
+     * Called when the message has been successfully deleted.
+     * <p>
+     * It filters the deleted message out of both the message list and
+     * the message ID list stored in {@link ChatState}, clears any error,
+     * and fires a property change so the View re-renders.
+     *
+     * @param outputData output data describing the deleted message
+     */
     @Override
     public void prepareSuccessView(DeleteMessageOutputData outputData) {
 
@@ -52,6 +71,14 @@ public class DeleteMessagePresenter implements DeleteMessageOutputBoundary {
         chatViewModel.firePropertyChange();
     }
 
+    /**
+     * Called when deleting the message fails.
+     * <p>
+     * It sets an error message in the {@link ChatState} and notifies
+     * the View via the {@link ChatViewModel}.
+     *
+     * @param outputData output data containing the failure reason
+     */
     @Override
     public void prepareFailView(DeleteMessageOutputData outputData) {
         ChatState state = chatViewModel.getState();

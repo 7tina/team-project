@@ -26,6 +26,7 @@ public class ChangeGroupNameInteractor implements ChangeGroupNameInputBoundary {
     public void execute(ChangeGroupNameInputData inputData) {
         String errorMessage = null;
         ChangeGroupNameOutputData outputData = null;
+        final int maxGroupName = 100;
 
         try {
             final String chatId = inputData.getChatId();
@@ -33,6 +34,9 @@ public class ChangeGroupNameInteractor implements ChangeGroupNameInputBoundary {
 
             if (newGroupName == null || newGroupName.trim().isEmpty()) {
                 errorMessage = "Group name cannot be empty";
+            }
+            else if (newGroupName.trim().length() > maxGroupName) {
+                errorMessage = "Group name cannot exceed 100 characters";
             }
             else {
                 final Optional<Chat> chatOpt = chatRepository.findById(chatId);

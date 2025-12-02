@@ -36,6 +36,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
     private String currentChatId;
     private String currentUserId;
     private boolean isGroupChat;
+    private boolean isDisplayingSearchResults = false;
 
     // Components
     private final JLabel chatPartnerLabel;
@@ -45,6 +46,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
     private final JButton backButton;
     private final JButton settingButton;
     private final JButton searchHistoryButton;
+    private final JButton clearSearchButton;
 
     // Reply preview
     private final JPanel replyPreviewBox;
@@ -130,7 +132,21 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
             viewManagerModel.firePropertyChange();
         });
 
+        clearSearchButton = new JButton("Clear");
+        clearSearchButton.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        clearSearchButton.setFocusable(false);
+        clearSearchButton.setVisible(false); // Hidden by default
+        clearSearchButton.addActionListener(e -> {
+            isDisplayingSearchResults = false;
+            clearSearchButton.setVisible(false);
+            // Refresh to show all messages again
+            if (viewChatHistoryController != null) {
+                viewChatHistoryController.execute(currentChatId, currentUserIds, currentMessageIds);
+            }
+        });
+
         rightButtonPanel.add(searchHistoryButton);
+        rightButtonPanel.add(clearSearchButton);
         rightButtonPanel.add(settingButton);
         topBar.add(rightButtonPanel, BorderLayout.EAST);
 
@@ -294,6 +310,10 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
 
         final ChatState state = (ChatState) evt.getNewValue();
 
+        JScrollBar verticalBar = chatScrollPane.getVerticalScrollBar();
+        int currentScrollValue = verticalBar.getValue();
+        boolean wasAtBottom = currentScrollValue + verticalBar.getVisibleAmount() >= verticalBar.getMaximum() - 50;
+
         if (!state.getFirst() && state.getChatId() != null && state.getGroupName() != null) {
             state.chatViewStart();
 
@@ -408,7 +428,12 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         chatDisplayPanel.revalidate();
         chatDisplayPanel.repaint();
 
-        scrollToBottom();
+        if (isDisplayingSearchResults && state.getMessages() != null && !state.getMessages().isEmpty()) {
+            clearSearchButton.setVisible(true);
+        }
+        if (wasAtBottom && !isDisplayingSearchResults) {
+            scrollToBottom();
+        }
     }
 
     // ==========================
@@ -512,7 +537,9 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         }
 
         refreshTimer = new Timer(1000, evnt -> {
-            viewChatHistoryController.execute(currentChatId, currentUserIds, currentMessageIds);
+            if (!isDisplayingSearchResults) {
+                viewChatHistoryController.execute(currentChatId, currentUserIds, currentMessageIds);
+            }
         });
         refreshTimer.start();
     }

@@ -33,13 +33,14 @@ public class RecentChatsInteractor implements RecentChatsInputBoundary {
     @Override
     public void execute(RecentChatsInputData recentChatsInputData) {
         try {
+            String currentUsername = recentChatsInputData.getUserId();
             messageRepository.clear();
-            recentChatsUserDataAccess.updateChatRepository(recentChatsInputData.getUserId());
-            List<Chat> allChats = chatRepository.findAll();
-            List<Chat> myChats = new ArrayList<>();
+            recentChatsUserDataAccess.updateChatRepository(currentUsername);
+            final List<Chat> allChats = chatRepository.findAll();
+            final List<Chat> myChats = new ArrayList<>();
             for (Chat chat : allChats) {
-                List<String> participants = chat.getParticipantUserIds();
-                if (participants.contains(recentChatsInputData.getUserId())) {
+                final List<String> participants = chat.getParticipantUserIds();
+                if (participants.contains(currentUsername)) {
                     myChats.add(chat);
                 }
             }
@@ -47,24 +48,34 @@ public class RecentChatsInteractor implements RecentChatsInputBoundary {
             myChats.sort(new Comparator<Chat>() {
                 @Override
                 public int compare(Chat c1, Chat c2) {
-                    Instant t1 = c1.getLastMessage();
-                    Instant t2 = c2.getLastMessage();
-                    if (t1 == null && t2 == null) return 0;
-                    if (t1 == null) return 1;
-                    if (t2 == null) return -1;
+                    final Instant t1 = c1.getLastMessage();
+                    final Instant t2 = c2.getLastMessage();
+                    if (t1 == null && t2 == null) {
+                        return 0;
+                    }
+                    if (t1 == null) {
+                        return 1;
+                    }
+                    if (t2 == null) {
+                        return -1;
+                    }
                     return t2.compareTo(t1);
                 }
             });
 
-            HashMap<String, String> nameToChatIds = new HashMap<>();
-            List<String> chatNames = new ArrayList<>();
-            List<String> chatNameExist = new ArrayList<>();
+            final HashMap<String, String> nameToChatIds = new HashMap<>();
+            final List<String> chatNames = new ArrayList<>();
             for (Chat chat : myChats) {
-                nameToChatIds.put(chat.getGroupName(), chat.getId());
-                chatNames.add(chat.getGroupName());
+                String name = chat.getGroupName();
+                if (chat.getParticipantUserIds().size() == 2) {
+                    final List<String> users = chat.getParticipantUserIds();
+                    name = users.get(0).equals(currentUsername) ? users.get(1) : users.get(0);
+                }
+                nameToChatIds.put(name, chat.getId());
+                chatNames.add(name);
             }
 
-            RecentChatsOutputData recentChatsOutputData = new RecentChatsOutputData(chatNames, nameToChatIds);
+            final RecentChatsOutputData recentChatsOutputData = new RecentChatsOutputData(chatNames, nameToChatIds);
             recentChatsPresenter.prepareSuccessView(recentChatsOutputData);
         }
         catch (Exception e) {

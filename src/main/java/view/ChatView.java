@@ -91,14 +91,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
 
         backButton = new JButton("⬅");
         backButton.setFont(new Font("SansSerif", Font.BOLD, 20));
-        backButton.addActionListener(evnt -> {
-            if (refreshTimer != null) {
-                refreshTimer.stop();
-            }
-
-            viewManagerModel.setState("logged in");
-            viewManagerModel.firePropertyChange();
-        });
+        backButton.addActionListener(this);
 
         partnerInfoPanel.add(backButton);
         partnerInfoPanel.add(partnerIcon);
@@ -291,10 +284,13 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
                 messageInputField.setText("");
                 clearReplyPreview();
             }
-        } else if (evt.getSource().equals(backButton)) {
-            System.out.println("back button pressed");
+        }
+        else if (evt.getSource().equals(backButton)) {
+            if (refreshTimer != null) {
+                refreshTimer.stop();
+            }
+
             if (recentChatsController != null) {
-                System.out.println("recentChatsController pressed");
                 recentChatsController.execute(currentUserId);
             }
         }

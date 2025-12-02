@@ -1,15 +1,15 @@
 package usecase.recent_chat;
 
-import entity.Chat;
-import entity.ports.ChatRepository;
-import entity.ports.MessageRepository;
-import entity.ports.UserRepository;
-
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+
+import entity.Chat;
+import entity.ports.ChatRepository;
+import entity.ports.MessageRepository;
+import entity.ports.UserRepository;
 
 public class RecentChatsInteractor implements RecentChatsInputBoundary {
     private final RecentChatsOutputBoundary recentChatsPresenter;

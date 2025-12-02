@@ -445,7 +445,7 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
     }
 
     @Override
-    public void updateChat(String chatId, String messageId) {
+    public void updateChat(String chatId, String messageId, Instant timestamp) {
         try {
             final DocumentReference doc = db.collection(COLLECTION_CHAT).document(chatId);
 
@@ -459,7 +459,9 @@ public class FireBaseUserDataAccessObject implements SignupUserDataAccessInterfa
                     if (messages != null) {
                         messages.add(messageId);
                         // Create a Map with the field to update
-                        final Map<String, Object> updates = Map.of(CHAT_MESSAGE, messages);
+                        final Map<String, Object> updates = new HashMap<>();
+                        updates.put(CHAT_MESSAGE, messages);
+                        updates.put(CHAT_RECENT, timestamp.toEpochMilli());
                         // Asynchronously update the document
                         final ApiFuture<WriteResult> futures = doc.update(updates);
                         futures.get();

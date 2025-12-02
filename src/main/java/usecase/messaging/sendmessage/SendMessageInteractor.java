@@ -77,6 +77,8 @@ public class SendMessageInteractor implements SendMessageInputBoundary {
             return;
         }
 
+        final Chat chat = chatOpt.get();
+
         Optional<User> senderOpt = userRepository.findByUsername(senderId);
         if (senderOpt.isEmpty()) {
             presenter.prepareFailView("Sender not found: " + senderId);
@@ -91,9 +93,9 @@ public class SendMessageInteractor implements SendMessageInputBoundary {
                 content,
                 Instant.now()
         );
-
+        chat.setLastMessage(Instant.now());
         Message saved = dataAccess.sendMessage(message);
-        dataAccess.updateChat(chatId, message.getId());
+        dataAccess.updateChat(chatId, message.getId(), chat.getLastMessage());
 
         // Array index order: [messageId, senderDisplayName, messageContent, messageTimestamp, repliedId]
         String senderName = senderOpt.get().getName();

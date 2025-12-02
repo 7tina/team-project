@@ -1,4 +1,4 @@
-package usecase.messaging.view_history;
+package usecase.messaging.viewhistory;
 
 import java.util.List;
 import java.util.Map;
@@ -27,6 +27,7 @@ public class ViewChatHistoryOutputData {
         return messages;
     }
 
-    public Map<String, Map<String, String>> getReactions() { return reactions; }
+    public Map<String, Map<String, String>> getReactions() {
+        return reactions;
+    }
 }
-

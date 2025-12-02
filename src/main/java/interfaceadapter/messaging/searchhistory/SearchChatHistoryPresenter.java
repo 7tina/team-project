@@ -1,4 +1,4 @@
-package interfaceadapter.messaging.search_history;
+package interfaceadapter.messaging.searchhistory;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -9,8 +9,8 @@ import java.util.List;
 import entity.Message;
 import interfaceadapter.messaging.ChatState;
 import interfaceadapter.messaging.ChatViewModel;
-import usecase.messaging.search_history.SearchChatHistoryOutputBoundary;
-import usecase.messaging.search_history.SearchChatHistoryOutputData;
+import usecase.messaging.searchhistory.SearchChatHistoryOutputBoundary;
+import usecase.messaging.searchhistory.SearchChatHistoryOutputData;
 
 /**
  * Presenter that converts search results into ChatState updates.

@@ -8,11 +8,11 @@ import entity.repo.InMemoryChatRepository;
 import entity.repo.InMemoryMessageRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import usecase.messaging.search_history.SearchChatHistoryInputBoundary;
-import usecase.messaging.search_history.SearchChatHistoryInputData;
-import usecase.messaging.search_history.SearchChatHistoryInteractor;
-import usecase.messaging.search_history.SearchChatHistoryOutputBoundary;
-import usecase.messaging.search_history.SearchChatHistoryOutputData;
+import usecase.messaging.searchhistory.SearchChatHistoryInputBoundary;
+import usecase.messaging.searchhistory.SearchChatHistoryInputData;
+import usecase.messaging.searchhistory.SearchChatHistoryInteractor;
+import usecase.messaging.searchhistory.SearchChatHistoryOutputBoundary;
+import usecase.messaging.searchhistory.SearchChatHistoryOutputData;
 
 import java.awt.Color;
 import java.time.Instant;

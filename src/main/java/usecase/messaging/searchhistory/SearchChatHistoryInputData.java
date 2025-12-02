@@ -1,4 +1,4 @@
-package usecase.messaging.search_history;
+package usecase.messaging.searchhistory;
 
 public class SearchChatHistoryInputData {
     private final String chatId;

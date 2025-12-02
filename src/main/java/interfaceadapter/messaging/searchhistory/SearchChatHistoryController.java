@@ -1,7 +1,7 @@
-package interfaceadapter.messaging.search_history;
+package interfaceadapter.messaging.searchhistory;
 
-import usecase.messaging.search_history.SearchChatHistoryInputBoundary;
-import usecase.messaging.search_history.SearchChatHistoryInputData;
+import usecase.messaging.searchhistory.SearchChatHistoryInputBoundary;
+import usecase.messaging.searchhistory.SearchChatHistoryInputData;
 
 public class SearchChatHistoryController {
     private final SearchChatHistoryInputBoundary interactor;

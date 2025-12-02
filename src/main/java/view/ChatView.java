@@ -132,7 +132,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
             viewManagerModel.firePropertyChange();
         });
 
-        clearSearchButton = new JButton("Clear");
+        clearSearchButton = new JButton("Done");
         clearSearchButton.setFont(new Font("SansSerif", Font.PLAIN, 14));
         clearSearchButton.setFocusable(false);
         clearSearchButton.setVisible(false); // Hidden by default
@@ -267,6 +267,11 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
             return;
         }
 
+        if (refreshTimer != null) {
+            refreshTimer.stop();
+        }
+
+        isDisplayingSearchResults = true;
         searchChatHistoryController.execute(currentChatId, trimmed);
     }
 

@@ -271,7 +271,11 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
             return;
         }
 
-        isDisplayingSearchResults = true; // Set flag before search
+        if (refreshTimer != null) {
+            refreshTimer.stop();
+        }
+
+        isDisplayingSearchResults = true;
         searchChatHistoryController.execute(currentChatId, trimmed);
     }
 

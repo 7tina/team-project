@@ -33,12 +33,10 @@ public class RemoveUserInteractor implements RemoveUserInputBoundary {
             final String chatId = inputData.getChatId();
             final String usernameToRemove = inputData.getUsernameToRemove();
 
-            // Validate username is not empty
             if (usernameToRemove == null || usernameToRemove.trim().isEmpty()) {
                 errorMessage = "Username cannot be empty";
             }
             else {
-                // Retrieve the chat from repository
                 final Optional<Chat> chatOpt = chatRepository.findById(chatId);
 
                 if (chatOpt.isEmpty()) {
@@ -58,12 +56,10 @@ public class RemoveUserInteractor implements RemoveUserInputBoundary {
                         errorMessage = "Minimum number of participants is 3";
                     }
                     else {
-                        // Remove the user from the chat
                         chat.removeParticipant(userIdToRemove);
                         dataAccess.removeUser(chatId, userIdToRemove);
                         dataAccess.saveChat(chat);
 
-                        // Prepare success output
                         outputData = new RemoveUserOutputData(chatId, usernameToRemove.trim());
                     }
                 }
@@ -73,7 +69,6 @@ public class RemoveUserInteractor implements RemoveUserInputBoundary {
             errorMessage = "Failed to remove user: " + ex.getMessage();
         }
 
-        // Single exit point
         if (errorMessage != null) {
             outputBoundary.prepareFailView(errorMessage);
         }

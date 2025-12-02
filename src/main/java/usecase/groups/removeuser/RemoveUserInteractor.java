@@ -50,9 +50,6 @@ public class RemoveUserInteractor implements RemoveUserInputBoundary {
                     if (userIdToRemove == null) {
                         errorMessage = "User not found: " + usernameToRemove;
                     }
-                    else if (userIdToRemove.equals(currentUserId)) {
-                        errorMessage = "You cannot remove yourself from the group chat";
-                    }
                     else if (!chat.getParticipantUserIds().contains(userIdToRemove)) {
                         errorMessage = "User is not a member of this chat";
                     }

@@ -144,11 +144,11 @@ public class CreateChatInteractor implements CreateChatInputBoundary{
         for (String username : participantUsernames) {
             Optional<User> userOpt = userRepository.findByUsername(username);
             if (userOpt.isEmpty()) {
-                boolean loaded = this.userDataAccessObject.loadToEntity(username);
-                if (!loaded) {
+                boolean load = this.userDataAccessObject.loadToEntity(username);
+                if (!load) {
                     CreateChatOutputData createChatOutputData = new CreateChatOutputData(
                             isGroupChat, null, null, null, null, false,
-                            "User not found: " + username
+                            "Null user not found."
                     );
                     userPresenter.prepareFailView(createChatOutputData);
                     return null;

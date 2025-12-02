@@ -1,5 +1,7 @@
 package usecase.messaging.sendmessage;
 
+import java.time.Instant;
+
 import entity.Message;
 
 /**
@@ -28,5 +30,5 @@ public interface SendMessageDataAccessInterface {
      * @param chatId    the chat that should be updated
      * @param messageId the ID of the newly-sent message
      */
-    void updateChat(String chatId, String messageId);
+    void updateChat(String chatId, String messageId, Instant timestamp);
 }

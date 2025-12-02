@@ -100,6 +100,7 @@ class SendMessageInteractorTest {
         Message sent;
         String updatedChatId;
         String updatedMsgId;
+        Instant timestamp;
 
         @Override
         public Message sendMessage(Message message) {
@@ -108,9 +109,10 @@ class SendMessageInteractorTest {
         }
 
         @Override
-        public void updateChat(String chatId, String messageId) {
+        public void updateChat(String chatId, String messageId, Instant timestamp) {
             updatedChatId = chatId;
             updatedMsgId = messageId;
+            this.timestamp = timestamp;
         }
     }
 

@@ -12,17 +12,19 @@ public class SearchUserPresenter implements SearchUserOutputBoundary {
 
     @Override
     public void prepareSuccessView(SearchUserOutputData outputData) {
-        SearchUserState state = userSearchViewModel.getState();
+        final SearchUserState state = userSearchViewModel.getState();
         state.setSearchResults(outputData.getUsernames());
         state.setSearchError(null);
-        userSearchViewModel.firePropertyChanged(); // Signal the view to update the list
+        // Signal the view to update the list
+        userSearchViewModel.firePropertyChanged();
     }
 
     @Override
     public void prepareFailView(String error) {
-        SearchUserState state = userSearchViewModel.getState();
+        final SearchUserState state = userSearchViewModel.getState();
         state.setSearchResults(null);
         state.setSearchError(error);
-        userSearchViewModel.firePropertyChanged(); // Signal the view to display the error
+        // Signal the view to display the error
+        userSearchViewModel.firePropertyChanged();
     }
 }

@@ -7,7 +7,7 @@ import entity.ports.ChatRepository;
 import entity.ports.MessageRepository;
 import entity.ports.UserRepository;
 import org.junit.jupiter.api.Test;
-import usecase.messaging.send_m.*;
+import usecase.messaging.sendmessage.*;
 
 import java.awt.Color;
 import java.time.Instant;
@@ -61,24 +61,38 @@ class SendMessageInteractorTest {
     // -------- Message Repo --------
     static class FakeMessageRepo implements MessageRepository {
         Message last;
+        private final Map<String, Message> data = new HashMap<>();
 
         @Override
-        public Optional<Message> findById(String id) { return Optional.empty(); }
+        public Optional<Message> findById(String id) {
+            return Optional.ofNullable(data.get(id));
+        }
 
         @Override
         public Message save(Message message) {
             last = message;
+            data.put(message.getId(), message);
             return message;
         }
 
         @Override
-        public List<Message> findByChatId(String chatId) { return Collections.emptyList(); }
+        public List<Message> findByChatId(String chatId) {
+            return Collections.emptyList();
+        }
 
         @Override
-        public void deleteById(String id) { }
+        public void deleteById(String id) {
+            data.remove(id);
+            if (last != null && id.equals(last.getId())) {
+                last = null;
+            }
+        }
 
         @Override
-        public void clear() { }
+        public void clear() {
+            data.clear();
+            last = null;
+        }
     }
 
     // -------- DAO --------

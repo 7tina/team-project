@@ -91,7 +91,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
 
         backButton = new JButton("⬅");
         backButton.setFont(new Font("SansSerif", Font.BOLD, 20));
-        backButton.addActionListener(e -> {
+        backButton.addActionListener(evnt -> {
             if (refreshTimer != null) {
                 refreshTimer.stop();
             }
@@ -112,12 +112,12 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         searchHistoryButton = new JButton("Search");
         searchHistoryButton.setFont(new Font("SansSerif", Font.PLAIN, 14));
         searchHistoryButton.setFocusable(false);
-        searchHistoryButton.addActionListener(e -> handleSearchHistory());
+        searchHistoryButton.addActionListener(evnt -> handleSearchHistory());
 
         settingButton = new JButton("⛭");
         settingButton.setFont(new Font("SansSerif", Font.BOLD, 20));
         settingButton.setFocusable(false);
-        settingButton.addActionListener(e -> {
+        settingButton.addActionListener(evnt -> {
             if (currentChatId == null) {
                 JOptionPane.showMessageDialog(this,
                         "Chat is still loading. Please wait a moment and try again.",
@@ -135,8 +135,9 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
         clearSearchButton = new JButton("Clear");
         clearSearchButton.setFont(new Font("SansSerif", Font.PLAIN, 14));
         clearSearchButton.setFocusable(false);
-        clearSearchButton.setVisible(false); // Hidden by default
-        clearSearchButton.addActionListener(e -> {
+        // Hidden by default
+        clearSearchButton.setVisible(false);
+        clearSearchButton.addActionListener(evnt -> {
             isDisplayingSearchResults = false;
             clearSearchButton.setVisible(false);
             // Refresh to show all messages again
@@ -392,7 +393,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
                     final JPopupMenu menu =
                             buildPopupMenu(fromCurrentUser, messageId, content);
                     actionButton.addActionListener(
-                            e -> menu.show(actionButton, 0, actionButton.getHeight())
+                            evnt -> menu.show(actionButton, 0, actionButton.getHeight())
                     );
 
                     bubble.addMouseListener(new MouseAdapter() {
@@ -471,7 +472,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
             menu.add(deleteItem);
 
             final JMenuItem replyItem = new JMenuItem("Reply");
-            replyItem.addActionListener(e -> {
+            replyItem.addActionListener(evnt -> {
                 replyingToMessageId = messageId;
                 final String shortText = content.length() > 20
                         ? content.substring(0, 20) + "…"

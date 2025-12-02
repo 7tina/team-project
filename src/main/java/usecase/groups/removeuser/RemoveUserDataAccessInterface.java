@@ -7,7 +7,7 @@ public interface RemoveUserDataAccessInterface {
      * Saves the updated chat.
      * @param chat the chat to save
      */
-    Chat saveChat(Chat chat);
+    void saveChat(Chat chat);
 
     /**
      * Gets a user ID by their username.

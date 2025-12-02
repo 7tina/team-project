@@ -16,6 +16,8 @@ import entity.ports.UserRepository;
 import entity.repo.InMemoryChatRepository;
 import entity.repo.InMemoryMessageRepository;
 import interfaceadapter.ViewManagerModel;
+import interfaceadapter.accesschat.AccessChatController;
+import interfaceadapter.accesschat.AccessChatPresenter;
 import interfaceadapter.create_chat.CreateChatController;
 import interfaceadapter.create_chat.CreateChatPresenter;
 import interfaceadapter.groupchat.adduser.AddUserController;
@@ -49,6 +51,9 @@ import interfaceadapter.search_user.SearchUserViewModel;
 import interfaceadapter.signup.SignupController;
 import interfaceadapter.signup.SignupPresenter;
 import interfaceadapter.signup.SignupViewModel;
+import usecase.accesschat.AccessChatInputBoundary;
+import usecase.accesschat.AccessChatInteractor;
+import usecase.accesschat.AccessChatOutputBoundary;
 import usecase.change_password.ChangePasswordInputBoundary;
 import usecase.change_password.ChangePasswordInteractor;
 import usecase.change_password.ChangePasswordOutputBoundary;
@@ -312,7 +317,7 @@ public class AppBuilder {
         );
 
         final LogoutInputBoundary logoutInteractor =
-                new LogoutInteractor(userDataAccessObject, logoutOutputBoundary);
+                new LogoutInteractor(userDataAccessObject, logoutOutputBoundary, chatRepository);
 
         final LogoutController logoutController = new LogoutController(logoutInteractor);
 
@@ -635,6 +640,35 @@ public class AppBuilder {
 
         if (this.chatView != null) {
             this.chatView.setRecentChatsController(recentChatsController);
+        }
+
+        if (this.loggedInView != null) {
+            this.loggedInView.setRecentChatsController(recentChatsController);
+        }
+
+        return this;
+    }
+
+    /**
+     * Adds the access-chats use case wiring to the application.
+     *
+     * @return this builder
+     */
+    public AppBuilder addAccessChatsUseCase() {
+        final AccessChatOutputBoundary accessChatPresenter =
+                new AccessChatPresenter(viewManagerModel, loggedInViewModel, chatViewModel);
+
+        final AccessChatInputBoundary accessChatInteractor =
+                new AccessChatInteractor(userDataAccessObject,
+                        accessChatPresenter,
+                        userRepository,
+                        chatRepository);
+
+        final AccessChatController accessChatController =
+                new AccessChatController(accessChatInteractor);
+
+        if (this.loggedInView != null) {
+            this.loggedInView.setAccessChatController(accessChatController);
         }
 
         return this;

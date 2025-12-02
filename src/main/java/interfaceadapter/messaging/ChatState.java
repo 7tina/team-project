@@ -10,7 +10,7 @@ import java.util.Map;
  */
 public class ChatState {
 
-    private boolean first;
+    private boolean first = false;
     private boolean isGroup;
     private String chatId;
     private final List<String> participants = new ArrayList<>();

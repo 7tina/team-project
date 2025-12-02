@@ -49,6 +49,7 @@ public class ViewChatHistoryInteractor implements ViewChatHistoryInputBoundary {
             dataAccess.findChatMessages(chatId, userIds, messageIds);
 
             List<Message> messageList = messageRepository.findByChatId(chatId);
+            messageList.sort(Comparator.comparing(Message::getTimestamp));
 
             List<String[]> messagesData = new ArrayList<>();
             Map<String, Map<String, String>> reactions = new HashMap<>();
@@ -58,7 +59,7 @@ public class ViewChatHistoryInteractor implements ViewChatHistoryInputBoundary {
                 data[0] = msg.getId();
                 data[1] = msg.getSenderUserId();
                 data[2] = msg.getContent();
-                data[3] = msg.getTimestamp().toString();
+                data[3] = makeString(msg.getTimestamp());
                 data[4] = msg.getRepliedMessageId() != null ? msg.getRepliedMessageId() : "";
 
                 messagesData.add(data);

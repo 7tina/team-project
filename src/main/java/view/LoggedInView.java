@@ -10,10 +10,12 @@ import java.util.List;
 import javax.swing.*;
 
 import interfaceadapter.ViewManagerModel;
+import interfaceadapter.accesschat.AccessChatController;
 import interfaceadapter.logged_in.ChangePasswordController;
 import interfaceadapter.logged_in.LoggedInState;
 import interfaceadapter.logged_in.LoggedInViewModel;
 import interfaceadapter.logout.LogoutController;
+import interfaceadapter.recent_chat.RecentChatsController;
 
 /**
  * The View for when the user is logged into the program, now displaying the chat list.
@@ -24,6 +26,8 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
     private final LoggedInViewModel loggedInViewModel;
     // Removed passwordErrorField
     private ChangePasswordController changePasswordController = null;
+    private RecentChatsController recentChatsController = null;
+    private AccessChatController accessChatController = null;
     private LogoutController logoutController;
     private final ViewManagerModel viewManagerModel;
 
@@ -91,6 +95,20 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
 
+        recentChatsList.addListSelectionListener(evnt -> {
+            // Ignore extra "adjusting" events
+            if (!evnt.getValueIsAdjusting() && accessChatController != null) {
+                final String selected = recentChatsList.getSelectedValue();
+                if (selected != null) {
+                    final LoggedInState state = loggedInViewModel.getState();
+                    final String chatId = state.getNameToChatIds(selected);
+                    final String currentUserId = state.getUsername();
+                    recentChatsList.clearSelection();
+                    accessChatController.execute(currentUserId, chatId);
+                }
+            }
+        });
+
         final JPanel buttonPanel = new JPanel();
         logOut = new JButton("Logout");
 
@@ -136,6 +154,10 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
         if (evt.getPropertyName().equals("state")) {
             final LoggedInState state = (LoggedInState) evt.getNewValue();
             usernameLabel.setText(state.getUsername());
+
+            if (!state.isLoggedIn() && recentChatsController != null) {
+                recentChatsController.execute(usernameLabel.getText());
+            }
         }
         else if (evt.getPropertyName().equals("username")) {
             final LoggedInState state = (LoggedInState) evt.getNewValue();
@@ -165,10 +187,20 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
         }
 
         else if (evt.getPropertyName().equals("recentChats")) {
+            recentChatsModel.clear();
             final LoggedInState state = (LoggedInState) evt.getNewValue();
             final List<String> chatNames = state.getChatNames();
             for (String name : chatNames) {
                 recentChatsModel.addElement(name);
+            }
+        }
+
+        else if (evt.getPropertyName().equals("access chat")) {
+            final LoggedInState state = (LoggedInState) evt.getNewValue();
+            if (state.getRecentChatsError() != null) {
+                JOptionPane.showMessageDialog(this,
+                        state.getRecentChatsError(),
+                        "Error Finding Chat: ", 0);
             }
         }
     }
@@ -179,6 +211,14 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
 
     public void setChangePasswordController(ChangePasswordController changePasswordController) {
         this.changePasswordController = changePasswordController;
+    }
+
+    public void setRecentChatsController(RecentChatsController recentChatsController) {
+        this.recentChatsController = recentChatsController;
+    }
+
+    public void setAccessChatController(AccessChatController accessChatController) {
+        this.accessChatController = accessChatController;
     }
 
     public void setLogoutController(LogoutController logoutController) {

@@ -31,6 +31,7 @@ public class RecentChatsPresenter implements RecentChatsOutputBoundary {
         // 塞入最近聊天列表（我们在 RecentChatsOutputData 里实现了 getRecentChats）
         state.setChatNames(outputData.getChatNames());
         state.setNameToChatIds(outputData.getNameToChatIds());
+        state.setLoggedIn(true);
 
         // 更新 ViewModel
         loggedInViewModel.setState(state);

@@ -8,6 +8,7 @@ import java.util.List;
  * The State information representing the logged-in user.
  */
 public class LoggedInState {
+    private boolean loggedIn = false;
 
     private String username = "";
     private String userId = "";
@@ -30,6 +31,14 @@ public class LoggedInState {
     // Because of the previous copy constructor, the default constructor must be explicit.
     public LoggedInState() {
 
+    }
+
+    public boolean isLoggedIn() {
+        return loggedIn;
+    }
+
+    public void setLoggedIn(boolean loggedIn) {
+        this.loggedIn = loggedIn;
     }
 
     public String getUsernameError() {
@@ -67,13 +76,18 @@ public class LoggedInState {
     public void setChatNames(List<String> chatNames) {
         this.chatNames = chatNames;
     }
+
     public List<String> getChatNames() {return chatNames;}
+
+    public void clearChatNames() {chatNames.clear();}
 
     public String getNameToChatIds(String chatName) {
         return nameToChatIds.get(chatName);
     }
 
     public void setNameToChatIds(HashMap<String, String> nameToChatIds) {this.nameToChatIds = nameToChatIds;}
+
+    public void clearNameToChatIds() {nameToChatIds.clear();}
 
     public void setRecentChatsError(String recentChatsError) {
         this.recentChatsError = recentChatsError;

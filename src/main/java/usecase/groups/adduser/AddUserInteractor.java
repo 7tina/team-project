@@ -25,9 +25,6 @@ public class AddUserInteractor implements AddUserInputBoundary {
 
     @Override
     public void execute(AddUserInputData inputData) {
-        String errorMessage = null;
-        AddUserOutputData outputData = null;
-
         try {
             final String chatId = inputData.getChatId();
             final String usernameToAdd = inputData.getUsernameToAdd();
@@ -63,10 +60,6 @@ public class AddUserInteractor implements AddUserInputBoundary {
                     }
                 }
             }
-        }
-        catch (IllegalArgumentException | IllegalStateException ex) {
-            errorMessage = "Failed to add user: " + ex.getMessage();
-        }
 
         if (errorMessage != null) {
             outputBoundary.prepareFailView(errorMessage);
@@ -76,4 +69,3 @@ public class AddUserInteractor implements AddUserInputBoundary {
         }
     }
 }
-

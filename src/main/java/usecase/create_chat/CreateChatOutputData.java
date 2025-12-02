@@ -18,7 +18,7 @@ public class CreateChatOutputData {
     public CreateChatOutputData(boolean isGroupChat, String chatId, String name,
                                 List<String> users, List<String> messageIds,
                                 boolean success, String message, String currentUserId) {
-        this.isGroupChat = isGroupChat;
+        this.isGroup = isGroup;
         this.chatId = chatId;
         this.groupName = name;
         this.users = users;
@@ -31,7 +31,7 @@ public class CreateChatOutputData {
     public CreateChatOutputData(boolean isGroupChat, String chatId, String name,
                                 List<String> users, List<String> messageIds,
                                 boolean success, String message) {
-        this.isGroupChat = isGroupChat;
+        this.isGroup = isGroup;
         this.chatId = chatId;
         this.groupName = name;
         this.users = users;

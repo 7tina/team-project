@@ -1,9 +1,9 @@
 package entity.repo;
 
+import java.util.*;
+
 import entity.Chat;
 import entity.ports.ChatRepository;
-
-import java.util.*;
 
 public class InMemoryChatRepository implements ChatRepository {
 
@@ -23,5 +23,10 @@ public class InMemoryChatRepository implements ChatRepository {
     @Override
     public java.util.List<Chat> findAll() {
         return new java.util.ArrayList<>(chats.values());
+    }
+
+    @Override
+    public void clear() {
+        chats.clear();
     }
 }

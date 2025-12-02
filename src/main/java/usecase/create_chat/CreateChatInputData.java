@@ -9,16 +9,12 @@ public class CreateChatInputData {
     private final String currentUserId;
     private final List<String> participantUsernames;
     private final String groupName;
-    private final boolean isGroupChat;
 
     public CreateChatInputData(String currentUserId,
-                               List<String> participantUsernames,
-                               String groupName,
-                               boolean isGroupChat) {
+                               List<String> participantUsernames, String groupName) {
         this.currentUserId = currentUserId;
         this.participantUsernames = participantUsernames;
         this.groupName = groupName;
-        this.isGroupChat = isGroupChat;
     }
 
     public String getCurrentUserId() {
@@ -31,9 +27,5 @@ public class CreateChatInputData {
 
     public String getGroupName() {
         return groupName;
-    }
-
-    public boolean isGroupChat() {
-        return isGroupChat;
     }
 }

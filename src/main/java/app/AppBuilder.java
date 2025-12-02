@@ -16,12 +16,16 @@ import entity.ports.UserRepository;
 import entity.repo.InMemoryChatRepository;
 import entity.repo.InMemoryMessageRepository;
 import interfaceadapter.ViewManagerModel;
+import interfaceadapter.accesschat.AccessChatController;
+import interfaceadapter.accesschat.AccessChatPresenter;
 import interfaceadapter.create_chat.CreateChatController;
 import interfaceadapter.create_chat.CreateChatPresenter;
 import interfaceadapter.groupchat.adduser.AddUserController;
 import interfaceadapter.groupchat.adduser.AddUserPresenter;
 import interfaceadapter.groupchat.changegroupname.ChangeGroupNameController;
 import interfaceadapter.groupchat.changegroupname.ChangeGroupNamePresenter;
+import interfaceadapter.groupchat.creategroupchat.CreateGroupChatController;
+import interfaceadapter.groupchat.creategroupchat.CreateGroupChatPresenter;
 import interfaceadapter.groupchat.removeuser.RemoveUserController;
 import interfaceadapter.groupchat.removeuser.RemoveUserPresenter;
 import interfaceadapter.logged_in.ChangePasswordController;
@@ -49,6 +53,9 @@ import interfaceadapter.search_user.SearchUserViewModel;
 import interfaceadapter.signup.SignupController;
 import interfaceadapter.signup.SignupPresenter;
 import interfaceadapter.signup.SignupViewModel;
+import usecase.accesschat.AccessChatInputBoundary;
+import usecase.accesschat.AccessChatInteractor;
+import usecase.accesschat.AccessChatOutputBoundary;
 import usecase.change_password.ChangePasswordInputBoundary;
 import usecase.change_password.ChangePasswordInteractor;
 import usecase.change_password.ChangePasswordOutputBoundary;
@@ -61,6 +68,7 @@ import usecase.groups.adduser.AddUserOutputBoundary;
 import usecase.groups.changegroupname.ChangeGroupNameInputBoundary;
 import usecase.groups.changegroupname.ChangeGroupNameInteractor;
 import usecase.groups.changegroupname.ChangeGroupNameOutputBoundary;
+import usecase.groups.creategroupchat.CreateGroupChatInteractor;
 import usecase.groups.removeuser.RemoveUserInputBoundary;
 import usecase.groups.removeuser.RemoveUserInteractor;
 import usecase.groups.removeuser.RemoveUserOutputBoundary;
@@ -100,6 +108,21 @@ import view.SearchUserView;
 import view.SignupView;
 import view.ViewManager;
 import view.WelcomeView;
+import interfaceadapter.recent_chat.RecentChatsController;
+import interfaceadapter.recent_chat.RecentChatsPresenter;
+import usecase.recent_chat.RecentChatsInputBoundary;
+import usecase.recent_chat.RecentChatsInteractor;
+import usecase.recent_chat.RecentChatsOutputBoundary;
+import interfaceadapter.messaging.add_reaction.AddReactionController;
+import interfaceadapter.messaging.add_reaction.AddReactionPresenter;
+import interfaceadapter.messaging.remove_reaction.RemoveReactionController;
+import interfaceadapter.messaging.remove_reaction.RemoveReactionPresenter;
+import usecase.messaging.add_reaction.AddReactionInputBoundary;
+import usecase.messaging.add_reaction.AddReactionInteractor;
+import usecase.messaging.add_reaction.AddReactionOutputBoundary;
+import usecase.messaging.remove_reaction.RemoveReactionInputBoundary;
+import usecase.messaging.remove_reaction.RemoveReactionInteractor;
+import usecase.messaging.remove_reaction.RemoveReactionOutputBoundary;
 
 // CHECKSTYLE:OFF
 
@@ -297,7 +320,7 @@ public class AppBuilder {
         );
 
         final LogoutInputBoundary logoutInteractor =
-                new LogoutInteractor(userDataAccessObject, logoutOutputBoundary);
+                new LogoutInteractor(userDataAccessObject, logoutOutputBoundary, chatRepository);
 
         final LogoutController logoutController = new LogoutController(logoutInteractor);
 
@@ -403,6 +426,36 @@ public class AppBuilder {
 
         if (this.searchUserView != null) {
             this.searchUserView.setCreateChatController(createChatController);
+        }
+
+        return this;
+    }
+
+    /**
+     * Adds the create-chat use case wiring to the application.
+     *
+     * @return this builder
+     */
+    public AppBuilder addCreateGroupChatUseCase() {
+        final Integer maxUsers = 10;
+
+        final CreateChatOutputBoundary createChatOutputBoundary =
+                new CreateGroupChatPresenter(viewManagerModel, chatViewModel);
+
+        final CreateChatInputBoundary createGroupChatInteractor =
+                new CreateGroupChatInteractor(
+                        createChatOutputBoundary,
+                        userDataAccessObject,
+                        chatRepository,
+                        userRepository,
+                        maxUsers
+                );
+
+        final CreateGroupChatController createGroupChatController =
+                new CreateGroupChatController(createGroupChatInteractor);
+
+        if (this.searchUserView != null) {
+            this.searchUserView.setCreateGroupChatController(createGroupChatController);
         }
 
         return this;
@@ -620,6 +673,78 @@ public class AppBuilder {
 
         if (this.chatView != null) {
             this.chatView.setRecentChatsController(recentChatsController);
+        }
+
+        if (this.loggedInView != null) {
+            this.loggedInView.setRecentChatsController(recentChatsController);
+        }
+
+        return this;
+    }
+
+    /**
+     * Adds the access-chats use case wiring to the application.
+     *
+     * @return this builder
+     */
+    public AppBuilder addAccessChatsUseCase() {
+        final AccessChatOutputBoundary accessChatPresenter =
+                new AccessChatPresenter(viewManagerModel, loggedInViewModel, chatViewModel);
+
+        final AccessChatInputBoundary accessChatInteractor =
+                new AccessChatInteractor(userDataAccessObject,
+                        accessChatPresenter,
+                        userRepository,
+                        chatRepository);
+
+        final AccessChatController accessChatController =
+                new AccessChatController(accessChatInteractor);
+
+        if (this.loggedInView != null) {
+            this.loggedInView.setAccessChatController(accessChatController);
+        }
+
+        return this;
+    }
+
+    /**
+     * Adds the reaction use cases (add and remove) to the application.
+     *
+     * @return this builder
+     */
+    public AppBuilder addReactionUseCases() {
+        // Add Reaction
+        final AddReactionOutputBoundary addReactionPresenter =
+                new AddReactionPresenter(chatViewModel, viewManagerModel);
+
+        final AddReactionInputBoundary addReactionInteractor =
+                new AddReactionInteractor(
+                        messageRepository,
+                        userDataAccessObject,
+                        addReactionPresenter
+                );
+
+        final AddReactionController addReactionController =
+                new AddReactionController(addReactionInteractor);
+
+        // Remove Reaction
+        final RemoveReactionOutputBoundary removeReactionPresenter =
+                new RemoveReactionPresenter(chatViewModel, viewManagerModel);
+
+        final RemoveReactionInputBoundary removeReactionInteractor =
+                new RemoveReactionInteractor(
+                        messageRepository,
+                        userDataAccessObject,
+                        removeReactionPresenter
+                );
+
+        final RemoveReactionController removeReactionController =
+                new RemoveReactionController(removeReactionInteractor);
+
+        // Set controllers in chat view
+        if (this.chatView != null) {
+            this.chatView.setAddReactionController(addReactionController);
+            this.chatView.setRemoveReactionController(removeReactionController);
         }
 
         return this;

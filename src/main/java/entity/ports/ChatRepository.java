@@ -32,4 +32,9 @@ public interface ChatRepository {
      * @return a list of all chats
      */
     List<Chat> findAll();
+
+    /**
+     * Removes all chats stored. Will be empty after this method is called.
+     */
+    void clear();
 }

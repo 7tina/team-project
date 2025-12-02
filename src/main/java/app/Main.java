@@ -25,12 +25,15 @@ public class Main {
                 .addChangePasswordUseCase()
                 .addUserSearchUseCase()
                 .addCreateChatUseCase()
+                .addCreateGroupChatUseCase()
                 .addChatUseCase()
+                .addReactionUseCases()
                 .addChangeGroupNameUseCase()
                 .addRemoveUserUseCase()
                 .addAddUserUseCase()
                 .addDeleteMessageUseCase()
                 .addRecentChatsUseCase()
+                .addAccessChatsUseCase()
                 .build();
 
         application.pack();

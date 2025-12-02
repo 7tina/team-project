@@ -10,7 +10,7 @@ import java.util.Map;
  */
 public class ChatState {
 
-    private boolean first;
+    private boolean first = false;
     private boolean isGroup;
     private String chatId;
     private final List<String> participants = new ArrayList<>();
@@ -22,6 +22,7 @@ public class ChatState {
     private boolean success;
     private String error;
     private String currentUserId;
+    private Map<String, Map<String, String>> messageReactions = new HashMap<>();
 
     public ChatState() {}
 
@@ -68,9 +69,22 @@ public class ChatState {
     public Map<String, Map<String, String>> getMessageToReaction() {return messageToReaction;}
 
     public void addReaction(String messageId, String userId, String reaction) {
+        // Update messageToReaction
         Map<String, String> reactions = messageToReaction.get(messageId);
-        if (reactions != null) {reactions.put(userId, reaction);}
+        if (reactions == null) {
+            reactions = new HashMap<>();
+        }
+        reactions.put(userId, reaction);
         messageToReaction.put(messageId, reactions);
+
+        // CRITICAL: Also update messageReactions so getMessageReactions() works
+        if (this.messageReactions == null) {
+            this.messageReactions = new HashMap<>();
+        }
+        if (!this.messageReactions.containsKey(messageId)) {
+            this.messageReactions.put(messageId, new HashMap<>());
+        }
+        this.messageReactions.get(messageId).put(userId, reaction);
     }
 
     public void removeReaction(String messageId, String userId, String reaction) {
@@ -81,7 +95,37 @@ public class ChatState {
         messageToReaction.put(messageId, reactions);
     }
 
-    public void clearReactions() {messageToReaction.clear();}
+    /**
+     * Updates the reactions for a specific message.
+     *
+     * @param messageId the message ID
+     * @param reactions the updated reactions map
+     */
+    public void updateMessageReaction(String messageId, Map<String, String> reactions) {
+        // Store reactions in a map for quick lookup during rendering
+        if (this.messageReactions == null) {
+            this.messageReactions = new HashMap<>();
+        }
+        this.messageReactions.put(messageId, new HashMap<>(reactions));
+    }
+
+    /**
+     * Gets the reactions for a specific message.
+     *
+     * @param messageId the message ID
+     * @return map of userId -> emoji, or empty map if no reactions
+     */
+    public Map<String, String> getMessageReactions(String messageId) {
+        if (messageReactions == null) {
+            return new HashMap<>();
+        }
+        return messageReactions.getOrDefault(messageId, new HashMap<>());
+    }
+
+    public void clearReactions() {
+        messageToReaction.clear();
+        messageReactions.clear();  // ← ADD THIS LINE
+    }
 
     public String getGroupName() {
         return groupName;

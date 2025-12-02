@@ -356,7 +356,7 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
 
             // DON'T update the label if we're just updating messages/reactions
             // Only update it when first opening the chat
-            // chatPartnerLabel.setText(state.getGroupName());
+            chatPartnerLabel.setText(state.getGroupName());
 
             final List<String[]> messages = state.getMessages();
 

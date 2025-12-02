@@ -662,7 +662,6 @@ public class ChatView extends JPanel implements ActionListener, PropertyChangeLi
                                String currentUser,
                                String groupName,
                                boolean isGroupChat) {
-        System.out.println(currentUser);
         this.currentChatId = chatId;
         this.currentUserId = currentUser;
         this.isGroupChat = isGroupChat;

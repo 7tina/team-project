@@ -13,7 +13,7 @@ public interface ChangeGroupNameDataAccessInterface {
      *
      * @param chat the chat entity to save
      */
-    Chat saveChat(Chat chat);
+    void saveChat(Chat chat);
 
     /**
      * Changes the group name of the specified chat.

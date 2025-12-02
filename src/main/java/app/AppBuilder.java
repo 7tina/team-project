@@ -133,6 +133,7 @@ public class AppBuilder {
 
     private static final String SERVICE_ACCOUNT_KEY_PATH =
             "src/main/resources/serviceAccountKey.json";
+    private static final Integer MAX_USERS_PER_CHAT = 10;
 
     private final JPanel cardPanel = new JPanel();
     private final CardLayout cardLayout = new CardLayout();
@@ -371,7 +372,6 @@ public class AppBuilder {
         this.searchUserView = new SearchUserView(
                 viewManagerModel,
                 searchUserViewModel,
-                chatViewModel,
                 loggedInViewModel
         );
         cardPanel.add(searchUserView, searchUserView.getViewName());
@@ -411,7 +411,7 @@ public class AppBuilder {
      */
     public AppBuilder addCreateChatUseCase() {
         final CreateChatOutputBoundary createChatOutputBoundary =
-                new CreateChatPresenter(viewManagerModel, chatViewModel);
+                new CreateChatPresenter(viewManagerModel, chatViewModel, searchUserViewModel);
 
         final CreateChatInputBoundary createChatInteractor =
                 new CreateChatInteractor(
@@ -437,10 +437,8 @@ public class AppBuilder {
      * @return this builder
      */
     public AppBuilder addCreateGroupChatUseCase() {
-        final Integer maxUsers = 10;
-
         final CreateChatOutputBoundary createChatOutputBoundary =
-                new CreateGroupChatPresenter(viewManagerModel, chatViewModel);
+                new CreateGroupChatPresenter(viewManagerModel, chatViewModel, searchUserViewModel);
 
         final CreateChatInputBoundary createGroupChatInteractor =
                 new CreateGroupChatInteractor(
@@ -448,7 +446,7 @@ public class AppBuilder {
                         userDataAccessObject,
                         chatRepository,
                         userRepository,
-                        maxUsers
+                        MAX_USERS_PER_CHAT
                 );
 
         final CreateGroupChatController createGroupChatController =

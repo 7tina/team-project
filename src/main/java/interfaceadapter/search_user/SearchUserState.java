@@ -5,6 +5,7 @@ import java.util.List;
 public class SearchUserState {
     private List<String> searchResults;
     private String searchError = "";
+    private String createError = "";
 
     // Default constructor
     public SearchUserState() {
@@ -21,6 +22,11 @@ public class SearchUserState {
         return searchError;
     }
 
+    public String getCreateError() {
+
+        return createError;
+    }
+
     // Setters
     public void setSearchResults(List<String> searchResults) {
         this.searchResults = searchResults;
@@ -29,5 +35,10 @@ public class SearchUserState {
     public void setSearchError(String searchError) {
 
         this.searchError = searchError;
+    }
+
+    public void setCreateError(String createError) {
+
+        this.createError = createError;
     }
 }

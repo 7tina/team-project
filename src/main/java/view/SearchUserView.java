@@ -14,8 +14,6 @@ import interfaceadapter.create_chat.CreateChatController;
 import interfaceadapter.groupchat.creategroupchat.CreateGroupChatController;
 import interfaceadapter.logged_in.LoggedInState;
 import interfaceadapter.logged_in.LoggedInViewModel;
-import interfaceadapter.messaging.ChatState;
-import interfaceadapter.messaging.ChatViewModel;
 import interfaceadapter.search_user.SearchUserController;
 import interfaceadapter.search_user.SearchUserState;
 import interfaceadapter.search_user.SearchUserViewModel;
@@ -27,7 +25,6 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
     private SearchUserController searchUserController;
     private final ViewManagerModel viewManagerModel;
     private final SearchUserViewModel searchUserViewModel;
-    private final ChatViewModel chatViewModel;
     private final LoggedInViewModel loggedInViewModel;
 
     private CreateChatController createChatController;
@@ -53,16 +50,13 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
     private boolean viewIsActive = false;
 
     public SearchUserView(ViewManagerModel viewManagerModel, SearchUserViewModel searchUserViewModel,
-                          ChatViewModel chatViewModel,
                           LoggedInViewModel loggedInViewModel) {
 
         this.viewManagerModel = viewManagerModel;
         this.searchUserViewModel = searchUserViewModel;
-        this.chatViewModel = chatViewModel;
         this.loggedInViewModel = loggedInViewModel;
         this.searchUserViewModel.addPropertyChangeListener(this);
         this.loggedInViewModel.addPropertyChangeListener(this);
-        this.chatViewModel.addPropertyChangeListener(this);
 
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         this.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -288,6 +282,14 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
                 if (state.getSearchError() != null) {
                     userListModel.addElement("Error: " + state.getSearchError());
                 }
+                else if (state.getCreateError() != null) {
+                    // Show error message if group chat creation failed
+                    JOptionPane.showMessageDialog(this,
+                            state.getCreateError(),
+                            "Error Creating Chat",
+                            JOptionPane.ERROR_MESSAGE);
+                    findUsers(loggedInViewModel.getState().getUsername(), "");
+                }
                 else if (state.getSearchResults() != null) {
                     boolean usersAdded = false;
 
@@ -312,18 +314,6 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
             else if (newValue instanceof LoggedInState && !this.started) {
                 this.started = true;
                 findUsers(loggedInViewModel.getState().getUsername(), "");
-            }
-
-            // Check if it's ChatState
-            else if (newValue instanceof ChatState) {
-                final ChatState chatState = (ChatState) newValue;
-                if (chatState.getError() != null) {
-                    // Show error message if group chat creation failed
-                    JOptionPane.showMessageDialog(this,
-                            chatState.getError(),
-                            "Error Creating Chat",
-                            JOptionPane.ERROR_MESSAGE);
-                }
             }
         }
     }

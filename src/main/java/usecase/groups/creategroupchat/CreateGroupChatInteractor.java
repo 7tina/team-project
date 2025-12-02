@@ -1,18 +1,19 @@
 package usecase.groups.creategroupchat;
 
-import entity.Chat;
-import entity.User;
-import entity.ports.ChatRepository;
-import entity.ports.UserRepository;
-import org.jetbrains.annotations.Nullable;
-import usecase.create_chat.*;
-
 import java.awt.*;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import org.jetbrains.annotations.Nullable;
+
+import entity.Chat;
+import entity.User;
+import entity.ports.ChatRepository;
+import entity.ports.UserRepository;
+import usecase.create_chat.*;
 
 public class CreateGroupChatInteractor extends CreateChatInteractor {
     private final Integer maxUsers;

@@ -28,6 +28,7 @@ public class AddUserInteractor implements AddUserInputBoundary {
         try {
             final String chatId = inputData.getChatId();
             final String usernameToAdd = inputData.getUsernameToAdd();
+            String errorMessage = "";
 
             if (usernameToAdd == null || usernameToAdd.trim().isEmpty()) {
                 errorMessage = "Username cannot be empty";
@@ -55,17 +56,19 @@ public class AddUserInteractor implements AddUserInputBoundary {
                             chat.addParticipant(userIdToAdd);
                             dataAccess.addUser(chatId, userIdToAdd);
                             dataAccess.saveChat(chat);
-                            outputData = new AddUserOutputData(chat.getId(), usernameToAdd.trim());
+                            final AddUserOutputData outputData = new AddUserOutputData(chat.getId(), usernameToAdd.trim());
+                            outputBoundary.prepareSuccessView(outputData);
                         }
                     }
                 }
             }
 
-        if (errorMessage != null) {
-            outputBoundary.prepareFailView(errorMessage);
+            if (!errorMessage.isEmpty()) {
+                outputBoundary.prepareFailView(errorMessage);
+            }
         }
-        else {
-            outputBoundary.prepareSuccessView(outputData);
+        catch (Exception e) {
+            outputBoundary.prepareFailView("Encountered Error: " + e.getMessage());
         }
     }
 }

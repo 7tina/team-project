@@ -126,8 +126,7 @@ public class CreateChatInteractor implements CreateChatInputBoundary {
             userDataAccessObject.saveChat(newChat);
             returnChat = newChat;
         }
-        userDataAccessObject.saveChat(newChat);
-        return newChat;
+        return returnChat;
     }
 
     @Nullable
@@ -169,7 +168,7 @@ public class CreateChatInteractor implements CreateChatInputBoundary {
             userPresenter.prepareFailView(outputData);
             return false;
         }
-        return userOpt.isPresent() ? userOpt.get().getName() : null;
+        return true;
     }
 
     protected boolean individualChatRequirements(String groupName, List<String> participantUsernames) {
@@ -181,7 +180,7 @@ public class CreateChatInteractor implements CreateChatInputBoundary {
             this.userPresenter.prepareFailView(outputData);
             return false;
         }
-        return isValid;
+        return true;
     }
 
     @Nullable

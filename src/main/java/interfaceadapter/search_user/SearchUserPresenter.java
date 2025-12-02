@@ -15,6 +15,7 @@ public class SearchUserPresenter implements SearchUserOutputBoundary {
         final SearchUserState state = userSearchViewModel.getState();
         state.setSearchResults(outputData.getUsernames());
         state.setSearchError(null);
+        state.setCreateError(null);
         // Signal the view to update the list
         userSearchViewModel.firePropertyChanged();
     }

@@ -71,6 +71,9 @@ public class RecentChatsInteractor implements RecentChatsInputBoundary {
                     final List<String> users = chat.getParticipantUserIds();
                     name = users.get(0).equals(currentUsername) ? users.get(1) : users.get(0);
                 }
+                if (chatNames.contains(name)) {
+                    name = name + "(copy)";
+                }
                 nameToChatIds.put(name, chat.getId());
                 chatNames.add(name);
             }

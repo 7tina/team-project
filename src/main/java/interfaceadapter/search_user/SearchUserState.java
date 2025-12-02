@@ -3,11 +3,13 @@ package interfaceadapter.search_user;
 import java.util.List;
 
 public class SearchUserState {
-    private List<String> searchResults = null;
-    private String searchError = null;
+    private List<String> searchResults;
+    private String searchError = "";
 
     // Default constructor
-    public SearchUserState() {}
+    public SearchUserState() {
+
+    }
 
     // Getters
     public List<String> getSearchResults() {
@@ -15,6 +17,7 @@ public class SearchUserState {
     }
 
     public String getSearchError() {
+
         return searchError;
     }
 
@@ -24,6 +27,7 @@ public class SearchUserState {
     }
 
     public void setSearchError(String searchError) {
+
         this.searchError = searchError;
     }
 }

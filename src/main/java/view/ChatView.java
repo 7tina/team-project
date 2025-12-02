@@ -12,9 +12,9 @@ import interfaceadapter.ViewManagerModel;
 import interfaceadapter.logged_in.LoggedInViewModel;
 import interfaceadapter.messaging.ChatState;
 import interfaceadapter.messaging.ChatViewModel;
-import interfaceadapter.messaging.delete_m.DeleteMessageController;
+import interfaceadapter.messaging.deletemessage.DeleteMessageController;
 import interfaceadapter.messaging.search_history.SearchChatHistoryController;
-import interfaceadapter.messaging.send_m.SendMessageController;
+import interfaceadapter.messaging.sendmessage.SendMessageController;
 import interfaceadapter.messaging.view_history.ViewChatHistoryController;
 import interfaceadapter.recent_chat.RecentChatsController;
 

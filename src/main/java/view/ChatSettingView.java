@@ -1,22 +1,23 @@
 package view;
 
-import interface_adapter.ViewManagerModel;
-import interface_adapter.groupchat.adduser.AddUserController;
-import interface_adapter.groupchat.changegroupname.ChangeGroupNameController;
-import interface_adapter.groupchat.removeuser.RemoveUserController;
-import interface_adapter.messaging.ChatViewModel;
-import interface_adapter.messaging.ChatState;
-
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
+import javax.swing.*;
+
+import interfaceadapter.ViewManagerModel;
+import interfaceadapter.groupchat.adduser.AddUserController;
+import interfaceadapter.groupchat.changegroupname.ChangeGroupNameController;
+import interfaceadapter.groupchat.removeuser.RemoveUserController;
+import interfaceadapter.messaging.ChatState;
+import interfaceadapter.messaging.ChatViewModel;
+
 public class ChatSettingView extends JPanel implements ActionListener, PropertyChangeListener {
 
-    public static final String viewName = "chat setting";
+    private final String viewName = "chat setting";
     private final ViewManagerModel viewManagerModel;
     private final ChatViewModel chatViewModel;
 
@@ -42,16 +43,16 @@ public class ChatSettingView extends JPanel implements ActionListener, PropertyC
         this.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         // ===== Top Bar with Back Button =====
-        JPanel topBar = new JPanel(new BorderLayout());
+        final JPanel topBar = new JPanel(new BorderLayout());
 
-        JButton backButton = new JButton("⬅");
+        final JButton backButton = new JButton("⬅");
         backButton.setFont(new Font("SansSerif", Font.BOLD, 20));
-        backButton.addActionListener(e -> {
+        backButton.addActionListener(evnt -> {
             viewManagerModel.setState("chat");
             viewManagerModel.firePropertyChange();
         });
 
-        JLabel title = new JLabel("Chat Settings", SwingConstants.CENTER);
+        final JLabel title = new JLabel("Chat Settings", SwingConstants.CENTER);
         title.setFont(new Font("SansSerif", Font.BOLD, 24));
 
         // Create a wrapper for the back button
@@ -73,7 +74,7 @@ public class ChatSettingView extends JPanel implements ActionListener, PropertyC
         this.add(topBar, BorderLayout.NORTH);
 
         // ===== Main Button Panel =====
-        JPanel contentPanel = new JPanel();
+        final JPanel contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.setBorder(BorderFactory.createEmptyBorder(40, 20, 40, 20));
 
@@ -131,7 +132,7 @@ public class ChatSettingView extends JPanel implements ActionListener, PropertyC
                 return;
             }
 
-            String newName = JOptionPane.showInputDialog(this,
+            final String newName = JOptionPane.showInputDialog(this,
                     "Enter new group name:",
                     "Change Group Name",
                     JOptionPane.PLAIN_MESSAGE);
@@ -169,7 +170,7 @@ public class ChatSettingView extends JPanel implements ActionListener, PropertyC
                 return;
             }
 
-            String user = JOptionPane.showInputDialog(this,
+            final String user = JOptionPane.showInputDialog(this,
                     "Enter username to add:",
                     "Add User",
                     JOptionPane.PLAIN_MESSAGE);
@@ -207,7 +208,7 @@ public class ChatSettingView extends JPanel implements ActionListener, PropertyC
                 return;
             }
 
-            String user = JOptionPane.showInputDialog(this,
+            final String user = JOptionPane.showInputDialog(this,
                     "Enter username to remove:",
                     "Remove User",
                     JOptionPane.PLAIN_MESSAGE);
@@ -236,7 +237,7 @@ public class ChatSettingView extends JPanel implements ActionListener, PropertyC
             return;
         }
 
-        Object newValue = evt.getNewValue();
+        final Object newValue = evt.getNewValue();
         if (!(newValue instanceof ChatState)) {
             return;
         }
@@ -246,7 +247,7 @@ public class ChatSettingView extends JPanel implements ActionListener, PropertyC
             return;
         }
 
-        ChatState state = (ChatState) newValue;
+        final ChatState state = (ChatState) newValue;
 
         // Update members display
         if (state.getParticipants() != null && !state.getParticipants().isEmpty()) {

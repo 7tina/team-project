@@ -1,27 +1,27 @@
 package view;
 
-import interface_adapter.ViewManagerModel;
-
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import interface_adapter.logged_in.LoggedInState;
-import interface_adapter.logged_in.LoggedInViewModel;
-import interface_adapter.messaging.ChatState;
-import interface_adapter.messaging.ChatViewModel;
-import interface_adapter.search_user.SearchUserController;
-import interface_adapter.search_user.SearchUserViewModel;
-import interface_adapter.search_user.SearchUserState;
-import interface_adapter.create_chat.CreateChatController;
-
 import java.util.List;
+
+import javax.swing.*;
+
+import interfaceadapter.ViewManagerModel;
+import interfaceadapter.create_chat.CreateChatController;
+import interfaceadapter.logged_in.LoggedInState;
+import interfaceadapter.logged_in.LoggedInViewModel;
+import interfaceadapter.messaging.ChatState;
+import interfaceadapter.messaging.ChatViewModel;
+import interfaceadapter.search_user.SearchUserController;
+import interfaceadapter.search_user.SearchUserState;
+import interfaceadapter.search_user.SearchUserViewModel;
 
 public class SearchUserView extends JPanel implements ActionListener, PropertyChangeListener {
 
-    public final String viewName = "new chat";
+    private final String viewName = "new chat";
 
     private SearchUserController searchUserController;
     private final ViewManagerModel viewManagerModel;
@@ -45,9 +45,10 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
     private final DefaultListModel<String> userListModel;
 
     private boolean started = false;
-    private String lastLoggedInUser = null; // Track the last user we loaded results for
-    private boolean viewIsActive = false; // Track if this view is currently displayed
-
+    // Track the last user we loaded results for
+    private String lastLoggedInUser = null;
+    // Track if this view is currently displayed
+    private boolean viewIsActive = false;
 
     public SearchUserView(ViewManagerModel viewManagerModel, SearchUserViewModel searchUserViewModel,
                           ChatViewModel chatViewModel,
@@ -64,30 +65,28 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         this.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        JPanel searchPanel = new JPanel();
+        final JPanel searchPanel = new JPanel();
         searchPanel.setLayout(new BoxLayout(searchPanel, BoxLayout.X_AXIS));
 
-        JLabel searchLabel = new JLabel("Search for User: ");
+        final JLabel searchLabel = new JLabel("Search for User: ");
         searchInputField = new JTextField(20);
 
         // Listen for when this view becomes active
         this.viewManagerModel.addPropertyChangeListener(evt -> {
             if ("state".equals(evt.getPropertyName())) {
-                String newViewName = (String) evt.getNewValue();
-                boolean wasActive = viewIsActive;
+                final String newViewName = (String) evt.getNewValue();
+                final boolean wasActive = viewIsActive;
                 viewIsActive = viewName.equals(newViewName);
 
                 // If view just became active, refresh the search
                 if (viewIsActive && !wasActive) {
-                    String currentUsername = loggedInViewModel.getState().getUsername();
+                    final String currentUsername = loggedInViewModel.getState().getUsername();
                     if (currentUsername != null) {
                         findUsers(currentUsername, searchInputField.getText());
                     }
                 }
             }
         });
-
-
 
         // Exit/Cancel Button
         searchExitButton = new JButton("✕");
@@ -110,7 +109,7 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
         userList = new JList<>(userListModel);
         userList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
-        JScrollPane scrollPane = new JScrollPane(userList);
+        final JScrollPane scrollPane = new JScrollPane(userList);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
 
@@ -120,37 +119,41 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
         selectionLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         // Hint label
-        JLabel hintLabel = new JLabel("Tip: Hold Ctrl to select multiple users for group chat");
+        final JLabel hintLabel = new JLabel("Tip: Hold Ctrl to select multiple users for group chat");
         hintLabel.setFont(new Font("SansSerif", Font.ITALIC, 10));
         hintLabel.setForeground(Color.GRAY);
         hintLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         // Create button BEFORE adding listener
         startChatButton = new JButton("Start Chat (99)");
-        Dimension buttonSize = startChatButton.getPreferredSize();
-        startChatButton.setText("Start Chat"); // Reset to default text
-        startChatButton.setPreferredSize(buttonSize); // Lock the size
+        final Dimension buttonSize = startChatButton.getPreferredSize();
+        // Reset to default text
+        startChatButton.setText("Start Chat");
+        // Lock the size
+        startChatButton.setPreferredSize(buttonSize);
         startChatButton.setMinimumSize(buttonSize);
         startChatButton.setMaximumSize(buttonSize);
 
         // Add selection listener for visual feedback
-        userList.addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                int count = userList.getSelectedValuesList().size();
+        userList.addListSelectionListener(evnt -> {
+            if (!evnt.getValueIsAdjusting()) {
+                final int count = userList.getSelectedValuesList().size();
                 selectionLabel.setText(count + (count == 1 ? " user" : " users") + " selected");
 
                 // Update button text dynamically
                 if (count == 1) {
                     startChatButton.setText("Start Chat");
-                } else if (count > 1) {
+                }
+                else if (count > 1) {
                     startChatButton.setText("Create Group Chat (" + count + ")");
-                } else {
+                }
+                else {
                     startChatButton.setText("Start Chat");
                 }
             }
         });
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        final JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         startChatButton.addActionListener(this);
         buttonPanel.add(startChatButton);
 
@@ -174,8 +177,9 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
             // Exit button to return to the home screen
             viewManagerModel.setState("logged in");
             viewManagerModel.firePropertyChange();
-        } else if (evt.getSource().equals(startChatButton)) {
-            List<String> selectedUsernames = userList.getSelectedValuesList();
+        }
+        else if (evt.getSource().equals(startChatButton)) {
+            final List<String> selectedUsernames = userList.getSelectedValuesList();
 
             if (selectedUsernames.isEmpty()) {
                 JOptionPane.showMessageDialog(this,
@@ -187,7 +191,7 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
 
             // Check if any selected user is an error message
             for (String user : selectedUsernames) {
-                if (user.startsWith("Error:") || user.equals("No users found.")) {
+                if (user.startsWith("Error:") || "No users found.".equals(user)) {
                     JOptionPane.showMessageDialog(this, "Please select a valid user to start a chat.");
                     return;
                 }
@@ -196,7 +200,8 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
             if (selectedUsernames.size() == 1) {
                 // Individual chat
                 startIndividualChat(selectedUsernames, false);
-            } else {
+            }
+            else {
                 // Group chat
                 startGroupChat(selectedUsernames, true);
             }
@@ -214,12 +219,13 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
 
     private void startIndividualChat(List<String> selectedUsernames, boolean isGroupChat) {
         // Get current logged-in user from session
-        String currentUsername = loggedInViewModel.getState().getUsername();
+        final String currentUsername = loggedInViewModel.getState().getUsername();
 
         // Find the target user
         if (createChatController != null) {
             createChatController.execute(currentUsername, selectedUsernames, "", isGroupChat);
-        } else {
+        }
+        else {
             JOptionPane.showMessageDialog(this,
                     "Chat feature not initialized",
                     "Error",
@@ -229,7 +235,7 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
 
     private void startGroupChat(List<String> usernames, boolean isGroupChat) {
         // Prompt user for group name
-        String groupName = JOptionPane.showInputDialog(this,
+        final String groupName = JOptionPane.showInputDialog(this,
                 "Enter a name for the group chat:",
                 "Create Group Chat",
                 JOptionPane.PLAIN_MESSAGE);
@@ -249,10 +255,11 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
 
         if (createChatController != null) {
             // Get current username
-            String currentUsername = loggedInViewModel.getState().getUsername();
+            final String currentUsername = loggedInViewModel.getState().getUsername();
 
             createChatController.execute(currentUsername, usernames, groupName.trim(), isGroupChat);
-        } else {
+        }
+        else {
             JOptionPane.showMessageDialog(this,
                     "Group chat feature not initialized",
                     "Error",
@@ -262,15 +269,12 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        String currentUsername = loggedInViewModel.getState().getUsername();
-
         if ("state".equals(evt.getPropertyName())) {
-            Object newValue = evt.getNewValue();
+            final Object newValue = evt.getNewValue();
 
             // Check if it's SearchUserState
             if (newValue instanceof SearchUserState) {
-                SearchUserState state = (SearchUserState) newValue;
-                String currentUser = loggedInViewModel.getState().getUsername();
+                final SearchUserState state = (SearchUserState) newValue;
 
                 // Always clear the list before updating
                 userListModel.clear();
@@ -282,7 +286,8 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
                     boolean usersAdded = false;
 
                     for (String username : state.getSearchResults()) {
-                        String currentUser1 = loggedInViewModel.getState().getUsername(); // Get current user
+                        // Get current user
+                        final String currentUser1 = loggedInViewModel.getState().getUsername();
 
                         // This check prevents the current user from being added to the list
                         if (!username.equals(currentUser1)) {
@@ -305,7 +310,7 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
 
             // Check if it's ChatState
             else if (newValue instanceof ChatState) {
-                ChatState chatState = (ChatState) newValue;
+                final ChatState chatState = (ChatState) newValue;
                 if (chatState.getError() != null) {
                     // Show error message if group chat creation failed
                     JOptionPane.showMessageDialog(this,
@@ -321,14 +326,23 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
         return viewName;
     }
 
+    /**
+     * Sets the controller for the search user use case.
+     * @param searchUserController the controller.
+     */
     public void setUserSearchController(SearchUserController searchUserController) {
         this.searchUserController = searchUserController;
         searchInputField.addActionListener(e -> {
-            String currentUsername = loggedInViewModel.getState().getUsername();
+            final String currentUsername = loggedInViewModel.getState().getUsername();
             findUsers(currentUsername, searchInputField.getText());
         });
     }
 
+    /**
+     * Starts the search user use case by calling on the controller.
+     * @param username the current username
+     * @param query the query to search for
+     */
     public void findUsers(String username, String query) {
         if (this.searchUserController != null) {
             this.searchUserController.execute(username, query);

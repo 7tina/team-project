@@ -1,9 +1,10 @@
 package use_case.login;
 
-import data_access.InMemoryUserDataAccessObject;
+import dataaccess.InMemoryUserDataAccessObject;
 import entity.UserFactory;
 import entity.User;
 import org.junit.jupiter.api.Test;
+import usecase.login.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 

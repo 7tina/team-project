@@ -45,6 +45,8 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
     private final DefaultListModel<String> userListModel;
 
     private boolean started = false;
+    private String lastLoggedInUser = null; // Track the last user we loaded results for
+    private boolean viewIsActive = false; // Track if this view is currently displayed
 
 
     public SearchUserView(ViewManagerModel viewManagerModel, SearchUserViewModel searchUserViewModel,
@@ -68,8 +70,27 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
         JLabel searchLabel = new JLabel("Search for User: ");
         searchInputField = new JTextField(20);
 
+        // Listen for when this view becomes active
+        this.viewManagerModel.addPropertyChangeListener(evt -> {
+            if ("state".equals(evt.getPropertyName())) {
+                String newViewName = (String) evt.getNewValue();
+                boolean wasActive = viewIsActive;
+                viewIsActive = viewName.equals(newViewName);
+
+                // If view just became active, refresh the search
+                if (viewIsActive && !wasActive) {
+                    String currentUsername = loggedInViewModel.getState().getUsername();
+                    if (currentUsername != null) {
+                        findUsers(currentUsername, searchInputField.getText());
+                    }
+                }
+            }
+        });
+
+
+
         // Exit/Cancel Button
-        searchExitButton = new JButton("❌");
+        searchExitButton = new JButton("✕");
         searchExitButton.setFont(new Font("Oxygen", Font.BOLD, 16));
         searchExitButton.setFocusPainted(false);
         searchExitButton.setBorderPainted(false);
@@ -142,7 +163,9 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
     @Override
     public void actionPerformed(ActionEvent evt) {
         if (evt.getSource().equals(searchExitButton)) {
-            this.started = false;
+            // Clear the list when exiting
+            userListModel.clear();
+            searchInputField.setText("");
             // Exit button to return to the home screen
             viewManagerModel.setState("logged in");
             viewManagerModel.firePropertyChange();
@@ -242,6 +265,9 @@ public class SearchUserView extends JPanel implements ActionListener, PropertyCh
             // Check if it's SearchUserState
             if (newValue instanceof SearchUserState) {
                 SearchUserState state = (SearchUserState) newValue;
+                String currentUser = loggedInViewModel.getState().getUsername();
+
+                // Always clear the list before updating
                 userListModel.clear();
 
                 if (state.getSearchError() != null) {

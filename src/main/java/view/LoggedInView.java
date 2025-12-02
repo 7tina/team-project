@@ -1,22 +1,19 @@
-// LoggedInView.java (Only showing the necessary changes/additions)
 package view;
 
-import interface_adapter.ViewManagerModel; // <-- NEW IMPORT NEEDED
-import interface_adapter.logged_in.ChangePasswordController;
-import interface_adapter.logged_in.LoggedInState;
-import interface_adapter.logged_in.LoggedInViewModel;
-import interface_adapter.logout.LogoutController;
-
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.List;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+
+import javax.swing.*;
+
+import interfaceadapter.ViewManagerModel;
+import interfaceadapter.logged_in.ChangePasswordController;
+import interfaceadapter.logged_in.LoggedInState;
+import interfaceadapter.logged_in.LoggedInViewModel;
+import interfaceadapter.logout.LogoutController;
 
 /**
  * The View for when the user is logged into the program, now displaying the chat list.
@@ -54,11 +51,8 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
 
         profileButton = new JButton("👤");
         profileButton.setFont(new Font("SansSerif", Font.PLAIN, 24));
-//        profileButton.setFocusPainted(false);
-//        profileButton.setBorderPainted(false);
-//        profileButton.setContentAreaFilled(false);
 
-        JPanel profileChatPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        final JPanel profileChatPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         profileChatPanel.add(profileButton);
 
         usernameLabel = new JLabel("User");
@@ -73,13 +67,13 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
         newChatButton = new JButton("➕");
         newChatButton.setFont(new Font("SansSerif", Font.PLAIN, 24));
 
-        JPanel newChatPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        final JPanel newChatPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         newChatPanel.add(newChatButton);
 
         topBar.add(newChatPanel, BorderLayout.EAST);
 
         // Recent Chats Panel
-        JLabel recentChatsTitle = new JLabel("Recent Chats");
+        final JLabel recentChatsTitle = new JLabel("Recent Chats");
         recentChatsTitle.setFont(new Font("SansSerif", Font.BOLD, 20));
 
         recentPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -87,27 +81,27 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
         recentPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
         recentPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, recentPanel.getPreferredSize().height));
 
-        JSeparator separator = new JSeparator(SwingConstants.HORIZONTAL);
+        final JSeparator separator = new JSeparator(SwingConstants.HORIZONTAL);
         separator.setBorder(BorderFactory.createDashedBorder(Color.BLACK));
         separator.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
 
         recentChatsModel = new DefaultListModel<String>();
         recentChatsList = new JList<>(recentChatsModel);
-        JScrollPane scrollPane = new JScrollPane(recentChatsList);
+        final JScrollPane scrollPane = new JScrollPane(recentChatsList);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
 
-        JPanel buttonPanel = new JPanel();
+        final JPanel buttonPanel = new JPanel();
         logOut = new JButton("Logout");
 
         // PROFILE BUTTON: Navigate to AccountDetailsView
-        profileButton.addActionListener(e -> {
+        profileButton.addActionListener(evnt -> {
             viewManagerModel.setState("account details");
             viewManagerModel.firePropertyChange();
         });
 
         // NEW CHAT BUTTON: Navigate to NewChatView
-        newChatButton.addActionListener(e -> {
+        newChatButton.addActionListener(evnt -> {
             viewManagerModel.setState("new chat");
             viewManagerModel.firePropertyChange();
         });
@@ -116,7 +110,8 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
         logOut.addActionListener(this);
 
         buttonPanel.add(logOut);
-        buttonPanel.setVisible(false); // Keep hidden
+        // Keep hidden
+        buttonPanel.setVisible(false);
 
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
@@ -171,7 +166,7 @@ public class LoggedInView extends JPanel implements ActionListener, PropertyChan
 
         else if (evt.getPropertyName().equals("recentChats")) {
             final LoggedInState state = (LoggedInState) evt.getNewValue();
-            List<String> chatNames = state.getChatNames();
+            final List<String> chatNames = state.getChatNames();
             for (String name : chatNames) {
                 recentChatsModel.addElement(name);
             }

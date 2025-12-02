@@ -1,215 +1,198 @@
 package use_case.search_user;
 
 import entity.User;
-import entity.repo.InMemoryUserRepository;
 import entity.ports.UserRepository;
 import org.junit.jupiter.api.Test;
+import usecase.search_user.*;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class SearchUserInteractorTest {
 
-    /**
-     * Mock implementation of SearchUserDataAccessInterface to control search results.
-     */
-    private static class MockSearchUserDataAccess implements SearchUserDataAccessInterface {
-        private final List<String> mockResults;
-        private final boolean shouldReturnResults;
-        private final String expectedUserId; // To check what User ID is passed
-
-        // Constructor for success case
-        MockSearchUserDataAccess(List<String> mockResults, String expectedUserId) {
-            this.mockResults = mockResults;
-            this.shouldReturnResults = true;
-            this.expectedUserId = expectedUserId;
-        }
-
-        // Constructor for failure (no results found) case
-        MockSearchUserDataAccess(String expectedUserId) {
-            this.mockResults = Arrays.asList();
-            this.shouldReturnResults = false;
-            this.expectedUserId = expectedUserId;
-        }
-
-        @Override
-        public List<String> searchUsers(String currentUserId, String query) {
-            // Assert the userId passed to the DAO is the expected one
-            assertEquals(expectedUserId, currentUserId);
-
-            // Simulate the DAO logic
-            if (shouldReturnResults) {
-                return mockResults;
-            } else {
-                return Arrays.asList();
-            }
-        }
-    }
-
-    /**
-     * Setup a UserRepository with a valid test user for authenticated sessions.
-     */
-    private UserRepository setupUserRepository(String testUsername) {
-        UserRepository userRepository = new InMemoryUserRepository();
-        User testUser = new User(testUsername, "testPassword");
-        userRepository.save(testUser);
-
-        // Add other users to the repository
-        userRepository.save(new User("Alice", "pass"));
-        userRepository.save(new User("Bob", "pass"));
-        userRepository.save(new User("Charlie", "pass"));
-
-        return userRepository;
-    }
-
-    // Success Tests
-
     @Test
-    void successTest_queryMatchesUsers() {
-        String validUserId = "testUser";
-        List<String> expectedResults = Arrays.asList("Alice", "Charlie");
-        SearchUserInputData inputData = new SearchUserInputData(validUserId, "ice");
-        SearchUserDataAccessInterface userDataAccessObject = new MockSearchUserDataAccess(expectedResults, validUserId);
-        UserRepository userRepository = setupUserRepository(validUserId);
+    void successTest() {
+        // Setup test data
+        SearchUserInputData inputData = new SearchUserInputData("Alice", "Bob");
 
-        // This presenter asserts a successful result
+        // Mock UserRepository
+        UserRepository mockUserRepository = new UserRepository() {
+            @Override
+            public Optional<User> findByUsername(String username) {
+                if ("Alice".equals(username)) {
+                    return Optional.of(new User("Alice", "password"));
+                }
+                return Optional.empty();
+            }
+
+            @Override
+            public User save(User user) {
+                return user;
+            }
+        };
+
+        // Mock DataAccessInterface
+        SearchUserDataAccessInterface mockDataAccess = new SearchUserDataAccessInterface() {
+            @Override
+            public List<String> searchUsers(String userId, String query) {
+                // Simulate finding users matching "Bob"
+                List<String> results = new ArrayList<>();
+                results.add("Bobby");
+                results.add("BobTheBuilder");
+                return results;
+            }
+        };
+
+        // Success presenter
         SearchUserOutputBoundary successPresenter = new SearchUserOutputBoundary() {
             @Override
             public void prepareSuccessView(SearchUserOutputData outputData) {
-                assertEquals(expectedResults, outputData.getUsernames());
+                // Verify the output contains the expected usernames
+                assertEquals(2, outputData.getUsernames().size());
+                assertTrue(outputData.getUsernames().contains("Bobby"));
+                assertTrue(outputData.getUsernames().contains("BobTheBuilder"));
             }
 
             @Override
             public void prepareFailView(String error) {
-                fail("Use case failure is unexpected: " + error);
+                fail("Use case failure is unexpected.");
             }
         };
 
-        SearchUserInputBoundary interactor = new SearchUserInteractor(userDataAccessObject, successPresenter, userRepository);
+        SearchUserInputBoundary interactor = new SearchUserInteractor(
+                mockDataAccess, successPresenter, mockUserRepository);
         interactor.execute(inputData);
     }
 
     @Test
-    void successTest_emptyQuery() {
-        String validUserId = "testUser";
-        List<String> expectedResults = Arrays.asList("All", "Users"); // DAO should return all users
-        SearchUserInputData inputData = new SearchUserInputData(validUserId, "");
-        SearchUserDataAccessInterface userDataAccessObject = new MockSearchUserDataAccess(expectedResults, validUserId);
-        UserRepository userRepository = setupUserRepository(validUserId);
+    void successEmptyQueryTest() {
+        // Test with empty query (should return all users except current user)
+        SearchUserInputData inputData = new SearchUserInputData("Alice", "");
 
-        // This presenter asserts a successful result
+        UserRepository mockUserRepository = new UserRepository() {
+            @Override
+            public Optional<User> findByUsername(String username) {
+                if ("Alice".equals(username)) {
+                    return Optional.of(new User("Alice", "password"));
+                }
+                return Optional.empty();
+            }
+
+            @Override
+            public User save(User user) {
+                return user;
+            }
+        };
+
+        SearchUserDataAccessInterface mockDataAccess = new SearchUserDataAccessInterface() {
+            @Override
+            public List<String> searchUsers(String userId, String query) {
+                // Return all users when query is empty
+                List<String> results = new ArrayList<>();
+                results.add("Bob");
+                results.add("Charlie");
+                results.add("Diana");
+                return results;
+            }
+        };
+
         SearchUserOutputBoundary successPresenter = new SearchUserOutputBoundary() {
             @Override
             public void prepareSuccessView(SearchUserOutputData outputData) {
-                assertEquals(expectedResults, outputData.getUsernames());
+                assertEquals(3, outputData.getUsernames().size());
+                assertTrue(outputData.getUsernames().contains("Bob"));
+                assertTrue(outputData.getUsernames().contains("Charlie"));
+                assertTrue(outputData.getUsernames().contains("Diana"));
             }
 
             @Override
             public void prepareFailView(String error) {
-                fail("Use case failure is unexpected for an empty query: " + error);
+                fail("Use case failure is unexpected.");
             }
         };
 
-        SearchUserInputBoundary interactor = new SearchUserInteractor(userDataAccessObject, successPresenter, userRepository);
+        SearchUserInputBoundary interactor = new SearchUserInteractor(
+                mockDataAccess, successPresenter, mockUserRepository);
         interactor.execute(inputData);
     }
 
     @Test
-    void successTest_nullQuery() {
-        String validUserId = "testUser";
-        List<String> expectedResults = Arrays.asList("All", "Users"); // DAO should return all users
-        SearchUserInputData inputData = new SearchUserInputData(validUserId, null); // Pass null query
+    void successNullQueryTest() {
+        // Test with null query (should be treated as empty query)
+        SearchUserInputData inputData = new SearchUserInputData("Alice", null);
 
-        // DAO Mock will receive an empty string for the query because Interactor handles null
-        SearchUserDataAccessInterface userDataAccessObject = new MockSearchUserDataAccess(expectedResults, validUserId);
-        UserRepository userRepository = setupUserRepository(validUserId);
+        UserRepository mockUserRepository = new UserRepository() {
+            @Override
+            public Optional<User> findByUsername(String username) {
+                if ("Alice".equals(username)) {
+                    return Optional.of(new User("Alice", "password"));
+                }
+                return Optional.empty();
+            }
 
-        // This presenter asserts a successful result
+            @Override
+            public User save(User user) {
+                return user;
+            }
+        };
+
+        SearchUserDataAccessInterface mockDataAccess = new SearchUserDataAccessInterface() {
+            @Override
+            public List<String> searchUsers(String userId, String query) {
+                // Verify that null query was converted to empty string
+                assertEquals("", query);
+                List<String> results = new ArrayList<>();
+                results.add("Bob");
+                return results;
+            }
+        };
+
         SearchUserOutputBoundary successPresenter = new SearchUserOutputBoundary() {
             @Override
             public void prepareSuccessView(SearchUserOutputData outputData) {
-                assertEquals(expectedResults, outputData.getUsernames());
+                assertEquals(1, outputData.getUsernames().size());
+                assertTrue(outputData.getUsernames().contains("Bob"));
             }
 
             @Override
             public void prepareFailView(String error) {
-                fail("Use case failure is unexpected for a null query: " + error);
+                fail("Use case failure is unexpected.");
             }
         };
 
-        SearchUserInputBoundary interactor = new SearchUserInteractor(userDataAccessObject, successPresenter, userRepository);
+        SearchUserInputBoundary interactor = new SearchUserInteractor(
+                mockDataAccess, successPresenter, mockUserRepository);
         interactor.execute(inputData);
     }
 
     @Test
-    void successTest_nullUserUnauthenticatedSearch() {
-        // This test covers the case where the currentUserID is null (unauthenticated user).
-        List<String> expectedResults = Arrays.asList("Public", "Users");
-        SearchUserInputData inputData = new SearchUserInputData(null, "query"); // Pass null user ID
+    void failureNullUsernameTest() {
+        // Test with null current username
+        SearchUserInputData inputData = new SearchUserInputData(null, "Bob");
 
-        // DAO Mock will receive a null user ID, and returns results
-        SearchUserDataAccessInterface userDataAccessObject = new MockSearchUserDataAccess(expectedResults, null);
-        UserRepository userRepository = new InMemoryUserRepository(); // Repository can be empty since we skip validation
-
-        // This presenter asserts a successful result
-        SearchUserOutputBoundary successPresenter = new SearchUserOutputBoundary() {
+        UserRepository mockUserRepository = new UserRepository() {
             @Override
-            public void prepareSuccessView(SearchUserOutputData outputData) {
-                assertEquals(expectedResults, outputData.getUsernames());
+            public Optional<User> findByUsername(String username) {
+                return Optional.empty();
             }
 
             @Override
-            public void prepareFailView(String error) {
-                fail("Use case failure is unexpected for a null user ID: " + error);
+            public User save(User user) {
+                return user;
             }
         };
 
-        SearchUserInputBoundary interactor = new SearchUserInteractor(userDataAccessObject, successPresenter, userRepository);
-        interactor.execute(inputData);
-    }
-
-    // Failure Tests
-
-    @Test
-    void failureTest_noUsersFound() {
-        String validUserId = "testUser";
-        String query = "nonexistentuser";
-        SearchUserInputData inputData = new SearchUserInputData(validUserId, query);
-
-        // This DAO mock returns an empty list
-        SearchUserDataAccessInterface userDataAccessObject = new MockSearchUserDataAccess(validUserId);
-        UserRepository userRepository = setupUserRepository(validUserId);
-
-        // This presenter asserts the correct failure message
-        SearchUserOutputBoundary failurePresenter = new SearchUserOutputBoundary() {
+        SearchUserDataAccessInterface mockDataAccess = new SearchUserDataAccessInterface() {
             @Override
-            public void prepareSuccessView(SearchUserOutputData outputData) {
-                fail("Use case success is unexpected.");
-            }
-
-            @Override
-            public void prepareFailView(String error) {
-                assertEquals("No users found matching: " + query, error);
+            public List<String> searchUsers(String userId, String query) {
+                fail("Data access should not be called with null username");
+                return new ArrayList<>();
             }
         };
 
-        SearchUserInputBoundary interactor = new SearchUserInteractor(userDataAccessObject, failurePresenter, userRepository);
-        interactor.execute(inputData);
-    }
-
-    @Test
-    void failureTest_currentUserDoesNotExist() {
-        // The user ID is non-null, but not found in the repository
-        String invalidUserId = "nonexistentUser";
-        SearchUserInputData inputData = new SearchUserInputData(invalidUserId, "query");
-
-        // DAO Mock is never called, so the expected user ID doesn't matter here.
-        SearchUserDataAccessInterface userDataAccessObject = new MockSearchUserDataAccess(null);
-        UserRepository userRepository = new InMemoryUserRepository(); // Repository is empty or doesn't contain the user
-
-        // This presenter asserts the session error
         SearchUserOutputBoundary failurePresenter = new SearchUserOutputBoundary() {
             @Override
             public void prepareSuccessView(SearchUserOutputData outputData) {
@@ -222,7 +205,142 @@ class SearchUserInteractorTest {
             }
         };
 
-        SearchUserInputBoundary interactor = new SearchUserInteractor(userDataAccessObject, failurePresenter, userRepository);
+        SearchUserInputBoundary interactor = new SearchUserInteractor(
+                mockDataAccess, failurePresenter, mockUserRepository);
+        interactor.execute(inputData);
+    }
+
+    @Test
+    void failureEmptyUsernameTest() {
+        // Test with empty current username
+        SearchUserInputData inputData = new SearchUserInputData("   ", "Bob");
+
+        UserRepository mockUserRepository = new UserRepository() {
+            @Override
+            public Optional<User> findByUsername(String username) {
+                return Optional.empty();
+            }
+
+            @Override
+            public User save(User user) {
+                return user;
+            }
+        };
+
+        SearchUserDataAccessInterface mockDataAccess = new SearchUserDataAccessInterface() {
+            @Override
+            public List<String> searchUsers(String userId, String query) {
+                fail("Data access should not be called with empty username");
+                return new ArrayList<>();
+            }
+        };
+
+        SearchUserOutputBoundary failurePresenter = new SearchUserOutputBoundary() {
+            @Override
+            public void prepareSuccessView(SearchUserOutputData outputData) {
+                fail("Use case success is unexpected.");
+            }
+
+            @Override
+            public void prepareFailView(String error) {
+                assertEquals("Session error. Please log in again.", error);
+            }
+        };
+
+        SearchUserInputBoundary interactor = new SearchUserInteractor(
+                mockDataAccess, failurePresenter, mockUserRepository);
+        interactor.execute(inputData);
+    }
+
+    @Test
+    void failureNoUsersFoundTest() {
+        // Test when search returns no results
+        SearchUserInputData inputData = new SearchUserInputData("Alice", "Zzzzzz");
+
+        UserRepository mockUserRepository = new UserRepository() {
+            @Override
+            public Optional<User> findByUsername(String username) {
+                if ("Alice".equals(username)) {
+                    return Optional.of(new User("Alice", "password"));
+                }
+                return Optional.empty();
+            }
+
+            @Override
+            public User save(User user) {
+                return user;
+            }
+        };
+
+        SearchUserDataAccessInterface mockDataAccess = new SearchUserDataAccessInterface() {
+            @Override
+            public List<String> searchUsers(String userId, String query) {
+                // Return empty list - no users found
+                return new ArrayList<>();
+            }
+        };
+
+        SearchUserOutputBoundary failurePresenter = new SearchUserOutputBoundary() {
+            @Override
+            public void prepareSuccessView(SearchUserOutputData outputData) {
+                fail("Use case success is unexpected.");
+            }
+
+            @Override
+            public void prepareFailView(String error) {
+                assertEquals("No users found matching: Zzzzzz", error);
+            }
+        };
+
+        SearchUserInputBoundary interactor = new SearchUserInteractor(
+                mockDataAccess, failurePresenter, mockUserRepository);
+        interactor.execute(inputData);
+    }
+
+    @Test
+    void successSingleUserFoundTest() {
+        // Test when exactly one user is found
+        SearchUserInputData inputData = new SearchUserInputData("Alice", "Bob");
+
+        UserRepository mockUserRepository = new UserRepository() {
+            @Override
+            public Optional<User> findByUsername(String username) {
+                if ("Alice".equals(username)) {
+                    return Optional.of(new User("Alice", "password"));
+                }
+                return Optional.empty();
+            }
+
+            @Override
+            public User save(User user) {
+                return user;
+            }
+        };
+
+        SearchUserDataAccessInterface mockDataAccess = new SearchUserDataAccessInterface() {
+            @Override
+            public List<String> searchUsers(String userId, String query) {
+                List<String> results = new ArrayList<>();
+                results.add("Bob");
+                return results;
+            }
+        };
+
+        SearchUserOutputBoundary successPresenter = new SearchUserOutputBoundary() {
+            @Override
+            public void prepareSuccessView(SearchUserOutputData outputData) {
+                assertEquals(1, outputData.getUsernames().size());
+                assertEquals("Bob", outputData.getUsernames().get(0));
+            }
+
+            @Override
+            public void prepareFailView(String error) {
+                fail("Use case failure is unexpected.");
+            }
+        };
+
+        SearchUserInputBoundary interactor = new SearchUserInteractor(
+                mockDataAccess, successPresenter, mockUserRepository);
         interactor.execute(inputData);
     }
 }

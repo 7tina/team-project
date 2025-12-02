@@ -39,69 +39,42 @@ public class AddUserInteractor implements AddUserInputBoundary {
                 return;
             }
 
-            Optional<Chat> chatOpt = chatRepository.findById(chatId);
+            final Optional<Chat> chatOpt = chatRepository.findById(chatId);
 
             if (chatOpt.isEmpty()) {
                 outputBoundary.prepareFailView("Chat not found");
                 return;
             }
 
-            Chat chat = chatOpt.get();
+            final Chat chat = chatOpt.get();
+            final String userIdToAdd = dataAccess.getUserIdByUsername(usernameToAdd.trim());
 
-            String userIdToAdd = dataAccess.getUserIdByUsername(usernameToAdd.trim());
             if (userIdToAdd == null) {
                 outputBoundary.prepareFailView("User not found: " + usernameToAdd);
                 return;
             }
 
-            List<String> currentParticipants = chat.getParticipantUserIds();
+            final List<String> currentParticipants = chat.getParticipantUserIds();
 
             if (currentParticipants.contains(userIdToAdd)) {
                 outputBoundary.prepareFailView("User is already a member of this chat");
-                return;
             }
             else {
-                final Optional<Chat> chatOpt = chatRepository.findById(chatId);
-
-                if (chatOpt.isEmpty()) {
-                    errorMessage = "Chat not found";
+                if (currentParticipants.contains(userIdToAdd)) {
+                    errorMessage = "User is already a member of this chat";
+                }
+                else if (currentParticipants.size() == MAX_PARTICIPANTS) {
+                    errorMessage = "Max number of participants reached";
                 }
                 else {
-                    final Chat chat = chatOpt.get();
-                    final String userIdToAdd = dataAccess.getUserIdByUsername(usernameToAdd.trim());
+                    chat.addParticipant(userIdToAdd);
+                    dataAccess.addUser(chatId, userIdToAdd);
+                    dataAccess.saveChat(chat);
+                    outputData = new AddUserOutputData(chat.getId(), usernameToAdd.trim());
+                    outputBoundary.prepareSuccessView(outputData);
 
-                    if (userIdToAdd == null) {
-                        errorMessage = "User not found: " + usernameToAdd;
-                    }
-                    else {
-                        final List<String> currentParticipants = chat.getParticipantUserIds();
-
-                        if (currentParticipants.contains(userIdToAdd)) {
-                            errorMessage = "User is already a member of this chat";
-                        }
-                        else if (currentParticipants.size() == MAX_PARTICIPANTS) {
-                            errorMessage = "Max number of participants reached";
-                        }
-                        else {
-                            chat.addParticipant(userIdToAdd);
-                            dataAccess.addUser(chatId, userIdToAdd);
-                            final Chat saved = dataAccess.saveChat(chat);
-                            outputData = new AddUserOutputData(saved.getId(), usernameToAdd.trim());
-                        }
-                    }
                 }
             }
-        }
-        catch (IllegalArgumentException | IllegalStateException ex) {
-            errorMessage = "Failed to add user: " + ex.getMessage();
-        }
-
-            chat.addParticipant(userIdToAdd);
-            dataAccess.addUser(chatId, userIdToAdd);
-            Chat saved = dataAccess.saveChat(chat);
-            AddUserOutputData outputData = new AddUserOutputData(saved.getId(), usernameToAdd.trim());
-            outputBoundary.prepareSuccessView(outputData);
-
         } catch (Exception e) {
             outputBoundary.prepareFailView("Failed to add user: " + e.getMessage());
         }

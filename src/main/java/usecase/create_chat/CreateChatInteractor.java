@@ -129,8 +129,11 @@ public class CreateChatInteractor implements CreateChatInputBoundary{
             Instant timeNow = Instant.now();
             Chat newChat = new Chat(chatId, groupName, backgroundColor, timeNow);
             // Add all participants
-            for (String userId : participantIds) {newChat.addParticipant(userId);}
-            returnChat = userDataAccessObject.saveChat(newChat);
+            for (String userId : participantIds) {
+                newChat.addParticipant(userId);
+            }
+            userDataAccessObject.saveChat(newChat);
+            returnChat = newChat;
         }
         return returnChat;
     }

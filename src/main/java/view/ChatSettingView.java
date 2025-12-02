@@ -1,11 +1,11 @@
 package view;
 
-import interface_adapter.ViewManagerModel;
-import interface_adapter.groupchat.adduser.AddUserController;
-import interface_adapter.groupchat.changegroupname.ChangeGroupNameController;
-import interface_adapter.groupchat.removeuser.RemoveUserController;
-import interface_adapter.messaging.ChatViewModel;
-import interface_adapter.messaging.ChatState;
+import interfaceadapter.ViewManagerModel;
+import interfaceadapter.groupchat.adduser.AddUserController;
+import interfaceadapter.groupchat.changegroupname.ChangeGroupNameController;
+import interfaceadapter.groupchat.removeuser.RemoveUserController;
+import interfaceadapter.messaging.ChatViewModel;
+import interfaceadapter.messaging.ChatState;
 
 import javax.swing.*;
 import java.awt.*;

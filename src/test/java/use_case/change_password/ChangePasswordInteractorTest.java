@@ -3,6 +3,7 @@ package use_case.change_password;
 import entity.User;
 import entity.UserFactory;
 import org.junit.jupiter.api.Test;
+import usecase.change_password.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 

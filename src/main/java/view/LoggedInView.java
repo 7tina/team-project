@@ -1,11 +1,11 @@
 // LoggedInView.java (Only showing the necessary changes/additions)
 package view;
 
-import interface_adapter.ViewManagerModel; // <-- NEW IMPORT NEEDED
-import interface_adapter.logged_in.ChangePasswordController;
-import interface_adapter.logged_in.LoggedInState;
-import interface_adapter.logged_in.LoggedInViewModel;
-import interface_adapter.logout.LogoutController;
+import interfaceadapter.ViewManagerModel; // <-- NEW IMPORT NEEDED
+import interfaceadapter.logged_in.ChangePasswordController;
+import interfaceadapter.logged_in.LoggedInState;
+import interfaceadapter.logged_in.LoggedInViewModel;
+import interfaceadapter.logout.LogoutController;
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,9 +14,6 @@ import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.List;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * The View for when the user is logged into the program, now displaying the chat list.

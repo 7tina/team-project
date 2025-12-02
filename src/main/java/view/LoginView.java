@@ -1,9 +1,9 @@
 package view;
 
-import interface_adapter.ViewManagerModel;
-import interface_adapter.login.LoginController;
-import interface_adapter.login.LoginState;
-import interface_adapter.login.LoginViewModel;
+import interfaceadapter.ViewManagerModel;
+import interfaceadapter.login.LoginController;
+import interfaceadapter.login.LoginState;
+import interfaceadapter.login.LoginViewModel;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;

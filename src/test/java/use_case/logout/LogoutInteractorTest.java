@@ -4,6 +4,10 @@ import data_access.InMemoryUserDataAccessObject;
 import entity.UserFactory;
 import entity.User;
 import org.junit.jupiter.api.Test;
+import usecase.logout.LogoutInputBoundary;
+import usecase.logout.LogoutInteractor;
+import usecase.logout.LogoutOutputBoundary;
+import usecase.logout.LogoutOutputData;
 
 import static org.junit.jupiter.api.Assertions.*;
 

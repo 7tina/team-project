@@ -31,19 +31,19 @@ import entity.UserFactory;
 import entity.ports.ChatRepository;
 import entity.ports.MessageRepository;
 import entity.ports.UserRepository;
-import use_case.change_password.ChangePasswordUserDataAccessInterface;
-import use_case.create_chat.CreateChatUserDataAccessInterface;
-import use_case.groups.adduser.AddUserDataAccessInterface;
-import use_case.groups.changegroupname.ChangeGroupNameDataAccessInterface;
-import use_case.groups.removeuser.RemoveUserDataAccessInterface;
-import use_case.login.LoginUserDataAccessInterface;
-import use_case.logout.LogoutUserDataAccessInterface;
-import use_case.messaging.delete_m.DeleteMessageDataAccessInterface;
-import use_case.messaging.send_m.SendMessageDataAccessInterface;
-import use_case.messaging.view_history.ViewChatHistoryDataAccessInterface;
-import use_case.recent_chat.RecentChatsUserDataAccessInterface;
-import use_case.search_user.SearchUserDataAccessInterface;
-import use_case.signup.SignupUserDataAccessInterface;
+import usecase.change_password.ChangePasswordUserDataAccessInterface;
+import usecase.create_chat.CreateChatUserDataAccessInterface;
+import usecase.groups.adduser.AddUserDataAccessInterface;
+import usecase.groups.changegroupname.ChangeGroupNameDataAccessInterface;
+import usecase.groups.removeuser.RemoveUserDataAccessInterface;
+import usecase.login.LoginUserDataAccessInterface;
+import usecase.logout.LogoutUserDataAccessInterface;
+import usecase.messaging.delete_m.DeleteMessageDataAccessInterface;
+import usecase.messaging.send_m.SendMessageDataAccessInterface;
+import usecase.messaging.view_history.ViewChatHistoryDataAccessInterface;
+import usecase.recent_chat.RecentChatsUserDataAccessInterface;
+import usecase.search_user.SearchUserDataAccessInterface;
+import usecase.signup.SignupUserDataAccessInterface;
 
 // CHECKSTYLE:OFF
 /**

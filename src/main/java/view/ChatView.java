@@ -1,14 +1,14 @@
 package view;
 
-import interface_adapter.ViewManagerModel;
-import interface_adapter.logged_in.LoggedInViewModel;
-import interface_adapter.messaging.ChatViewModel;
-import interface_adapter.messaging.ChatState;
-import interface_adapter.messaging.send_m.SendMessageController;
-import interface_adapter.messaging.view_history.ViewChatHistoryController;
-import interface_adapter.messaging.delete_m.DeleteMessageController;
-import interface_adapter.messaging.search_history.SearchChatHistoryController;
-import interface_adapter.recent_chat.RecentChatsController;
+import interfaceadapter.ViewManagerModel;
+import interfaceadapter.logged_in.LoggedInViewModel;
+import interfaceadapter.messaging.ChatViewModel;
+import interfaceadapter.messaging.ChatState;
+import interfaceadapter.messaging.send_m.SendMessageController;
+import interfaceadapter.messaging.view_history.ViewChatHistoryController;
+import interfaceadapter.messaging.delete_m.DeleteMessageController;
+import interfaceadapter.messaging.search_history.SearchChatHistoryController;
+import interfaceadapter.recent_chat.RecentChatsController;
 
 import java.util.List;
 import javax.swing.*;

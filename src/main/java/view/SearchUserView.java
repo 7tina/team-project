@@ -1,6 +1,6 @@
 package view;
 
-import interface_adapter.ViewManagerModel;
+import interfaceadapter.ViewManagerModel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -8,14 +8,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import interface_adapter.logged_in.LoggedInState;
-import interface_adapter.logged_in.LoggedInViewModel;
-import interface_adapter.messaging.ChatState;
-import interface_adapter.messaging.ChatViewModel;
-import interface_adapter.search_user.SearchUserController;
-import interface_adapter.search_user.SearchUserViewModel;
-import interface_adapter.search_user.SearchUserState;
-import interface_adapter.create_chat.CreateChatController;
+import interfaceadapter.logged_in.LoggedInState;
+import interfaceadapter.logged_in.LoggedInViewModel;
+import interfaceadapter.messaging.ChatState;
+import interfaceadapter.messaging.ChatViewModel;
+import interfaceadapter.search_user.SearchUserController;
+import interfaceadapter.search_user.SearchUserViewModel;
+import interfaceadapter.search_user.SearchUserState;
+import interfaceadapter.create_chat.CreateChatController;
 
 import java.util.List;
 

@@ -2,6 +2,7 @@ package usecase.messaging.deletemessage;
 
 /**
  * Data access interface for the delete message use case.
+ *
  * <p>
  * Implementations are responsible for removing a message from persistent storage.
  */

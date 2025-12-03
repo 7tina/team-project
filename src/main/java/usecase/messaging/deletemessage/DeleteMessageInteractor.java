@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 /**
  * Interactor for the delete message use case.
+ *
  * <p>
  * It delegates deletion to the Data Access layer, constructs an output data
  * object, and notifies the presenter.
@@ -27,6 +28,7 @@ public class DeleteMessageInteractor implements DeleteMessageInputBoundary {
 
     /**
      * Executes the delete message use case.
+     *
      * <p>
      * On success: calls {@code prepareSuccessView}.
      * On failure: calls {@code prepareFailView}.
@@ -35,12 +37,12 @@ public class DeleteMessageInteractor implements DeleteMessageInputBoundary {
      */
     @Override
     public void execute(DeleteMessageInputData input) {
-        String messageId = input.getMessageId();
+        final String messageId = input.getMessageId();
 
         try {
             dao.deleteMessageById(messageId);
 
-            DeleteMessageOutputData out = new DeleteMessageOutputData(
+            final DeleteMessageOutputData out = new DeleteMessageOutputData(
                     messageId,
                     LocalDateTime.now(),
                     true,
@@ -48,8 +50,9 @@ public class DeleteMessageInteractor implements DeleteMessageInputBoundary {
             );
             presenter.prepareSuccessView(out);
 
-        } catch (Exception e) {
-            DeleteMessageOutputData out = new DeleteMessageOutputData(
+        }
+        catch (Exception e) {
+            final DeleteMessageOutputData out = new DeleteMessageOutputData(
                     messageId,
                     LocalDateTime.now(),
                     false,

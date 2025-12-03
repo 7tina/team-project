@@ -2,6 +2,7 @@ package usecase.messaging.deletemessage;
 
 /**
  * Input data for the delete message use case.
+ *
  * <p>
  * Contains the message ID to delete and the user who requested deletion.
  */

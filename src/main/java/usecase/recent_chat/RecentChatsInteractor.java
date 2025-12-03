@@ -33,7 +33,7 @@ public class RecentChatsInteractor implements RecentChatsInputBoundary {
     @Override
     public void execute(RecentChatsInputData recentChatsInputData) {
         try {
-            String currentUsername = recentChatsInputData.getUserId();
+            final String currentUsername = recentChatsInputData.getUserId();
             messageRepository.clear();
             recentChatsUserDataAccess.updateChatRepository(currentUsername);
             final List<Chat> allChats = chatRepository.findAll();

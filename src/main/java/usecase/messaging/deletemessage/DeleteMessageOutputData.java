@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 /**
  * Output data for the delete message use case.
+ *
  * <p>
  * Contains the ID of the deleted message, the deletion timestamp,
  * a success flag, and an optional failure reason.

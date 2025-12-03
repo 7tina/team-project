@@ -2,6 +2,7 @@ package usecase.messaging.sendmessage;
 
 /**
  * Output boundary for the send message use case.
+ *
  * <p>
  * Implementations are responsible for preparing data for the view layer
  * (e.g., updating a view model).

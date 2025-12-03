@@ -2,6 +2,7 @@ package usecase.messaging.sendmessage;
 
 /**
  * Output data for the send message use case.
+ *
  * <p>
  * This object is created by the interactor and passed to the presenter.
  */
@@ -10,6 +11,7 @@ public class SendMessageOutputData {
     private final String chatId;
     /**
      * Encoded message data.
+     *
      * <p>
      * Expected order:
      * <ol>

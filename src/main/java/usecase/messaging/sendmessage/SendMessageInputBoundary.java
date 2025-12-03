@@ -2,6 +2,7 @@ package usecase.messaging.sendmessage;
 
 /**
  * Input boundary for the send message use case.
+ *
  * <p>
  * This interface is called by the controller layer to trigger the use case.
  */

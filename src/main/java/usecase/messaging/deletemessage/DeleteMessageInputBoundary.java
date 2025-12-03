@@ -2,6 +2,7 @@ package usecase.messaging.deletemessage;
 
 /**
  * Input boundary for the delete message use case.
+ *
  * <p>
  * Called by the controller to initiate the use case.
  */

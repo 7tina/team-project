@@ -29,7 +29,7 @@ public final class FirebaseClientProvider {
 
                 final FirestoreOptions options = FirestoreOptions.newBuilder()
                         .setCredentials(credentials)
-                        .setProjectId("gochat-1c0fc")
+                        .setProjectId("gochat-8f679")
                         .build();
 
                 instance = options.getService();

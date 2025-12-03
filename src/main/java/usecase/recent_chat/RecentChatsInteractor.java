@@ -33,7 +33,7 @@ public class RecentChatsInteractor implements RecentChatsInputBoundary {
     @Override
     public void execute(RecentChatsInputData recentChatsInputData) {
         try {
-            String currentUsername = recentChatsInputData.getUserId();
+            final String currentUsername = recentChatsInputData.getUserId();
             messageRepository.clear();
             recentChatsUserDataAccess.updateChatRepository(currentUsername);
             final List<Chat> allChats = chatRepository.findAll();
@@ -81,8 +81,8 @@ public class RecentChatsInteractor implements RecentChatsInputBoundary {
             final RecentChatsOutputData recentChatsOutputData = new RecentChatsOutputData(chatNames, nameToChatIds);
             recentChatsPresenter.prepareSuccessView(recentChatsOutputData);
         }
-        catch (Exception e) {
-            recentChatsPresenter.prepareFailView(e.getMessage());
+        catch (IllegalArgumentException | IllegalStateException ex) {
+            recentChatsPresenter.prepareFailView(ex.getMessage());
         }
 
     }

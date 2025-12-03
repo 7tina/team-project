@@ -13,7 +13,7 @@ public class ViewChatHistoryInputData {
 
     private final List<String> messageIds;
 
-    public ViewChatHistoryInputData(String chatId,  List<String> userIds, List<String> messageIds) {
+    public ViewChatHistoryInputData(String chatId, List<String> userIds, List<String> messageIds) {
         this.chatId = chatId;
         this.userIds = userIds;
         this.messageIds = messageIds;
@@ -23,7 +23,11 @@ public class ViewChatHistoryInputData {
         return chatId;
     }
 
-    public List<String> getUserIds() {return userIds;}
+    public List<String> getUserIds() {
+        return userIds;
+    }
 
-    public List<String> getMessageIds() {return messageIds;}
+    public List<String> getMessageIds() {
+        return messageIds;
+    }
 }

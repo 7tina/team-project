@@ -1,16 +1,15 @@
 package usecase.messaging.view_history;
 
-import entity.Chat;
-import entity.Message;
-import entity.ports.ChatRepository;
-import entity.ports.MessageRepository;
-import entity.ports.UserRepository;
-
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+
+import entity.Message;
+import entity.ports.ChatRepository;
+import entity.ports.MessageRepository;
+import entity.ports.UserRepository;
 
 /**
  * Use case: view the history of a given chat.

@@ -81,8 +81,8 @@ public class RecentChatsInteractor implements RecentChatsInputBoundary {
             final RecentChatsOutputData recentChatsOutputData = new RecentChatsOutputData(chatNames, nameToChatIds);
             recentChatsPresenter.prepareSuccessView(recentChatsOutputData);
         }
-        catch (Exception e) {
-            recentChatsPresenter.prepareFailView(e.getMessage());
+        catch (IllegalArgumentException | IllegalStateException ex) {
+            recentChatsPresenter.prepareFailView(ex.getMessage());
         }
 
     }

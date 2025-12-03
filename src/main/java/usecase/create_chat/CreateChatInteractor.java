@@ -1,9 +1,12 @@
 package usecase.create_chat;
 
-import java.awt.*;
+import java.awt.Color;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -49,49 +52,44 @@ public class CreateChatInteractor implements CreateChatInputBoundary {
         try {
             final Optional<User> currentUserOpt = validateUser(currentUserID);
             if (currentUserOpt == null) {
-                return;
+                // Validation failed, error already reported
             }
-
-            final String currentUserId = currentUserOpt.get().getName();
-
-            // Validate input
-            if (!validParticipantInput(participantUsernames)) {
-                return;
+            else if (!validParticipantInput(participantUsernames)) {
+                // Validation failed, error already reported
             }
-
-            // Validate chat requirements
-            if (!individualChatRequirements(groupName, participantUsernames)) {
-                return;
+            else if (!individualChatRequirements(groupName, participantUsernames)) {
+                // Validation failed, error already reported
             }
+            else {
+                // Load target user into userRepository
+                final List<String> participantIds = validateUsers(
+                        currentUserOpt.get().getName(), participantUsernames, false);
 
-            // Load target user into userRepository
-            final List<String> participantIds = validateUsers(currentUserId, participantUsernames, false);
-            if (participantIds == null) {
-                return;
+                if (participantIds != null) {
+                    // Find existing chat with all participants
+                    this.userDataAccessObject.updateChatRepository(currentUserOpt.get().getName());
+                    final List<Chat> allChats = chatRepository.findAll();
+                    final Chat chat = findOrMakeIndividualChat(allChats, participantIds, groupName);
+
+                    if (chat != null) {
+                        final String chatId = chat.getId();
+                        final String chatName = chat.getGroupName();
+                        final List<String> chatUsers = chat.getParticipantUserIds();
+                        final List<String> chatMessages = chat.getMessageIds();
+
+                        final CreateChatOutputData createChatOutputData = new CreateChatOutputData(
+                                false, chatId, chatName, chatUsers, chatMessages, true, null,
+                                currentUserOpt.get().getName());
+                        this.userPresenter.prepareSuccessView(createChatOutputData);
+                    }
+                }
             }
-
-            // Find existing chat with all participants
-            Chat chat = null;
-            this.userDataAccessObject.updateChatRepository(currentUserId);
-            final List<Chat> allChats = chatRepository.findAll();
-            chat = findOrMakeIndividualChat(allChats, participantIds, groupName);
-            if (chat == null) {
-                return;
-            }
-            final String chatId = chat.getId();
-            final String chatName = chat.getGroupName();
-            final List<String> chatUsers = chat.getParticipantUserIds();
-            final List<String> chatMessages = chat.getMessageIds();
-
-            final CreateChatOutputData createChatOutputData = new CreateChatOutputData(
-                    false, chatId, chatName, chatUsers, chatMessages, true, null, currentUserId);
-            this.userPresenter.prepareSuccessView(createChatOutputData);
         }
-        catch (Exception e) {
+        catch (Exception ex) {
             // Handle any unexpected errors
             final CreateChatOutputData createChatOutputData = new CreateChatOutputData(
                     false, null, null, null, null, false,
-                    "Failed to create chat: " + e.getMessage()
+                    "Failed to create chat: " + ex.getMessage()
             );
             userPresenter.prepareFailView(createChatOutputData);
         }
@@ -102,7 +100,7 @@ public class CreateChatInteractor implements CreateChatInputBoundary {
         Chat returnChat = null;
         if (!allChats.isEmpty()) {
             for (Chat chat : allChats) {
-                final java.util.List<String> participants = chat.getParticipantUserIds();
+                final List<String> participants = chat.getParticipantUserIds();
                 Collections.sort(participants);
                 Collections.sort(participantIds);
                 if (participants.size() == 2 && participantIds.size() == 2
@@ -131,13 +129,15 @@ public class CreateChatInteractor implements CreateChatInputBoundary {
 
     @Nullable
     protected List<String> validateUsers(String currentUserId,
-                                       List<String> participantUsernames, boolean isGroup) {
+                                         List<String> participantUsernames, boolean isGroup) {
         final List<String> participantIds = new ArrayList<>();
         // Add creator
         participantIds.add(currentUserId);
 
+        List<String> result = participantIds;
+
         for (String username : participantUsernames) {
-            final Optional<User> userOpt = userRepository.findByUsername(username);
+            Optional<User> userOpt = userRepository.findByUsername(username);
             if (userOpt.isEmpty()) {
                 final boolean load = this.userDataAccessObject.loadToEntity(username);
                 if (!load) {
@@ -146,46 +146,54 @@ public class CreateChatInteractor implements CreateChatInputBoundary {
                             "Null user not found."
                     );
                     userPresenter.prepareFailView(createChatOutputData);
-                    return null;
+                    result = null;
+                    break;
+                }
+                else {
+                    // After successful load, query the repository again to get the user
+                    userOpt = userRepository.findByUsername(username);
                 }
             }
-            else {
+
+            // Now userOpt should be present (either was already there, or just loaded)
+            if (result != null && userOpt.isPresent()) {
                 final String userId = userOpt.get().getName();
                 if (!participantIds.contains(userId)) {
                     participantIds.add(userId);
                 }
             }
         }
-        return participantIds;
+        return result;
     }
 
     protected boolean validParticipantInput(List<String> participantUsernames) {
-        if (participantUsernames == null || participantUsernames.isEmpty()) {
+        final boolean isValid = participantUsernames != null && !participantUsernames.isEmpty();
+        if (!isValid) {
             final CreateChatOutputData outputData = new CreateChatOutputData(
                     false, null, null, null, null, false,
                     "No participants provided"
             );
             userPresenter.prepareFailView(outputData);
-            return false;
         }
-        return true;
+        return isValid;
     }
 
     protected boolean individualChatRequirements(String groupName, List<String> participantUsernames) {
-        if (!groupName.isEmpty() || participantUsernames.size() != 1) {
+        final boolean isValid = groupName.isEmpty() && participantUsernames.size() == 1;
+        if (!isValid) {
             final CreateChatOutputData outputData = new CreateChatOutputData(
                     false, null, null, null, null, false,
                     "An error has occurred when initializing your chat");
             System.out.println(groupName + participantUsernames);
             this.userPresenter.prepareFailView(outputData);
-            return false;
         }
-        return true;
+        return isValid;
     }
 
     @Nullable
     protected Optional<User> validateUser(String currentUserID) {
         final Optional<User> currentUserOpt = userRepository.findByUsername(currentUserID);
+        Optional<User> result = currentUserOpt;
 
         if (currentUserOpt.isEmpty()) {
             final CreateChatOutputData createChatOutputData = new CreateChatOutputData(
@@ -193,14 +201,8 @@ public class CreateChatInteractor implements CreateChatInputBoundary {
                     "Session error. Please log in again."
             );
             userPresenter.prepareFailView(createChatOutputData);
-            return null;
+            result = null;
         }
-        return currentUserOpt;
-    }
-
-    private void handleFailure(boolean isGroupChat, String errorMessage) {
-        final CreateChatOutputData outputData = new CreateChatOutputData(
-                isGroupChat, null, null, null, null, false, errorMessage);
-        userPresenter.prepareFailView(outputData);
+        return result;
     }
 }

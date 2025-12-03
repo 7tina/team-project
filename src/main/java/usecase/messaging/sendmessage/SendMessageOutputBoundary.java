@@ -12,7 +12,7 @@ public interface SendMessageOutputBoundary {
     /**
      * Prepares the success view when the message is sent successfully.
      *
-     * @param outputData output data describing the sent message and chat context
+     * @param outputData output data describing the scent message and chat context
      */
     void prepareSuccessView(SendMessageOutputData outputData);
 

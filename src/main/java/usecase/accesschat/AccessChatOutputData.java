@@ -3,7 +3,7 @@ package usecase.accesschat;
 import java.util.List;
 
 public class AccessChatOutputData {
-    private boolean isGroupChat;
+    private final boolean isGroupChat;
     private final String chatId;
     private final String groupName;
     private final List<String> users;

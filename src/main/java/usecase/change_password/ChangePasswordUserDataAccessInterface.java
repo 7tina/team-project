@@ -7,7 +7,8 @@ import usecase.signup.SignupUserDataAccessInterface;
 /**
  * The DAO interface for the Change Password Use Case.
  */
-public interface ChangePasswordUserDataAccessInterface extends LoginUserDataAccessInterface, SignupUserDataAccessInterface {
+public interface ChangePasswordUserDataAccessInterface extends LoginUserDataAccessInterface,
+        SignupUserDataAccessInterface {
 
     /**
      * Updates the system to record this user's password.

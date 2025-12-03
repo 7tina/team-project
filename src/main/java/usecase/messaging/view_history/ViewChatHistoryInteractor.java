@@ -15,6 +15,11 @@ import entity.ports.ChatRepository;
 import entity.ports.MessageRepository;
 import entity.ports.UserRepository;
 
+import entity.Message;
+import entity.ports.ChatRepository;
+import entity.ports.MessageRepository;
+import entity.ports.UserRepository;
+
 /**
  * Use case: view the history of a given chat.
  */

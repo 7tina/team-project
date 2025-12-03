@@ -1,11 +1,11 @@
 package usecase.messaging.search_history;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import entity.Message;
 import entity.ports.ChatRepository;
 import entity.ports.MessageRepository;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Interactor for searching messages by keyword in a given chat.
@@ -26,8 +26,8 @@ public class SearchChatHistoryInteractor implements SearchChatHistoryInputBounda
 
     @Override
     public void execute(SearchChatHistoryInputData inputData) {
-        String chatId = inputData.getChatId();
-        String keyword = inputData.getKeyword();
+        final String chatId = inputData.getChatId();
+        final String keyword = inputData.getKeyword();
 
         if (keyword == null || keyword.trim().isEmpty()) {
             presenter.prepareFailView("Search keyword must not be empty.");
@@ -39,12 +39,12 @@ public class SearchChatHistoryInteractor implements SearchChatHistoryInputBounda
             return;
         }
 
-        List<Message> allMessages = messageRepository.findByChatId(chatId);
-        List<Message> matching = new ArrayList<>();
+        final List<Message> allMessages = messageRepository.findByChatId(chatId);
+        final List<Message> matching = new ArrayList<>();
 
-        String keywordLower = keyword.toLowerCase();
+        final String keywordLower = keyword.toLowerCase();
         for (Message message : allMessages) {
-            String content = message.getContent();
+            final String content = message.getContent();
             if (content != null && content.toLowerCase().contains(keywordLower)) {
                 matching.add(message);
             }
@@ -52,8 +52,9 @@ public class SearchChatHistoryInteractor implements SearchChatHistoryInputBounda
 
         if (matching.isEmpty()) {
             presenter.prepareNoMatchesView(chatId, keyword);
-        } else {
-            SearchChatHistoryOutputData outputData = new SearchChatHistoryOutputData(matching);
+        }
+        else {
+            final SearchChatHistoryOutputData outputData = new SearchChatHistoryOutputData(matching);
             presenter.prepareSuccessView(outputData);
         }
     }

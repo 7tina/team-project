@@ -1,4 +1,4 @@
-package use_case.groups.changegroupname;
+package use_case.groups;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

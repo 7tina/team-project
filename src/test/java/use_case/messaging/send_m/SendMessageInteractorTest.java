@@ -38,6 +38,11 @@ class SendMessageInteractorTest {
         public List<Chat> findAll() {
             return new ArrayList<>(data.values());
         }
+
+        @Override
+        public void clear() {
+            data.clear();
+        }
     }
 
     // -------- User Repo --------

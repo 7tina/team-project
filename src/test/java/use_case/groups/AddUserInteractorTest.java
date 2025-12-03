@@ -1,4 +1,4 @@
-package usecase.groups.adduser;
+package use_case.groups;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -19,6 +19,8 @@ import org.junit.jupiter.api.Test;
 
 import entity.Chat;
 import entity.ports.ChatRepository;
+
+import usecase.groups.adduser.*;
 
 /**
  * Complete test suite for AddUserInteractor with 100% code coverage.
@@ -219,6 +221,26 @@ class AddUserInteractorTest {
         assertEquals(10, chat.getParticipantUserIds().size(), "Chat should have exactly 10 participants");
     }
 
+    @Test
+    void testExecute_ExceptionDuringSave() {
+        // Arrange
+        Chat chat = new Chat("chat123", "Test Group", Color.ORANGE, Instant.now());
+        chat.addParticipant("user1");
+        chatRepository.addChat(chat);
+        dataAccess.addUserMapping("newUser", "userId123");
+        dataAccess.throwExceptionOnSave = true;
+        dataAccess.exceptionType = "IllegalStateException";
+
+        AddUserInputData inputData = new AddUserInputData("chat123", "newUser");
+
+        // Act
+        interactor.execute(inputData);
+
+        // Assert
+        assertFalse(outputBoundary.isSuccess, "Should indicate failure");
+        assertEquals("Unexpected error: Invalid state on save", outputBoundary.errorMessage, "Error message should match");
+    }
+
     // ==================== Test Double Implementations ====================
 
     /**
@@ -283,6 +305,8 @@ class AddUserInteractorTest {
         private final Map<String, String> usernameToUserId = new HashMap<>();
         boolean addUserCalled = false;
         boolean saveChatCalled = false;
+        boolean throwExceptionOnSave = false;
+        String exceptionType = "";
 
         void addUserMapping(String username, String userId) {
             usernameToUserId.put(username, userId);
@@ -300,6 +324,11 @@ class AddUserInteractorTest {
 
         @Override
         public void saveChat(Chat chat) {
+            if (throwExceptionOnSave) {
+                if ("IllegalStateException".equals(exceptionType)) {
+                    throw new IllegalStateException("Invalid state on save");
+                }
+            }
             saveChatCalled = true;
         }
     }

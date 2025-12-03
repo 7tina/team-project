@@ -11,6 +11,12 @@ public class RecentChatsOutputData {
         this.chatNames = chatNames;
         this.nameToChatIds = nameToChatIds;
     }
-    public List<String> getChatNames() {return chatNames;}
-    public HashMap<String, String> getNameToChatIds() {return nameToChatIds;}
+
+    public List<String> getChatNames() {
+        return chatNames;
+    }
+
+    public HashMap<String, String> getNameToChatIds() {
+        return nameToChatIds;
+    }
 }

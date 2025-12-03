@@ -1,10 +1,10 @@
 package usecase.messaging.add_reaction;
 
+import java.util.Optional;
+
 import dataaccess.FireBaseUserDataAccessObject;
 import entity.Message;
 import entity.ports.MessageRepository;
-
-import java.util.Optional;
 
 /**
  * Interactor for the Add Reaction use case.
@@ -56,7 +56,8 @@ public class AddReactionInteractor implements AddReactionInputBoundary {
             );
             outputBoundary.prepareSuccessView(outputData);
 
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             outputBoundary.prepareFailView("Failed to save reaction: " + e.getMessage());
         }
     }

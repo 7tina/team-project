@@ -25,6 +25,7 @@ public class AccessChatInteractor implements AccessChatInputBoundary {
 
     /**
      * Execute the Access Chat use case.
+     *
      * @param accessChatInputData The required input data to execute the use case.
      */
     public void execute(AccessChatInputData accessChatInputData) {
@@ -38,7 +39,6 @@ public class AccessChatInteractor implements AccessChatInputBoundary {
         }
         else {
             final String currentUserId = currentUserOpt.get().getName();
-
             accessChatDataAccess.updateChatRepository(currentUserId);
 
             final Optional<Chat> chatOpt = chatRepository.findById(chatId);
@@ -47,12 +47,13 @@ public class AccessChatInteractor implements AccessChatInputBoundary {
             }
             else {
                 final Chat chat = chatOpt.get();
-                final String name = chat.getGroupName();
-                final List<String> userIds = chat.getParticipantUserIds();
-                final List<String> messageIds = chat.getMessageIds();
-                final boolean isGroup = userIds.size() > 2;
                 final AccessChatOutputData outputData = new AccessChatOutputData(
-                        isGroup, chatId, name, userIds, messageIds, currentUserId
+                        chat.getParticipantUserIds().size() > 2,
+                        chatId,
+                        chat.getGroupName(),
+                        chat.getParticipantUserIds(),
+                        chat.getMessageIds(),
+                        currentUserId
                 );
                 accessChatPresenter.prepareSuccessView(outputData);
             }

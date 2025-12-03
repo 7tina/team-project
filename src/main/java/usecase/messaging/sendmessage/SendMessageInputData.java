@@ -2,6 +2,7 @@ package usecase.messaging.sendmessage;
 
 /**
  * Input data for the send message use case.
+ *
  * <p>
  * This is created in the controller layer and passed into the interactor.
  */

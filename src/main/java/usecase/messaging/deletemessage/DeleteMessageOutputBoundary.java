@@ -2,6 +2,7 @@ package usecase.messaging.deletemessage;
 
 /**
  * Output boundary for the delete message use case.
+ *
  * <p>
  * A presenter implements this interface to prepare the view model.
  */

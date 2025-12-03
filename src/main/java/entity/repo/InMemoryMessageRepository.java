@@ -1,10 +1,10 @@
 package entity.repo;
 
-import entity.Message;
-import entity.ports.MessageRepository;
-
 import java.util.*;
 import java.util.stream.Collectors;
+
+import entity.Message;
+import entity.ports.MessageRepository;
 
 /**
  * Will only store the messages of the current chat and will clear when not in use.

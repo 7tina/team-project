@@ -26,35 +26,35 @@ public class SearchChatHistoryInteractor implements SearchChatHistoryInputBounda
 
     @Override
     public void execute(SearchChatHistoryInputData inputData) {
-        String chatId = inputData.getChatId();
-        String keyword = inputData.getKeyword();
+        final String chatId = inputData.getChatId();
+        final String rawKeyword = inputData.getKeyword();
 
-        if (keyword == null || keyword.trim().isEmpty()) {
+        final String trimmedKeyword = rawKeyword == null ? "" : rawKeyword.trim();
+
+        if (trimmedKeyword.isEmpty()) {
             presenter.prepareFailView("Search keyword must not be empty.");
-            return;
-        }
-
-        if (chatRepository.findById(chatId).isEmpty()) {
+        } else if (chatRepository.findById(chatId).isEmpty()) {
             presenter.prepareFailView("Chat not found: " + chatId);
-            return;
-        }
-
-        List<Message> allMessages = messageRepository.findByChatId(chatId);
-        List<Message> matching = new ArrayList<>();
-
-        String keywordLower = keyword.toLowerCase();
-        for (Message message : allMessages) {
-            String content = message.getContent();
-            if (content != null && content.toLowerCase().contains(keywordLower)) {
-                matching.add(message);
-            }
-        }
-
-        if (matching.isEmpty()) {
-            presenter.prepareNoMatchesView(chatId, keyword);
         } else {
-            SearchChatHistoryOutputData outputData = new SearchChatHistoryOutputData(matching);
-            presenter.prepareSuccessView(outputData);
+            final List<Message> allMessages = messageRepository.findByChatId(chatId);
+            final List<Message> matching = new ArrayList<>();
+
+            final String keywordLower = trimmedKeyword.toLowerCase();
+            for (Message message : allMessages) {
+                final String content = message.getContent();
+                if (content != null && content.toLowerCase().contains(keywordLower)) {
+                    matching.add(message);
+                }
+            }
+
+            if (matching.isEmpty()) {
+                presenter.prepareNoMatchesView(chatId, trimmedKeyword);
+            }
+            else {
+                final SearchChatHistoryOutputData outputData =
+                        new SearchChatHistoryOutputData(matching);
+                presenter.prepareSuccessView(outputData);
+            }
         }
     }
 }

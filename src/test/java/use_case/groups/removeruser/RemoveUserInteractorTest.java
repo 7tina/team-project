@@ -1,4 +1,4 @@
-package use_case.groups;
+package use_case.groups.removeruser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

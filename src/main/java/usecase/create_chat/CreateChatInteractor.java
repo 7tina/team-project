@@ -71,17 +71,15 @@ public class CreateChatInteractor implements CreateChatInputBoundary {
                     final List<Chat> allChats = chatRepository.findAll();
                     final Chat chat = findOrMakeIndividualChat(allChats, participantIds, groupName);
 
-                    if (chat != null) {
-                        final String chatId = chat.getId();
-                        final String chatName = chat.getGroupName();
-                        final List<String> chatUsers = chat.getParticipantUserIds();
-                        final List<String> chatMessages = chat.getMessageIds();
+                    final String chatId = chat.getId();
+                    final String chatName = chat.getGroupName();
+                    final List<String> chatUsers = chat.getParticipantUserIds();
+                    final List<String> chatMessages = chat.getMessageIds();
 
-                        final CreateChatOutputData createChatOutputData = new CreateChatOutputData(
-                                false, chatId, chatName, chatUsers, chatMessages, true, null,
-                                currentUserOpt.get().getName());
-                        this.userPresenter.prepareSuccessView(createChatOutputData);
-                    }
+                    final CreateChatOutputData createChatOutputData = new CreateChatOutputData(
+                            false, chatId, chatName, chatUsers, chatMessages, true, null,
+                            currentUserOpt.get().getName());
+                    this.userPresenter.prepareSuccessView(createChatOutputData);
                 }
             }
         }
@@ -156,7 +154,7 @@ public class CreateChatInteractor implements CreateChatInputBoundary {
             }
 
             // Now userOpt should be present (either was already there, or just loaded)
-            if (result != null && userOpt.isPresent()) {
+            if (userOpt.isPresent()) {
                 final String userId = userOpt.get().getName();
                 if (!participantIds.contains(userId)) {
                     participantIds.add(userId);

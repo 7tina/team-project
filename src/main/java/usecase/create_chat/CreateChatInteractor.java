@@ -131,13 +131,13 @@ public class CreateChatInteractor implements CreateChatInputBoundary {
 
     @Nullable
     protected List<String> validateUsers(String currentUserId,
-                                       List<String> participantUsernames, boolean isGroup) {
+                                         List<String> participantUsernames, boolean isGroup) {
         final List<String> participantIds = new ArrayList<>();
         // Add creator
         participantIds.add(currentUserId);
 
         for (String username : participantUsernames) {
-            final Optional<User> userOpt = userRepository.findByUsername(username);
+            Optional<User> userOpt = userRepository.findByUsername(username);
             if (userOpt.isEmpty()) {
                 final boolean load = this.userDataAccessObject.loadToEntity(username);
                 if (!load) {
@@ -148,8 +148,12 @@ public class CreateChatInteractor implements CreateChatInputBoundary {
                     userPresenter.prepareFailView(createChatOutputData);
                     return null;
                 }
+                // After successful load, query the repository again to get the user
+                userOpt = userRepository.findByUsername(username);
             }
-            else {
+
+            // Now userOpt should be present (either was already there, or just loaded)
+            if (userOpt.isPresent()) {
                 final String userId = userOpt.get().getName();
                 if (!participantIds.contains(userId)) {
                     participantIds.add(userId);
@@ -196,11 +200,5 @@ public class CreateChatInteractor implements CreateChatInputBoundary {
             return null;
         }
         return currentUserOpt;
-    }
-
-    private void handleFailure(boolean isGroupChat, String errorMessage) {
-        final CreateChatOutputData outputData = new CreateChatOutputData(
-                isGroupChat, null, null, null, null, false, errorMessage);
-        userPresenter.prepareFailView(outputData);
     }
 }

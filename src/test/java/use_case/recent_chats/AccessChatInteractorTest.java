@@ -1,4 +1,4 @@
-package use_case.recent_chats;
+package use_case.accesschat;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -17,15 +17,15 @@ import entity.UserFactory;
 import entity.ports.ChatRepository;
 import entity.ports.UserRepository;
 import entity.repo.InMemoryChatRepository;
-import entity.repo.InMemoryMessageRepository;
 import entity.repo.InMemoryUserRepository;
+
 import usecase.accesschat.*;
 
 public class AccessChatInteractorTest {
     private UserFactory userFactory = new UserFactory();
 
     @Test
-    void successTest() {
+    void successTestTwoParticipants() {
         final AccessChatInputData inputData = new AccessChatInputData("Miles1", "chat1");
         final AccessChatDataAccessInterface dao = new InMemoryUserDataAccessObject();
         final UserRepository userRepository = new InMemoryUserRepository();
@@ -104,7 +104,7 @@ public class AccessChatInteractorTest {
     }
 
     @Test
-    void failureWrongUserIdTest() {
+    void failureUserNotFoundTest() {
         final AccessChatInputData inputData = new AccessChatInputData("Miles1", "chat1");
         final AccessChatDataAccessInterface dao = new InMemoryUserDataAccessObject();
         final UserRepository userRepository = new InMemoryUserRepository();
@@ -136,7 +136,7 @@ public class AccessChatInteractorTest {
     }
 
     @Test
-    void failureWrongChatIdTest() {
+    void failureChatNotFoundTest() {
         final AccessChatInputData inputData = new AccessChatInputData("Miles1", "chat2");
         final AccessChatDataAccessInterface dao = new InMemoryUserDataAccessObject();
         final UserRepository userRepository = new InMemoryUserRepository();
@@ -167,5 +167,28 @@ public class AccessChatInteractorTest {
         final AccessChatInputBoundary interactor = new AccessChatInteractor(dao, successPresenter,
                 userRepository, chatRepository);
         interactor.execute(inputData);
+    }
+
+    @Test
+    void testInputDataGetters() {
+        final AccessChatInputData inputData = new AccessChatInputData("user123", "chat456");
+        assertEquals("user123", inputData.getUserId());
+        assertEquals("chat456", inputData.getChatId());
+    }
+
+    @Test
+    void testOutputDataGetters() {
+        final List<String> users = new ArrayList<>(List.of("user1", "user2"));
+        final List<String> messageIds = new ArrayList<>(List.of("msg1", "msg2"));
+        final AccessChatOutputData outputData = new AccessChatOutputData(
+                true, "chat123", "Test Group", users, messageIds, "user1"
+        );
+
+        assertEquals(true, outputData.isGroupChat());
+        assertEquals("chat123", outputData.getChatId());
+        assertEquals("Test Group", outputData.getGroupName());
+        assertEquals(users, outputData.getUsers());
+        assertEquals(messageIds, outputData.getMessageIds());
+        assertEquals("user1", outputData.getCurrentUserId());
     }
 }

@@ -16,6 +16,7 @@ import entity.ports.UserRepository;
 
 /**
  * Interactor for the send message use case.
+ *
  * <p>
  * It validates the chat and sender, creates a new {@link Message},
  * delegates persistence to the data access interface, and then notifies
@@ -51,6 +52,7 @@ public class SendMessageInteractor implements SendMessageInputBoundary {
 
     /**
      * Executes the send message use case.
+     *
      * <p>
      * Steps:
      * <ol>
@@ -66,12 +68,12 @@ public class SendMessageInteractor implements SendMessageInputBoundary {
      */
     @Override
     public void execute(SendMessageInputData inputData) {
-        String chatId = inputData.getChatId();
-        String senderId = inputData.getSenderUserId();
-        String repliedMessageId = inputData.getRepliedMessageId();
-        String content = inputData.getContent();
+        final String chatId = inputData.getChatId();
+        final String senderId = inputData.getSenderUserId();
+        final String repliedMessageId = inputData.getRepliedMessageId();
+        final String content = inputData.getContent();
 
-        Optional<Chat> chatOpt = chatRepository.findById(chatId);
+        final Optional<Chat> chatOpt = chatRepository.findById(chatId);
         if (chatOpt.isEmpty()) {
             presenter.prepareFailView("Chat not found: " + chatId);
             return;
@@ -79,13 +81,13 @@ public class SendMessageInteractor implements SendMessageInputBoundary {
 
         final Chat chat = chatOpt.get();
 
-        Optional<User> senderOpt = userRepository.findByUsername(senderId);
+        final Optional<User> senderOpt = userRepository.findByUsername(senderId);
         if (senderOpt.isEmpty()) {
             presenter.prepareFailView("Sender not found: " + senderId);
             return;
         }
 
-        Message message = new Message(
+        final Message message = new Message(
                 UUID.randomUUID().toString(),
                 chatId,
                 senderId,
@@ -94,20 +96,19 @@ public class SendMessageInteractor implements SendMessageInputBoundary {
                 Instant.now()
         );
         chat.setLastMessage(Instant.now());
-        Message saved = dataAccess.sendMessage(message);
+        final Message saved = dataAccess.sendMessage(message);
         dataAccess.updateChat(chatId, message.getId(), chat.getLastMessage());
 
         // Array index order: [messageId, senderDisplayName, messageContent, messageTimestamp, repliedId]
-        String senderName = senderOpt.get().getName();
-        String[] msg = {
-                saved.getId(),
-                senderName,
+        final String senderName = senderOpt.get().getName();
+        final String[] msg = {
+                saved.getId(), senderName,
                 saved.getContent(),
                 makeString(saved.getTimestamp()),
-                saved.getRepliedMessageId()
+                saved.getRepliedMessageId(),
         };
 
-        SendMessageOutputData outputData = new SendMessageOutputData(chatId, msg);
+        final SendMessageOutputData outputData = new SendMessageOutputData(chatId, msg);
         presenter.prepareSuccessView(outputData);
     }
 
@@ -119,10 +120,10 @@ public class SendMessageInteractor implements SendMessageInputBoundary {
      *         using UTC time zone
      */
     private String makeString(Instant timestamp) {
-        ZoneId zone = ZoneId.of("UTC"); // Specify the desired time zone
-        ZonedDateTime zdt = timestamp.atZone(zone);
+        final ZoneId zone = ZoneId.of("UTC");
+        final ZonedDateTime zdt = timestamp.atZone(zone);
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
         return zdt.format(formatter);
     }
 }

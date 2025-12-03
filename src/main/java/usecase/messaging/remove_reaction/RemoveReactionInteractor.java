@@ -1,10 +1,10 @@
 package usecase.messaging.remove_reaction;
 
+import java.util.Optional;
+
 import dataaccess.FireBaseUserDataAccessObject;
 import entity.Message;
 import entity.ports.MessageRepository;
-
-import java.util.Optional;
 
 /**
  * Interactor for the Remove Reaction use case.
@@ -55,8 +55,9 @@ public class RemoveReactionInteractor implements RemoveReactionInputBoundary {
             );
             outputBoundary.prepareSuccessView(outputData);
 
-        } catch (Exception e) {
-            outputBoundary.prepareFailView("Failed to remove reaction: " + e.getMessage());
+        }
+        catch (IllegalArgumentException | IllegalStateException ex) {
+            outputBoundary.prepareFailView("Failed to remove reaction: " + ex.getMessage());
         }
     }
 }

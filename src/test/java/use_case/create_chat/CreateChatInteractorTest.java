@@ -25,6 +25,7 @@ import entity.ports.ChatRepository;
 import entity.ports.UserRepository;
 
 import usecase.create_chat.*;
+import java.lang.reflect.Method;
 
 /**
  * Complete test suite for CreateChatInteractor with 100% code coverage.
@@ -43,6 +44,80 @@ class CreateChatInteractorTest {
         outputBoundary = new TestOutputBoundary();
         dataAccess = new TestDataAccess(chatRepository, userRepository);
         interactor = new CreateChatInteractor(outputBoundary, dataAccess, chatRepository, userRepository);
+    }
+
+    @Test
+    void testValidateUsers_EmptyParticipants_NoLoopIteration() throws Exception {
+        User alice = new User("alice", "pass123");
+        userRepository.addUser(alice);
+
+        Method m = CreateChatInteractor.class.getDeclaredMethod(
+                "validateUsers", String.class, List.class, boolean.class);
+        m.setAccessible(true);
+
+        List<String> emptyParticipants = new ArrayList<>();
+
+        @SuppressWarnings("unchecked")
+        List<String> result = (List<String>) m.invoke(
+                interactor, "alice", emptyParticipants, false);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("alice", result.get(0));
+
+        assertFalse(outputBoundary.failCalled);
+    }
+
+    @Test
+    void testValidateUsers_ResultNotNullButUserStillMissing() throws Exception {
+        User alice = new User("alice", "pass123");
+        userRepository.addUser(alice);
+
+        dataAccess.loadShouldFail = false;
+        dataAccess.userToLoad = null;
+
+        Method m = CreateChatInteractor.class.getDeclaredMethod(
+                "validateUsers", String.class, List.class, boolean.class);
+        m.setAccessible(true);
+
+        List<String> participants = new ArrayList<>();
+        participants.add("ghost");
+
+        @SuppressWarnings("unchecked")
+        List<String> result = (List<String>) m.invoke(
+                interactor, "alice", participants, false);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("alice", result.get(0));
+
+        assertFalse(outputBoundary.failCalled);
+    }
+
+    @Test
+    void testFindOrMakeIndividualChat_ParticipantSize2_ButIdsSize1() throws Exception {
+        Method m = CreateChatInteractor.class.getDeclaredMethod(
+                "findOrMakeIndividualChat", List.class, List.class, String.class);
+        m.setAccessible(true);
+
+        Chat existingChat = new Chat(
+                UUID.randomUUID().toString(),
+                "g",
+                Color.GRAY,
+                Instant.now()
+        );
+        existingChat.addParticipant("u1");
+        existingChat.addParticipant("u2");
+
+        List<Chat> allChats = new ArrayList<>();
+        allChats.add(existingChat);
+
+        List<String> participantIds = new ArrayList<>();
+        participantIds.add("u1");
+
+        Object result = m.invoke(interactor, allChats, participantIds, "g");
+
+        assertNotNull(result);
     }
 
     @Test
@@ -650,6 +725,39 @@ class CreateChatInteractorTest {
     }
 
     @Test
+    void testFindOrMakeIndividualChat_AllConditionsTrue_ChatFound_Really() {
+        // Arrange
+        User alice = new User("alice", "pass123");
+        User bob = new User("bob", "pass456");
+        userRepository.addUser(alice);
+        userRepository.addUser(bob);
+
+        Chat existingChat = new Chat(
+                UUID.randomUUID().toString(),
+                "",
+                Color.GRAY,
+                Instant.now()
+        );
+        existingChat.addParticipant("bob");
+        existingChat.addParticipant("alice");
+        chatRepository.save(existingChat);
+
+        List<String> participants = Arrays.asList("bob");
+        CreateChatInputData inputData = new CreateChatInputData("alice", participants, "");
+
+        // Act
+        interactor.execute(inputData);
+
+        // Assert
+        assertTrue(outputBoundary.successCalled);
+        assertFalse(outputBoundary.failCalled);
+        assertNotNull(outputBoundary.successData);
+
+        assertEquals(existingChat.getId(), outputBoundary.successData.getChatId());
+        assertEquals(1, chatRepository.findAll().size());
+    }
+
+    @Test
     void testValidateUsers_UserInRepository_AddedOnce() {
         // Test the else branch where user IS in repository and gets added
 
@@ -793,5 +901,75 @@ class CreateChatInteractorTest {
             saveChatCalled = true;
             chatRepository.save(chat);
         }
+    }
+
+    @Test
+    void testValidateUsers_LoadReturnsTrueButUserStillMissing() {
+        // Arrange
+        User currentUser = new User("alice", "pass123");
+        userRepository.addUser(currentUser);
+
+        // loadShouldFail = false, userToLoad = null
+        List<String> participants = Arrays.asList("ghost");
+        CreateChatInputData inputData = new CreateChatInputData("alice", participants, "");
+
+        // Act
+        interactor.execute(inputData);
+
+        // Assert
+        assertTrue(outputBoundary.successCalled);
+        assertFalse(outputBoundary.failCalled);
+        assertNotNull(outputBoundary.successData);
+
+        assertEquals(1, outputBoundary.successData.getUsers().size());
+        assertTrue(outputBoundary.successData.getUsers().contains("alice"));
+    }
+
+    @Test
+    void testValidateUsers_LoadSucceedsButUserStillMissing() {
+        // Arrange
+        User alice = new User("alice", "pass123");
+        userRepository.addUser(alice);
+
+        List<String> participants = Arrays.asList("ghost");
+
+        CreateChatInputData input = new CreateChatInputData("alice", participants, "");
+
+        // Act
+        interactor.execute(input);
+
+        // Assert
+        assertTrue(outputBoundary.successCalled);
+        assertFalse(outputBoundary.failCalled);
+
+        // Only alice is in chat → ghost never appears
+        assertEquals(1, outputBoundary.successData.getUsers().size());
+        assertTrue(outputBoundary.successData.getUsers().contains("alice"));
+    }
+
+    @Test
+    void testFindOrMakeChat_SortedParticipantsChangeOrder() {
+        // Arrange
+        User alice = new User("alice", "pass123");
+        User bob = new User("bob", "pass456");
+        userRepository.addUser(alice);
+        userRepository.addUser(bob);
+
+        // Create chat where participants are out of order
+        Chat chat = new Chat(UUID.randomUUID().toString(), "bob", Color.GRAY, Instant.now());
+        chat.addParticipant("bob");
+        chat.addParticipant("alice"); // intentionally reversed
+        chatRepository.save(chat);
+
+        // This input will trigger sorting mismatch
+        List<String> participants = Arrays.asList("bob");
+        CreateChatInputData inputData = new CreateChatInputData("alice", participants, "");
+
+        // Act
+        interactor.execute(inputData);
+
+        // Assert
+        assertTrue(outputBoundary.successCalled);
+        assertNotNull(outputBoundary.successData.getChatId());
     }
 }

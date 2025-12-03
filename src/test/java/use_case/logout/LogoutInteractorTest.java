@@ -8,6 +8,8 @@ import usecase.logout.LogoutInputBoundary;
 import usecase.logout.LogoutInteractor;
 import usecase.logout.LogoutOutputBoundary;
 import usecase.logout.LogoutOutputData;
+import entity.ports.ChatRepository;
+import entity.repo.InMemoryChatRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -30,9 +32,12 @@ class LogoutInteractorTest {
                 assertEquals("Paul", user.getUsername());
                 assertNull(userRepository.getCurrentUsername());
             }
-};
+        };
 
-        LogoutInputBoundary interactor = new LogoutInteractor(userRepository, successPresenter);
+        ChatRepository chatRepo = new InMemoryChatRepository();
+
+        LogoutInputBoundary interactor =
+                new LogoutInteractor(userRepository, successPresenter, chatRepo);
         interactor.execute();
         assertNull(userRepository.getCurrentUsername());
     }

@@ -2,7 +2,7 @@ package usecase.recent_chat;
 
 public class RecentChatsInputData {
 
-    private final String userId;
+    private String userId;
 
     public RecentChatsInputData(String userId) {
         this.userId = userId;

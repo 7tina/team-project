@@ -14,12 +14,27 @@ public class DeleteMessageInteractor implements DeleteMessageInputBoundary {
     private final DeleteMessageDataAccessInterface dao;
     private final DeleteMessageOutputBoundary presenter;
 
+    /**
+     * Constructs a {@code DeleteMessageInteractor}.
+     *
+     * @param dao       data access interface for deleting messages
+     * @param presenter output boundary for presenting results
+     */
     public DeleteMessageInteractor(DeleteMessageDataAccessInterface dao,
                                    DeleteMessageOutputBoundary presenter) {
         this.dao = dao;
         this.presenter = presenter;
     }
 
+    /**
+     * Executes the delete message use case.
+     *
+     * <p>
+     * On success: calls {@code prepareSuccessView}.
+     * On failure: calls {@code prepareFailView}.
+     *
+     * @param input input data containing the message ID and user ID
+     */
     @Override
     public void execute(DeleteMessageInputData input) {
         final String messageId = input.getMessageId();
@@ -36,12 +51,12 @@ public class DeleteMessageInteractor implements DeleteMessageInputBoundary {
             presenter.prepareSuccessView(out);
 
         }
-        catch (IllegalArgumentException | IllegalStateException ex) {
+        catch (Exception e) {
             final DeleteMessageOutputData out = new DeleteMessageOutputData(
                     messageId,
                     LocalDateTime.now(),
                     false,
-                    ex.getMessage()
+                    e.getMessage()
             );
             presenter.prepareFailView(out);
         }

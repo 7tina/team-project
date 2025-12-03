@@ -31,6 +31,7 @@ public interface SendMessageDataAccessInterface {
      *
      * @param chatId    the chat that should be updated
      * @param messageId the ID of the newly-sent message
+     * @param timestamp the time of the newly-sent message
      */
     void updateChat(String chatId, String messageId, Instant timestamp);
 }

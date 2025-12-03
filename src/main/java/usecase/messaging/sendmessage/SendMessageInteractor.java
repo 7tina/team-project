@@ -74,42 +74,45 @@ public class SendMessageInteractor implements SendMessageInputBoundary {
         final String content = inputData.getContent();
 
         final Optional<Chat> chatOpt = chatRepository.findById(chatId);
+
         if (chatOpt.isEmpty()) {
             presenter.prepareFailView("Chat not found: " + chatId);
-            return;
         }
+        else {
+            final Chat chat = chatOpt.get();
 
-        final Chat chat = chatOpt.get();
+            final Optional<User> senderOpt = userRepository.findByUsername(senderId);
 
-        final Optional<User> senderOpt = userRepository.findByUsername(senderId);
-        if (senderOpt.isEmpty()) {
-            presenter.prepareFailView("Sender not found: " + senderId);
-            return;
+            if (senderOpt.isEmpty()) {
+                presenter.prepareFailView("Sender not found: " + senderId);
+            }
+            else {
+                final Message message = new Message(
+                        UUID.randomUUID().toString(),
+                        chatId,
+                        senderId,
+                        repliedMessageId,
+                        content,
+                        Instant.now()
+                );
+
+                chat.setLastMessage(Instant.now());
+                final Message saved = dataAccess.sendMessage(message);
+                dataAccess.updateChat(chatId, message.getId(), chat.getLastMessage());
+
+                // Array index order: [messageId, senderDisplayName, messageContent, messageTimestamp, repliedId]
+                final String senderName = senderOpt.get().getName();
+                final String[] msg = {
+                        saved.getId(), senderName,
+                        saved.getContent(),
+                        makeString(saved.getTimestamp()),
+                        saved.getRepliedMessageId(),
+                };
+
+                final SendMessageOutputData outputData = new SendMessageOutputData(chatId, msg);
+                presenter.prepareSuccessView(outputData);
+            }
         }
-
-        final Message message = new Message(
-                UUID.randomUUID().toString(),
-                chatId,
-                senderId,
-                repliedMessageId,
-                content,
-                Instant.now()
-        );
-        chat.setLastMessage(Instant.now());
-        final Message saved = dataAccess.sendMessage(message);
-        dataAccess.updateChat(chatId, message.getId(), chat.getLastMessage());
-
-        // Array index order: [messageId, senderDisplayName, messageContent, messageTimestamp, repliedId]
-        final String senderName = senderOpt.get().getName();
-        final String[] msg = {
-                saved.getId(), senderName,
-                saved.getContent(),
-                makeString(saved.getTimestamp()),
-                saved.getRepliedMessageId(),
-        };
-
-        final SendMessageOutputData outputData = new SendMessageOutputData(chatId, msg);
-        presenter.prepareSuccessView(outputData);
     }
 
     /**
@@ -120,6 +123,7 @@ public class SendMessageInteractor implements SendMessageInputBoundary {
      *         using UTC time zone
      */
     private String makeString(Instant timestamp) {
+        // Specify the desired time zone
         final ZoneId zone = ZoneId.of("UTC");
         final ZonedDateTime zdt = timestamp.atZone(zone);
 

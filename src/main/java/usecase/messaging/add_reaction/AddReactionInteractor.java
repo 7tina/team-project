@@ -57,8 +57,8 @@ public class AddReactionInteractor implements AddReactionInputBoundary {
             outputBoundary.prepareSuccessView(outputData);
 
         }
-        catch (IllegalArgumentException | IllegalStateException ex) {
-            outputBoundary.prepareFailView("Failed to save reaction: " + ex.getMessage());
+        catch (Exception e) {
+            outputBoundary.prepareFailView("Failed to save reaction: " + e.getMessage());
         }
     }
 }

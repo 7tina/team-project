@@ -33,31 +33,22 @@ public class RemoveReactionInteractor implements RemoveReactionInputBoundary {
 
         if (messageOpt.isEmpty()) {
             outputBoundary.prepareFailView("Message not found.");
-            return;
         }
+        else {
+            final Message message = messageOpt.get();
 
-        final Message message = messageOpt.get();
+            message.getReactions().remove(userId);
+            messageRepository.save(message);
 
-        // Remove reaction from the message
-        message.getReactions().remove(userId);
-
-        // Save to repository
-        messageRepository.save(message);
-
-        // Save to Firebase
-        try {
-            dataAccess.removeReactionFromMessage(messageId, userId);
-
-            // Prepare success view
-            final RemoveReactionOutputData outputData = new RemoveReactionOutputData(
-                    messageId,
-                    message.getReactions()
-            );
-            outputBoundary.prepareSuccessView(outputData);
-
-        }
-        catch (IllegalArgumentException | IllegalStateException ex) {
-            outputBoundary.prepareFailView("Failed to remove reaction: " + ex.getMessage());
+            try {
+                dataAccess.removeReactionFromMessage(messageId, userId);
+                final RemoveReactionOutputData outputData =
+                        new RemoveReactionOutputData(messageId, message.getReactions());
+                outputBoundary.prepareSuccessView(outputData);
+            }
+            catch (Exception e) {
+                outputBoundary.prepareFailView("Failed to remove reaction: " + e.getMessage());
+            }
         }
     }
 }

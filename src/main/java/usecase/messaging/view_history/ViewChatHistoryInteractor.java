@@ -4,7 +4,16 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import entity.Message;
+import entity.ports.ChatRepository;
+import entity.ports.MessageRepository;
+import entity.ports.UserRepository;
 
 import entity.Message;
 import entity.ports.ChatRepository;
@@ -41,20 +50,20 @@ public class ViewChatHistoryInteractor implements ViewChatHistoryInputBoundary {
     @Override
     public void execute(ViewChatHistoryInputData inputData) {
         try {
-            String chatId = inputData.getChatId();
-            List<String> userIds = inputData.getUserIds();
-            List<String> messageIds = inputData.getMessageIds();
+            final String chatId = inputData.getChatId();
+            final List<String> userIds = inputData.getUserIds();
+            final List<String> messageIds = inputData.getMessageIds();
 
             dataAccess.findChatMessages(chatId, userIds, messageIds);
 
-            List<Message> messageList = messageRepository.findByChatId(chatId);
+            final List<Message> messageList = messageRepository.findByChatId(chatId);
             messageList.sort(Comparator.comparing(Message::getTimestamp));
 
-            List<String[]> messagesData = new ArrayList<>();
-            Map<String, Map<String, String>> reactions = new HashMap<>();
+            final List<String[]> messagesData = new ArrayList<>();
+            final Map<String, Map<String, String>> reactions = new HashMap<>();
 
             for (Message msg : messageList) {
-                String[] data = new String[5];
+                final String[] data = new String[5];
                 data[0] = msg.getId();
                 data[1] = msg.getSenderUserId();
                 data[2] = msg.getContent();
@@ -69,26 +78,38 @@ public class ViewChatHistoryInteractor implements ViewChatHistoryInputBoundary {
                 }
             }
 
-            ViewChatHistoryOutputData outputData = new ViewChatHistoryOutputData(
+            final ViewChatHistoryOutputData outputData = new ViewChatHistoryOutputData(
                     messagesData,
                     reactions
             );
 
             presenter.prepareSuccessView(outputData);
 
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             presenter.prepareFailView("Failed to load chat history: " + e.getMessage());
         }
     }
 
     /**
-     * Helper: timestamp
+     * Converts an {@link Instant} timestamp into a formatted date-time string.
+     *
+     * <p>
+     * The timestamp is converted to the UTC time zone and formatted as
+     * "dd-MM-yyyy HH:mm:ss".
+     *
+     * </p>
+     *
+     * @param timestamp the {@link Instant} to be formatted
+     * @return a string representation of the timestamp in UTC, formatted
+     *         as "dd-MM-yyyy HH:mm:ss"
      */
     private String makeString(Instant timestamp) {
-        ZoneId zone = ZoneId.of("UTC"); // Specify the desired time zone
-        ZonedDateTime zdt = timestamp.atZone(zone);
+        // Specify the desired time zone
+        final ZoneId zone = ZoneId.of("UTC");
+        final ZonedDateTime zdt = timestamp.atZone(zone);
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
         return zdt.format(formatter);
     }
 }

@@ -6,9 +6,9 @@ import entity.User;
 import entity.UserFactory;
 import entity.ports.UserRepository;
 
-import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.Optional;
+import java.util.Map;
 
 public class FirestoreUserRepository implements UserRepository {
 

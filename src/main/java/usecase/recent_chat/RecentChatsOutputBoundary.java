@@ -3,17 +3,15 @@ package usecase.recent_chat;
 public interface RecentChatsOutputBoundary {
 
     /**
-     * Prepares the view model for a successful retrieval of recent chats.
-     *
+     * Prepares the success view when recent chats are successfully retrieved.
      * @param outputData the data containing the user's recent chats
      */
     void prepareSuccessView(RecentChatsOutputData outputData);
 
     /**
-     * Prepares the view model for a failed attempt to retrieve recent chats,
-     * typically due to missing user data or storage errors.
+     * Prepares the failure view when the recent chats retrieval fails.
      *
-     * @param errorMessage a message describing why the operation failed
+     * @param errorMessage a message describing the reason for failure
      */
     void prepareFailView(String errorMessage);
 }

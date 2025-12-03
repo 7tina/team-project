@@ -3,9 +3,9 @@ package usecase.recent_chat;
 public interface RecentChatsInputBoundary {
 
     /**
-     * Executes the Recent Chats use case.
-     *
-     * @param recentChatsInputData the data required to retrieve recent chats
+     * Executes the recent chats use case using the provided input data.
+     * @param recentChatsInputData the data required to fetch and process
+     *                             the user's recent chats
      */
     void execute(RecentChatsInputData recentChatsInputData);
 }

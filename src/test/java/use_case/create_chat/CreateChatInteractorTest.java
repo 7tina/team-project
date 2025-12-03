@@ -48,28 +48,23 @@ class CreateChatInteractorTest {
 
     @Test
     void testValidateUsers_EmptyParticipants_NoLoopIteration() throws Exception {
-        // 让 currentUser 在 repository 里
         User alice = new User("alice", "pass123");
         userRepository.addUser(alice);
 
-        // 通过反射拿到 protected 的 validateUsers 方法
         Method m = CreateChatInteractor.class.getDeclaredMethod(
                 "validateUsers", String.class, List.class, boolean.class);
         m.setAccessible(true);
 
-        // 空的 participant 列表 → for 循环 0 次迭代
         List<String> emptyParticipants = new ArrayList<>();
 
         @SuppressWarnings("unchecked")
         List<String> result = (List<String>) m.invoke(
                 interactor, "alice", emptyParticipants, false);
 
-        // 断言：只包含 creator 自己，说明没进循环但返回正常
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("alice", result.get(0));
 
-        // 不应该触发失败 view
         assertFalse(outputBoundary.failCalled);
     }
 

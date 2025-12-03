@@ -1,9 +1,7 @@
-package use_case.messaging.chat_history;
+package use_case.messaging.search_history;
 
 import entity.Chat;
 import entity.Message;
-import entity.ports.ChatRepository;
-import entity.ports.MessageRepository;
 import entity.repo.InMemoryChatRepository;
 import entity.repo.InMemoryMessageRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,48 +17,46 @@ import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Unit tests for SearchChatHistoryInteractor.
+ * Final working version for SearchChatHistoryInteractor tests.
  */
 public class SearchChatHistoryInteractorTest {
 
-    private ChatRepository chatRepository;
-    private MessageRepository messageRepository;
-    private TestPresenter presenter;
+    private InMemoryChatRepository chatRepository;
+    private InMemoryMessageRepository messageRepository;
+    private CapturingPresenter presenter;
     private SearchChatHistoryInputBoundary interactor;
 
     @BeforeEach
     public void setUp() {
         chatRepository = new InMemoryChatRepository();
         messageRepository = new InMemoryMessageRepository();
-        presenter = new TestPresenter();
-        interactor = new SearchChatHistoryInteractor(
-                chatRepository, messageRepository, presenter
-        );
+        presenter = new CapturingPresenter();
+        interactor = new SearchChatHistoryInteractor(chatRepository, messageRepository, presenter);
 
         // Prepare one chat.
-        Chat chat = new Chat(
-                "chat-1",
-                "Test Group",
-                Color.WHITE,
-                Instant.now()
-        );
+        final Chat chat = new Chat("chat-1", "Test Group", Color.WHITE, Instant.now());
         chatRepository.save(chat);
 
-        // Message constructor:
-        // Message(String id, String chatId, String senderUserId,
-        //         String repliedMessageId, String content, Instant timestamp)
-        Message m1 = new Message(
-                "m1",          // id
-                "chat-1",      // chatId
-                "user-1",      // senderUserId
-                null,          // repliedMessageId
-                "hello world", // content
-                Instant.now()  // timestamp
+        /*
+         * Message constructor:
+         * Message(String id, String chatId, String senderUserId,
+         *         String repliedMessageId, String content, Instant timestamp)
+         */
+        final Message m1 = new Message(
+                "m1",
+                "chat-1",
+                "user-1",
+                null,
+                "hello world",
+                Instant.now()
         );
-        Message m2 = new Message(
+        final Message m2 = new Message(
                 "m2",
                 "chat-1",
                 "user-2",
@@ -68,7 +64,7 @@ public class SearchChatHistoryInteractorTest {
                 "something else",
                 Instant.now()
         );
-        Message m3 = new Message(
+        final Message m3 = new Message(
                 "m3",
                 "chat-1",
                 "user-1",
@@ -82,90 +78,151 @@ public class SearchChatHistoryInteractorTest {
         messageRepository.save(m3);
     }
 
+    /**
+     * Happy path: messages containing the keyword (case-insensitive) are returned.
+     */
     @Test
-    public void searchSuccess_returnsMatchingMessages() {
-        SearchChatHistoryInputData input =
+    public void searchSuccessReturnsMatchingMessages() {
+        final SearchChatHistoryInputData input =
                 new SearchChatHistoryInputData("chat-1", "hello");
 
         interactor.execute(input);
 
-        assertNull(presenter.lastFailError);
-        assertNull(presenter.lastNoMatchesChatId);
+        assertNull(presenter.getLastFailError());
+        assertNull(presenter.getLastNoMatchesChatId());
 
-        assertNotNull(presenter.lastSuccessOutput);
-        List<Message> messages = presenter.lastSuccessOutput.getMessages();
+        assertNotNull(presenter.getLastSuccessOutput());
+        final List<Message> messages = presenter.getLastSuccessOutput().getMessages();
 
         // Should match m1 and m3 (case-insensitive).
         assertEquals(2, messages.size());
-        List<String> ids = messages.stream()
+        final List<String> ids = messages.stream()
                 .map(Message::getId)
                 .collect(Collectors.toList());
         assertTrue(ids.contains("m1"));
         assertTrue(ids.contains("m3"));
     }
 
+    /**
+     * No messages contain the keyword → call prepareNoMatchesView.
+     */
     @Test
-    public void searchNoMatches_callsNoMatchesView() {
-        SearchChatHistoryInputData input =
+    public void searchNoMatchesCallsNoMatchesView() {
+        final SearchChatHistoryInputData input =
                 new SearchChatHistoryInputData("chat-1", "xyz");
 
         interactor.execute(input);
 
-        assertNull(presenter.lastFailError);
-        assertNull(presenter.lastSuccessOutput);
+        assertNull(presenter.getLastFailError());
+        assertNull(presenter.getLastSuccessOutput());
 
-        assertEquals("chat-1", presenter.lastNoMatchesChatId);
-        assertEquals("xyz", presenter.lastNoMatchesKeyword);
+        assertEquals("chat-1", presenter.getLastNoMatchesChatId());
+        assertEquals("xyz", presenter.getLastNoMatchesKeyword());
     }
 
+    /**
+     * Chat not found → call prepareFailView.
+     */
     @Test
-    public void chatNotFound_callsFailView() {
-        SearchChatHistoryInputData input =
+    public void chatNotFoundCallsFailView() {
+        final SearchChatHistoryInputData input =
                 new SearchChatHistoryInputData("unknown", "hello");
 
         interactor.execute(input);
 
-        assertNull(presenter.lastSuccessOutput);
-        assertNull(presenter.lastNoMatchesChatId);
-        assertNotNull(presenter.lastFailError);
-        assertTrue(presenter.lastFailError.contains("Chat not found"));
+        assertNull(presenter.getLastSuccessOutput());
+        assertNull(presenter.getLastNoMatchesChatId());
+        assertNotNull(presenter.getLastFailError());
+        assertTrue(presenter.getLastFailError().contains("Chat not found"));
     }
 
+    /**
+     * Empty keyword → call prepareFailView.
+     */
     @Test
-    public void emptyKeyword_callsFailView() {
-        SearchChatHistoryInputData input =
+    public void emptyKeywordCallsFailView() {
+        final SearchChatHistoryInputData input =
                 new SearchChatHistoryInputData("chat-1", "");
 
         interactor.execute(input);
 
-        assertNull(presenter.lastSuccessOutput);
-        assertNull(presenter.lastNoMatchesChatId);
-        assertEquals("Search keyword must not be empty.", presenter.lastFailError);
+        assertNull(presenter.getLastSuccessOutput());
+        assertNull(presenter.getLastNoMatchesChatId());
+        assertEquals("Search keyword must not be empty.", presenter.getLastFailError());
     }
 
-    // ------------------ Test Presenter ------------------
+    /**
+     * Keyword with only whitespace → also treated as empty.
+     */
+    @Test
+    public void whitespaceOnlyKeywordCallsFailView() {
+        final SearchChatHistoryInputData input =
+                new SearchChatHistoryInputData("chat-1", "   ");
 
-    private static class TestPresenter implements SearchChatHistoryOutputBoundary {
+        interactor.execute(input);
 
-        SearchChatHistoryOutputData lastSuccessOutput;
-        String lastFailError;
-        String lastNoMatchesChatId;
-        String lastNoMatchesKeyword;
+        assertNull(presenter.getLastSuccessOutput());
+        assertNull(presenter.getLastNoMatchesChatId());
+        assertEquals("Search keyword must not be empty.", presenter.getLastFailError());
+    }
+
+    /**
+     * Keyword with leading/trailing whitespace → trimmed then searched successfully.
+     */
+    @Test
+    public void keywordWithWhitespaceTrimmedAndSearchesSuccessfully() {
+        final SearchChatHistoryInputData input =
+                new SearchChatHistoryInputData("chat-1", "  hello  ");
+
+        interactor.execute(input);
+
+        assertNull(presenter.getLastFailError());
+        assertNull(presenter.getLastNoMatchesChatId());
+        assertNotNull(presenter.getLastSuccessOutput());
+
+        final List<Message> messages = presenter.getLastSuccessOutput().getMessages();
+        assertEquals(2, messages.size());
+    }
+
+    // ------------------ Capturing Presenter ------------------
+
+    private static class CapturingPresenter implements SearchChatHistoryOutputBoundary {
+
+        private SearchChatHistoryOutputData lastSuccessOutput;
+        private String lastFailError;
+        private String lastNoMatchesChatId;
+        private String lastNoMatchesKeyword;
 
         @Override
-        public void prepareSuccessView(SearchChatHistoryOutputData outputData) {
+        public void prepareSuccessView(final SearchChatHistoryOutputData outputData) {
             this.lastSuccessOutput = outputData;
         }
 
         @Override
-        public void prepareNoMatchesView(String chatId, String keyword) {
+        public void prepareNoMatchesView(final String chatId, final String keyword) {
             this.lastNoMatchesChatId = chatId;
             this.lastNoMatchesKeyword = keyword;
         }
 
         @Override
-        public void prepareFailView(String errorMessage) {
+        public void prepareFailView(final String errorMessage) {
             this.lastFailError = errorMessage;
+        }
+
+        public SearchChatHistoryOutputData getLastSuccessOutput() {
+            return lastSuccessOutput;
+        }
+
+        public String getLastFailError() {
+            return lastFailError;
+        }
+
+        public String getLastNoMatchesChatId() {
+            return lastNoMatchesChatId;
+        }
+
+        public String getLastNoMatchesKeyword() {
+            return lastNoMatchesKeyword;
         }
     }
 }

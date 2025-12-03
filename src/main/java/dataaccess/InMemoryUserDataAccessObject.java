@@ -1,6 +1,7 @@
 package dataaccess;
 
 import entity.User;
+import usecase.accesschat.AccessChatDataAccessInterface;
 import usecase.change_password.ChangePasswordUserDataAccessInterface;
 import usecase.login.LoginUserDataAccessInterface;
 import usecase.logout.LogoutUserDataAccessInterface;
@@ -18,7 +19,8 @@ public class InMemoryUserDataAccessObject implements SignupUserDataAccessInterfa
                                                      LoginUserDataAccessInterface,
                                                      ChangePasswordUserDataAccessInterface,
                                                      LogoutUserDataAccessInterface,
-                                                     RecentChatsUserDataAccessInterface {
+                                                     RecentChatsUserDataAccessInterface,
+                                                     AccessChatDataAccessInterface {
 
     private final Map<String, User> users = new HashMap<>();
 

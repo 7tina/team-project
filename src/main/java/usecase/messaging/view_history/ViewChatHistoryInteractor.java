@@ -1,5 +1,10 @@
 package usecase.messaging.view_history;
 
+import entity.Message;
+import entity.ports.ChatRepository;
+import entity.ports.MessageRepository;
+import entity.ports.UserRepository;
+
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -10,20 +15,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import entity.Message;
-import entity.ports.ChatRepository;
-import entity.ports.MessageRepository;
-import entity.ports.UserRepository;
-
-import entity.Message;
-import entity.ports.ChatRepository;
-import entity.ports.MessageRepository;
-import entity.ports.UserRepository;
-
 /**
  * Use case: view the history of a given chat.
  */
 public class ViewChatHistoryInteractor implements ViewChatHistoryInputBoundary {
+
+    private static final int MESSAGE_DATA_SIZE = 5;
+    private static final int INDEX_ID = 0;
+    private static final int INDEX_SENDER = 1;
+    private static final int INDEX_CONTENT = 2;
+    private static final int INDEX_TIMESTAMP = 3;
+    private static final int INDEX_REPLY_TO = 4;
 
     private final ChatRepository chatRepository;
     private final MessageRepository messageRepository;
@@ -49,44 +51,57 @@ public class ViewChatHistoryInteractor implements ViewChatHistoryInputBoundary {
      */
     @Override
     public void execute(ViewChatHistoryInputData inputData) {
-        try {
-            final String chatId = inputData.getChatId();
-            final List<String> userIds = inputData.getUserIds();
-            final List<String> messageIds = inputData.getMessageIds();
+        final String chatId = inputData.getChatId();
+        final List<String> userIds = inputData.getUserIds();
+        final List<String> messageIds = inputData.getMessageIds();
 
+        try {
+            // 1) Check if Chat exists
+            if (chatRepository.findById(chatId).isEmpty()) {
+                presenter.prepareFailView("Chat not found: " + chatId);
+                return;
+            }
+
+            // 2) Let dataAccess perform necessary pre-loading / validation
             dataAccess.findChatMessages(chatId, userIds, messageIds);
 
-            final List<Message> messageList = messageRepository.findByChatId(chatId);
+            // 3) Retrieve all messages from the repository
+            final List<Message> messageList =
+                    new ArrayList<>(messageRepository.findByChatId(chatId));
+
+            if (messageList.isEmpty()) {
+                presenter.prepareFailView("No messages in this chat: " + chatId);
+                return;
+            }
+
+            // 4) Sort from oldest to newest by timestamp
             messageList.sort(Comparator.comparing(Message::getTimestamp));
 
+            // 5) Assemble data for the presenter
             final List<String[]> messagesData = new ArrayList<>();
             final Map<String, Map<String, String>> reactions = new HashMap<>();
 
             for (Message msg : messageList) {
-                final String[] data = new String[5];
-                data[0] = msg.getId();
-                data[1] = msg.getSenderUserId();
-                data[2] = msg.getContent();
-                data[3] = makeString(msg.getTimestamp());
-                data[4] = msg.getRepliedMessageId() != null ? msg.getRepliedMessageId() : "";
+                final String[] data = new String[MESSAGE_DATA_SIZE];
+                data[INDEX_ID] = msg.getId();
+                data[INDEX_SENDER] = msg.getSenderUserId();
+                data[INDEX_CONTENT] = msg.getContent();
+                data[INDEX_TIMESTAMP] = makeString(msg.getTimestamp());
+                data[INDEX_REPLY_TO] =
+                        msg.getRepliedMessageId() != null ? msg.getRepliedMessageId() : "";
 
                 messagesData.add(data);
 
-                // Collect reactions
                 if (msg.getReactions() != null && !msg.getReactions().isEmpty()) {
                     reactions.put(msg.getId(), new HashMap<>(msg.getReactions()));
                 }
             }
 
-            final ViewChatHistoryOutputData outputData = new ViewChatHistoryOutputData(
-                    messagesData,
-                    reactions
-            );
+            final ViewChatHistoryOutputData outputData =
+                    new ViewChatHistoryOutputData(messagesData, reactions);
 
             presenter.prepareSuccessView(outputData);
-
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             presenter.prepareFailView("Failed to load chat history: " + e.getMessage());
         }
     }
@@ -94,23 +109,18 @@ public class ViewChatHistoryInteractor implements ViewChatHistoryInputBoundary {
     /**
      * Converts an {@link Instant} timestamp into a formatted date-time string.
      *
-     * <p>
-     * The timestamp is converted to the UTC time zone and formatted as
-     * "dd-MM-yyyy HH:mm:ss".
-     *
-     * </p>
+     * <p>The timestamp is converted to the UTC time zone and formatted as
+     * {@code "dd-MM-yyyy HH:mm:ss"}.</p>
      *
      * @param timestamp the {@link Instant} to be formatted
-     * @return a string representation of the timestamp in UTC, formatted
-     *         as "dd-MM-yyyy HH:mm:ss"
+     * @return a string representation of the timestamp in UTC, formatted as
+     * {@code "dd-MM-yyyy HH:mm:ss"}
      */
-    private String makeString(Instant timestamp) {
-        // Specify the desired time zone
+    private String makeString(final Instant timestamp) {
         final ZoneId zone = ZoneId.of("UTC");
         final ZonedDateTime zdt = timestamp.atZone(zone);
-
-        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+        final DateTimeFormatter formatter =
+                DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
         return zdt.format(formatter);
     }
 }
-

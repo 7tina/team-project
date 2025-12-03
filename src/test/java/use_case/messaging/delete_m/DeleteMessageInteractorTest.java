@@ -3,6 +3,8 @@ package use_case.messaging.delete_m;
 import org.junit.jupiter.api.Test;
 import usecase.messaging.deletemessage.*;
 
+import java.time.LocalDateTime;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class DeleteMessageInteractorTest {
@@ -44,6 +46,8 @@ class DeleteMessageInteractorTest {
         DeleteMessageInputData input =
                 new DeleteMessageInputData("msg-123", "user-1");
 
+        assertEquals("user-1", input.getCurrentUserId());
+
         interactor.execute(input);
 
         // DAO called with correct id
@@ -53,6 +57,8 @@ class DeleteMessageInteractorTest {
         assertNotNull(presenter.successData);
         assertTrue(presenter.successData.isSuccess());
         assertEquals("msg-123", presenter.successData.getMessageId());
+
+        assertNotNull(presenter.successData.getDeletionTime());
 
         // fail presenter not called
         assertNull(presenter.failData);
@@ -82,5 +88,16 @@ class DeleteMessageInteractorTest {
 
         // success presenter not called
         assertNull(presenter.successData);
+    }
+
+    @Test
+    void outputData_convenienceConstructor_setsSuccessTrueAndReasonNull() {
+        LocalDateTime time = LocalDateTime.now();
+        DeleteMessageOutputData output = new DeleteMessageOutputData("test-id", time);
+
+        assertTrue(output.isSuccess());
+        assertEquals("test-id", output.getMessageId());
+        assertEquals(time, output.getDeletionTime());
+        assertNull(output.getFailReason());
     }
 }

@@ -10,6 +10,8 @@ import usecase.logout.LogoutInputBoundary;
 import usecase.logout.LogoutInteractor;
 import usecase.logout.LogoutOutputBoundary;
 import usecase.logout.LogoutOutputData;
+import entity.ports.ChatRepository;
+import entity.repo.InMemoryChatRepository;
 
 import java.util.ArrayList;
 import java.util.HashMap;

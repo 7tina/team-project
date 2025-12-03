@@ -21,3 +21,4 @@ public class RemoveReactionInputData {
         return userId;
     }
 }
+

@@ -56,16 +56,16 @@ public class ViewChatHistoryInteractor implements ViewChatHistoryInputBoundary {
         final List<String> messageIds = inputData.getMessageIds();
 
         try {
-            // 1) Chat 是否存在
+            // 1) Check if Chat exists
             if (chatRepository.findById(chatId).isEmpty()) {
                 presenter.prepareFailView("Chat not found: " + chatId);
                 return;
             }
 
-            // 2) 让 dataAccess 做它需要的预加载 / 校验工作
+            // 2) Let dataAccess perform necessary pre-loading / validation
             dataAccess.findChatMessages(chatId, userIds, messageIds);
 
-            // 3) 从仓库拿到所有消息
+            // 3) Retrieve all messages from the repository
             final List<Message> messageList =
                     new ArrayList<>(messageRepository.findByChatId(chatId));
 
@@ -74,10 +74,10 @@ public class ViewChatHistoryInteractor implements ViewChatHistoryInputBoundary {
                 return;
             }
 
-            // 4) 按时间从旧到新排序
+            // 4) Sort from oldest to newest by timestamp
             messageList.sort(Comparator.comparing(Message::getTimestamp));
 
-            // 5) 组装给 presenter 的数据
+            // 5) Assemble data for the presenter
             final List<String[]> messagesData = new ArrayList<>();
             final Map<String, Map<String, String>> reactions = new HashMap<>();
 
@@ -114,7 +114,7 @@ public class ViewChatHistoryInteractor implements ViewChatHistoryInputBoundary {
      *
      * @param timestamp the {@link Instant} to be formatted
      * @return a string representation of the timestamp in UTC, formatted as
-     *         {@code "dd-MM-yyyy HH:mm:ss"}
+     * {@code "dd-MM-yyyy HH:mm:ss"}
      */
     private String makeString(final Instant timestamp) {
         final ZoneId zone = ZoneId.of("UTC");

@@ -6,9 +6,9 @@ import entity.ports.ChatRepository;
  * The Logout Interactor.
  */
 public class LogoutInteractor implements LogoutInputBoundary {
-    private LogoutUserDataAccessInterface userDataAccessObject;
-    private LogoutOutputBoundary logoutPresenter;
-    private ChatRepository chatRepository;
+    private final LogoutUserDataAccessInterface userDataAccessObject;
+    private final LogoutOutputBoundary logoutPresenter;
+    private final ChatRepository chatRepository;
 
     public LogoutInteractor(LogoutUserDataAccessInterface userDataAccessInterface,
                             LogoutOutputBoundary logoutOutputBoundary,
@@ -21,7 +21,7 @@ public class LogoutInteractor implements LogoutInputBoundary {
     @Override
     public void execute() {
         // * set the current username to null in the DAO
-        String username = userDataAccessObject.getCurrentUsername();
+        final String username = userDataAccessObject.getCurrentUsername();
         userDataAccessObject.setCurrentUsername(null);
         chatRepository.clear();
         // * instantiate the `LogoutOutputData`, which needs to contain the username.

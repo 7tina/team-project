@@ -1,7 +1,8 @@
 package usecase.messaging.search_history;
 
-import entity.Message;
 import java.util.List;
+
+import entity.Message;
 
 public class SearchChatHistoryOutputData {
     private final List<Message> matchingMessages;

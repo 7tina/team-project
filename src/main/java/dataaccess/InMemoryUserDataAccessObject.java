@@ -1,9 +1,11 @@
 package dataaccess;
 
 import entity.User;
+import usecase.accesschat.AccessChatDataAccessInterface;
 import usecase.change_password.ChangePasswordUserDataAccessInterface;
 import usecase.login.LoginUserDataAccessInterface;
 import usecase.logout.LogoutUserDataAccessInterface;
+import usecase.recent_chat.RecentChatsUserDataAccessInterface;
 import usecase.signup.SignupUserDataAccessInterface;
 
 import java.util.HashMap;
@@ -16,7 +18,9 @@ import java.util.Map;
 public class InMemoryUserDataAccessObject implements SignupUserDataAccessInterface,
                                                      LoginUserDataAccessInterface,
                                                      ChangePasswordUserDataAccessInterface,
-                                                     LogoutUserDataAccessInterface {
+                                                     LogoutUserDataAccessInterface,
+                                                     RecentChatsUserDataAccessInterface,
+                                                     AccessChatDataAccessInterface {
 
     private final Map<String, User> users = new HashMap<>();
 
@@ -53,4 +57,8 @@ public class InMemoryUserDataAccessObject implements SignupUserDataAccessInterfa
         users.put(user.getName(), user);
     }
 
+    @Override
+    public void updateChatRepository(String userId) {
+        // do nothing because chatRepository is manually updated for tests
+    }
 }

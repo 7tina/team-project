@@ -20,6 +20,9 @@ import usecase.create_chat.CreateChatOutputData;
 import usecase.create_chat.CreateChatUserDataAccessInterface;
 
 public class CreateGroupChatInteractor extends CreateChatInteractor {
+    private static final int MIN_GROUP_SIZE = 3;
+    private static final int MIN_VALID_MAX_USERS = 2;
+
     private final Integer maxUsers;
 
     public CreateGroupChatInteractor(CreateChatOutputBoundary boundary,
@@ -28,11 +31,11 @@ public class CreateGroupChatInteractor extends CreateChatInteractor {
                                      UserRepository userRepository,
                                      Integer maxUsers) {
         super(boundary, dao, chatRepository, userRepository);
-        if (maxUsers > 2) {
+        if (maxUsers > MIN_VALID_MAX_USERS) {
             this.maxUsers = maxUsers;
         }
         else {
-            this.maxUsers = 3;
+            this.maxUsers = MIN_GROUP_SIZE;
         }
     }
 

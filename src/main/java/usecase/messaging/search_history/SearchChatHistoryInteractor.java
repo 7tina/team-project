@@ -1,11 +1,11 @@
 package usecase.messaging.search_history;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import entity.Message;
 import entity.ports.ChatRepository;
 import entity.ports.MessageRepository;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Interactor for searching messages by keyword in a given chat.
@@ -35,7 +35,8 @@ public class SearchChatHistoryInteractor implements SearchChatHistoryInputBounda
             presenter.prepareFailView("Search keyword must not be empty.");
         } else if (chatRepository.findById(chatId).isEmpty()) {
             presenter.prepareFailView("Chat not found: " + chatId);
-        } else {
+        } 
+      else {
             final List<Message> allMessages = messageRepository.findByChatId(chatId);
             final List<Message> matching = new ArrayList<>();
 
@@ -49,8 +50,7 @@ public class SearchChatHistoryInteractor implements SearchChatHistoryInputBounda
 
             if (matching.isEmpty()) {
                 presenter.prepareNoMatchesView(chatId, trimmedKeyword);
-            }
-            else {
+            } else {
                 final SearchChatHistoryOutputData outputData =
                         new SearchChatHistoryOutputData(matching);
                 presenter.prepareSuccessView(outputData);

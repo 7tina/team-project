@@ -1,6 +1,5 @@
 package interfaceadapter.accesschat;
 
-
 import usecase.accesschat.AccessChatInputBoundary;
 import usecase.accesschat.AccessChatInputData;
 

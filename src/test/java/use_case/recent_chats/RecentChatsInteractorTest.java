@@ -1,13 +1,14 @@
 package use_case.recent_chats;
 
-import java.awt.*;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
+
+import java.awt.*;
+import java.time.Instant;
+import java.util.*;
+import java.util.List;
+import java.util.stream.Stream;
+
 import org.junit.jupiter.api.Test;
 
 import dataaccess.InMemoryUserDataAccessObject;
@@ -51,13 +52,11 @@ public class RecentChatsInteractorTest {
         chatRepository.save(chat1);
         chatRepository.save(chat2);
 
-        // This creates a successPresenter that tests whether the test case is as we expect.
         final RecentChatsOutputBoundary successPresenter = new RecentChatsOutputBoundary() {
             @Override
             public void prepareSuccessView(RecentChatsOutputData outputData) {
                 final List<String> chatNames = outputData.getChatNames();
                 final HashMap<String, String> nameToChatIds = outputData.getNameToChatIds();
-                // 2 things to check: the output data is correct, and the user has been created in the DAO.
                 assertEquals(2, chatNames.size());
                 assertEquals("Miles2", chatNames.get(0));
                 assertEquals("Miles2(copy)", chatNames.get(1));
@@ -79,9 +78,25 @@ public class RecentChatsInteractorTest {
     @Test
     void failureExceptionTest() {
         final RecentChatsInputData inputData = new RecentChatsInputData("Miles");
-        final RecentChatsUserDataAccessInterface dao = new InMemoryUserDataAccessObject();
+        final RecentChatsUserDataAccessInterface dao = new InMemoryUserDataAccessObject() {
+            @Override
+            public void updateChatRepository(String username) {
+                final Stream<Integer> s = Stream.of(1,2,3);
+                s.count();
+                s.count();
+            }
+        };
         final MessageRepository messageRepository = new InMemoryMessageRepository();
         final UserRepository userRepository = new InMemoryUserRepository();
+        final ChatRepository chatRepository = new InMemoryChatRepository();
+        final User user1 = userFactory.create("Miles1", "123");
+        final User user2 = userFactory.create("Miles2", "456");
+        userRepository.save(user1);
+        userRepository.save(user2);
+        final Chat chat = new Chat("test1", "", Color.BLUE, Instant.now());
+        chat.addParticipant("Miles1");
+        chat.addParticipant("Miles2");
+        chatRepository.save(chat);
 
         // This creates a successPresenter that tests whether the test case is as we expect.
         final RecentChatsOutputBoundary successPresenter = new RecentChatsOutputBoundary() {
@@ -93,13 +108,12 @@ public class RecentChatsInteractorTest {
 
             @Override
             public void prepareFailView(String error) {
-                assertEquals("Cannot invoke \"entity.ports.ChatRepository.findAll()\" because "
-                        + "\"this.chatRepository\" is null", error);
+                assertEquals("stream has already been operated upon or closed", error);
             }
         };
 
         final RecentChatsInputBoundary interactor = new RecentChatsInteractor(successPresenter,
-                dao, messageRepository, userRepository, null);
+                dao, messageRepository, userRepository, chatRepository);
         interactor.execute(inputData);
     }
 
@@ -139,7 +153,7 @@ public class RecentChatsInteractorTest {
                 final List<String> expected = new ArrayList<>(
                         List.of("test2", "test1")
                 );
-                // 2 things to check: the output data is correct, and the user has been created in the DAO.
+
                 assertEquals(2, chatNames.size());
                 assertEquals(expected, chatNames);
             }
@@ -186,7 +200,7 @@ public class RecentChatsInteractorTest {
                 final List<String> expected = new ArrayList<>(
                         List.of("test1", "test2")
                 );
-                // 2 things to check: the output data is correct, and the user has been created in the DAO.
+
                 assertEquals(2, chatNames.size());
                 assertEquals(expected, chatNames);
             }
@@ -233,7 +247,7 @@ public class RecentChatsInteractorTest {
                 final List<String> expected = new ArrayList<>(
                         List.of("test2", "test1")
                 );
-                // 2 things to check: the output data is correct, and the user has been created in the DAO.
+
                 assertEquals(2, chatNames.size());
                 assertEquals(expected, chatNames);
             }
